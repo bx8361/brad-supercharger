@@ -2,6 +2,8 @@
 
 A local-first toolbox for everyday developer work. It is a static [React](https://react.dev/) + [Vite](https://vite.dev/) site: tool inputs are processed in the browser, and nothing is sent to a server.
 
+Published site: [https://bx8361.github.io/brad-supercharger/](https://bx8361.github.io/brad-supercharger/)
+
 ## Run locally
 
 ```sh
