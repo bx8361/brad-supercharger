@@ -1,0 +1,50 @@
+{
+  "name": "brads-supercharger",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js",
+    "predev": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js",
+    "prebuild": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test",
+    "test:data-playground": "vitest run --config vitest.data-playground.config.ts"
+  },
+  "dependencies": {
+    "@peculiar/x509": "^2.1.0",
+    "@xmldom/xmldom": "^0.9.12",
+    "crypto-js": "^4.2.0",
+    "diff": "^8.0.2",
+    "dompurify": "^3.2.6",
+    "jsonpath-plus": "^11.1.1",
+    "jsqr": "^1.4.0",
+    "jsxgraph": "^1.13.3",
+    "lucide-react": "^0.468.0",
+    "marked": "^15.0.12",
+    "mermaid": "^12.1.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "reflect-metadata": "^0.2.2",
+    "sql-formatter": "^15.9.0",
+    "xmllint-wasm": "^5.3.0",
+    "yaml": "^2.8.0",
+    "ml-distance": "^5.0.0",
+    "ml-kmeans": "^7.0.1",
+    "ml-pca": "^4.1.1",
+    "papaparse": "^5.5.3",
+    "plotly.js-dist-min": "^3.3.0"
+  },
+  "devDependencies": {
+    "@import-meta-env/cli": "0.6.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^6.3.5",
+    "@types/papaparse": "^5.3.16",
+    "@types/plotly.js": "^3.0.8",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

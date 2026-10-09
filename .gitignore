@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Production build (publish dist/ to gh-pages separately)
+dist/
+
+# Local env files (secrets, overrides)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test / coverage
+coverage/
+
+# Vite
+*.local
+
+# draw.io editor (fetched by scripts/vendor-drawio.js on npm install)
+public/drawio/
+
+# Hoppscotch API client (fetched by scripts/vendor-hoppscotch.js on npm install)
+public/hoppscotch/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Optional: uncomment if you use these tools
+# .eslintcache
+# *.tsbuildinfo
