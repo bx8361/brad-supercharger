@@ -1,0 +1,2 @@
+import{a0 as o,o as t,m as r,n}from"./index-Dd3JBeWY.js";const l={viewBox:"0 0 24 24",width:"1.2em",height:"1.2em"};function i(s,e){return t(),r("svg",l,[...e[0]||(e[0]=[n("path",{fill:"none",stroke:"currentColor","stroke-linecap":"round","stroke-linejoin":"round","stroke-width":"2",d:"M22 3H2l8 9.46V19l4 2v-8.54z"},null,-1)])])}const c=o({name:"lucide-filter",render:i});export{c as I};
+//# sourceMappingURL=filter-Bjib1Xni.js.map

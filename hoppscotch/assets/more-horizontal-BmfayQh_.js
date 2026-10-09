@@ -1,0 +1,2 @@
+import{a0 as r,o as c,m as n,n as e}from"./index-Dd3JBeWY.js";const t={viewBox:"0 0 24 24",width:"1.2em",height:"1.2em"};function i(s,o){return c(),n("svg",t,[...o[0]||(o[0]=[e("g",{fill:"none",stroke:"currentColor","stroke-linecap":"round","stroke-linejoin":"round","stroke-width":"2"},[e("circle",{cx:"12",cy:"12",r:"1"}),e("circle",{cx:"19",cy:"12",r:"1"}),e("circle",{cx:"5",cy:"12",r:"1"})],-1)])])}const l=r({name:"lucide-more-horizontal",render:i});export{l as I};
+//# sourceMappingURL=more-horizontal-BmfayQh_.js.map

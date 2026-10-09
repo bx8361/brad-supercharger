@@ -1,0 +1,1 @@
+{"version":3,"file":"teams-8RX26cd5.js","sources":["../../../hoppscotch-common/src/pages/profile/teams.vue"],"sourcesContent":["<template>\n  <TeamsView :modal=\"false\" class=\"p-4\" />\n</template>\n\n<script setup lang=\"ts\"></script>\n"],"names":["_createBlock","_component_TeamsView"],"mappings":"8GACEA,EAAwCC,EAAA,CAA5B,MAAO,GAAO,MAAM"}
