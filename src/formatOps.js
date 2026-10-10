@@ -14,9 +14,119 @@ export function sortJson(value) {
   return value
 }
 
-export function formatJson(input, { mode = 'format', indent = '2', sort = false } = {}) {
+// ponytail: one scan to strict JSON (quotes, trailing commas, comments, unquoted keys, True/False/None). JSON.parse stays the validator.
+const codeLiterals = { True: 'true', False: 'false', None: 'null', undefined: 'null' }
+
+function skipNoise(source, i) {
+  while (i < source.length) {
+    const c = source[i]
+    if (c === ' ' || c === '\t' || c === '\n' || c === '\r') { i++; continue }
+    if (c === '/' && source[i + 1] === '/') {
+      i += 2
+      while (i < source.length && source[i] !== '\n') i++
+      continue
+    }
+    if (c === '/' && source[i + 1] === '*') {
+      const end = source.indexOf('*/', i + 2)
+      if (end < 0) throw new Error('Unclosed comment')
+      i = end + 2
+      continue
+    }
+    break
+  }
+  return i
+}
+
+function readJsonString(source, i) {
+  const quote = source[i]
+  let text = '"'
+  i++
+  while (i < source.length) {
+    const c = source[i]
+    if (c === '\\') {
+      const n = source[i + 1]
+      if (n === undefined) throw new Error('Unclosed string')
+      if (n === '\n' || n === '\r') {
+        i += 2
+        if (n === '\r' && source[i] === '\n') i++
+        continue
+      }
+      if (n === "'") { text += "'"; i += 2; continue }
+      if (n === '"') { text += '\\"'; i += 2; continue }
+      text += `\\${n}`
+      i += 2
+      continue
+    }
+    if (c === quote) return { text: `${text}"`, index: i + 1 }
+    if (c === '"') { text += '\\"'; i++; continue }
+    if (c === '\n') { text += '\\n'; i++; continue }
+    if (c === '\r') { text += '\\r'; i++; continue }
+    if (c === '\t') { text += '\\t'; i++; continue }
+    if (c < ' ') { text += `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`; i++; continue }
+    text += c
+    i++
+  }
+  throw new Error('Unclosed string')
+}
+
+export function relaxJson(input) {
+  const source = String(input).replace(/^\uFEFF/, '')
+  let out = ''
+  let i = 0
+  let pendingComma = false
+  const flushComma = () => {
+    if (!pendingComma) return
+    out += ','
+    pendingComma = false
+  }
+  while (i < source.length) {
+    i = skipNoise(source, i)
+    if (i >= source.length) break
+    const c = source[i]
+    if (c === ',') {
+      if (pendingComma) out += ','
+      pendingComma = true
+      i++
+      continue
+    }
+    if (c === '}' || c === ']') {
+      pendingComma = false
+      out += c
+      i++
+      continue
+    }
+    flushComma()
+    if (c === '"' || c === "'") {
+      const read = readJsonString(source, i)
+      out += read.text
+      i = read.index
+      continue
+    }
+    if (c === '{' || c === '[' || c === ':') {
+      out += c
+      i++
+      continue
+    }
+    if (/[A-Za-z_$]/.test(c)) {
+      const start = i++
+      while (i < source.length && /[A-Za-z0-9_$]/.test(source[i])) i++
+      const word = source.slice(start, i)
+      const after = skipNoise(source, i)
+      if (source[after] === ':') out += JSON.stringify(word)
+      else out += codeLiterals[word] || word
+      continue
+    }
+    const start = i
+    while (i < source.length && !' \t\n\r,{}[]:\'"/'.includes(source[i])) i++
+    if (i === start) throw new Error(`Unexpected '${c}'`)
+    out += source.slice(start, i)
+  }
+  return out
+}
+
+export function formatJson(input, { mode = 'format', indent = '2', sort = false, repair = false } = {}) {
   if (!String(input).trim()) return ''
-  let value = JSON.parse(input)
+  let value = JSON.parse(repair ? relaxJson(input) : input)
   if (sort) value = sortJson(value)
   if (mode === 'minify') return JSON.stringify(value)
   return JSON.stringify(value, null, indent === 'tab' ? '\t' : Number(indent))

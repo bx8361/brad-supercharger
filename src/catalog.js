@@ -40,7 +40,7 @@ export const tools = [
   { id: 'jwt', name: 'JWT encoder', short: 'JWT', description: 'Encode or decode JSON Web Tokens (HS256/384/512).', category: 'encode', icon: Fingerprint, keywords: 'json web token auth claims sign' },
   { id: 'qrcode', name: 'QR code', short: 'QR', description: 'Generate QR codes from text or read codes from images.', category: 'encode', icon: QrCode, keywords: 'matrix barcode scan decode' },
   { id: 'url', name: 'URL encoder', short: 'URL', description: 'Percent-encode or decode URL data (RFC 3986).', category: 'encode', icon: Link2, keywords: 'uri escape unescape component' },
-  { id: 'json', name: 'JSON formatter', short: 'JSON', description: 'Validate, format, minify, or sort JSON.', category: 'format', icon: Braces, keywords: 'pretty print minify validate formatter sort properties' },
+  { id: 'json', name: 'JSON formatter', short: 'JSON', description: 'Validate, format, minify, or sort JSON.', category: 'format', icon: Braces, keywords: 'pretty print minify validate formatter sort properties jsonc repair quotes comments' },
   { id: 'sql', name: 'SQL formatter', short: 'SQL', description: 'Format SQL for common dialects.', category: 'format', icon: Database, keywords: 'pretty print query mysql postgres tsql' },
   { id: 'xml', name: 'XML formatter', short: 'XML', description: 'Format or minify XML.', category: 'format', icon: FileCode, keywords: 'pretty print minify attributes' },
   { id: 'hash', name: 'Hash generator', short: 'SHA', description: 'Create SHA digests from text or files.', category: 'generate', icon: Hash, keywords: 'checksum sha-1 sha-256 sha-384 sha-512' },

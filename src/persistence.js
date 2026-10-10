@@ -6,7 +6,7 @@ export const emptySaved = {
 
 // Only known tool options may be saved without consent. New fields default to private.
 const toolOptions = {
-  json: ['mode', 'indent', 'sort'], sql: ['language', 'indent', 'leadingComma'], xml: ['indent', 'newlineOnAttributes'],
+  json: ['mode', 'indent', 'sort', 'repair'], sql: ['language', 'indent', 'leadingComma'], xml: ['indent', 'newlineOnAttributes'],
   base64: ['mode'], url: ['mode', 'direction'],
   html: ['direction'], timestamp: ['mode'],
   cron: ['count'], 'json-table': ['format'], yaml: ['direction', 'indent'],

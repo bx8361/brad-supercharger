@@ -1,4 +1,4 @@
-const jsonRe = /"(?:\\u[0-9a-fA-F]{4}|\\.|[^"\\])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b/g
+const jsonRe = /"(?:\\u[0-9a-fA-F]{4}|\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b/g
 const yamlRe = /"(?:\\.|[^"\\\n])*"|'(?:[^'\n]|'')*'|#[^\n]*|^[ \t]*(?:-[ \t]+)?[^:#\n][^:\n]*:|\b(?:true|false|null|yes|no|on|off)\b|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/gm
 const xmlRe = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?[\w:.-]+|\/?>|"[^"]*"|'[^']*'/g
 const sqlRe = /--[^\n]*|\/\*[\s\S]*?\*\/|'(?:''|[^'])*'|"(?:[^"])*"|`(?:``|[^`])*`|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][\w$]*\b/g
@@ -27,7 +27,8 @@ function tokenizeJson(text) {
   let match
   while ((match = keyRe.exec(text))) keys.add(match.index)
   return scan(text, jsonRe, (token, index) => {
-    if (token.startsWith('"')) return keys.has(index) ? 'key' : 'string'
+    if (token.startsWith('"') || token.startsWith("'")) return keys.has(index) ? 'key' : 'string'
+    if (token.startsWith('/')) return 'comment'
     if (token === 'true' || token === 'false' || token === 'null') return 'bool'
     return 'number'
   })

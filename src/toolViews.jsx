@@ -540,11 +540,12 @@ function JSONTool({ data, setData }) {
   const indent = textValue(data, 'indent', '2')
   const mode = textValue(data, 'mode', 'format')
   const sort = checked(data, 'sort')
+  const repair = checked(data, 'repair')
   let output = '', error = ''
-  try { output = formatJson(input, { mode, indent, sort }) }
+  try { output = formatJson(input, { mode, indent, sort, repair }) }
   catch (e) { error = input ? e.message : ''; }
   return <div className="tool-content">
-    <div className="inline-controls"><label>Action<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="format">Format JSON</option><option value="minify">Minify JSON</option></select></label><label>Indentation<select value={indent} onChange={e => set(setData, 'indent', e.target.value)}><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="tab">Tab</option></select></label><label className="check-pill"><input type="checkbox" checked={sort} onChange={e => set(setData, 'sort', e.target.checked)} />Sort properties</label><Sample onClick={() => set(setData, 'input', initialSamples.json)} /></div>
+    <div className="inline-controls"><label>Action<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="format">Format JSON</option><option value="minify">Minify JSON</option></select></label><label>Indentation<select value={indent} onChange={e => set(setData, 'indent', e.target.value)}><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="tab">Tab</option></select></label><label className="check-pill"><input type="checkbox" checked={sort} onChange={e => set(setData, 'sort', e.target.checked)} />Sort properties</label><label className="check-pill" title="Single quotes, trailing commas, comments, and unquoted keys. The input is left unchanged."><input type="checkbox" checked={repair} onChange={e => set(setData, 'repair', e.target.checked)} />Fix common issues</label><Sample onClick={() => set(setData, 'input', initialSamples.json)} /></div>
     <Split><Editor value={input} onChange={v => set(setData, 'input', v)} label="JSON input" language="json" /><Output value={output} label="Formatted JSON" error={!!error} language="json" placeholder={error || 'Enter valid JSON to see the result.'} /></Split>
     {error && <p className="error-note">{error}</p>}
   </div>

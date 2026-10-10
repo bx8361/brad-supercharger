@@ -19,6 +19,20 @@ test('json sort orders keys at every level', () => {
 }`)
 })
 
+test('json repair fixes quotes, trailing commas, and comments without requiring strict input', () => {
+  const input = `{
+'this_is_key': 'value', // comment
+'this_is_key2': 'value', /*..*/
+}`
+  assert.equal(formatJson(input, { repair: true, indent: '2' }), `{
+  "this_is_key": "value",
+  "this_is_key2": "value"
+}`)
+  assert.equal(formatJson(`{a: 1, b: 'say "hi"', c: True,}`, { repair: true, mode: 'minify' }), '{"a":1,"b":"say \\"hi\\"","c":true}')
+  assert.equal(formatJson('{"url": "https://x.com", "note": "/* keep */",}', { repair: true, mode: 'minify' }), '{"url":"https://x.com","note":"/* keep */"}')
+  assert.throws(() => formatJson(input), /JSON/)
+})
+
 test('sql formatter uppercases keywords and can lead with commas', () => {
   const formatted = formatSql('select id, name from users', { indent: '2' })
   assert.match(formatted, /SELECT/)
@@ -44,6 +58,8 @@ test('xml formatter indents and can break attributes', () => {
 test('find ranges and highlight marks cover the query', () => {
   assert.deepEqual(findRanges('Ab ab', 'ab'), [{ start: 0, end: 2 }, { start: 3, end: 5 }])
   const parts = paint('{"a":1}', 'json', findRanges('{"a":1}', 'a'), 0)
+  const commented = paint('{ "a": 1, // note\n "b": "http://x" /* keep */ }', 'json')
+  assert.deepEqual(commented.filter(part => part.kind === 'comment').map(part => part.text), ['// note', '/* keep */'])
   assert.equal(parts.map(part => part.text).join(''), '{"a":1}')
   assert.equal(parts.find(part => part.find).text, 'a')
 })
