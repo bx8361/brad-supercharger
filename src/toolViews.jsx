@@ -517,17 +517,48 @@ function boxInNode(node, element) {
   return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y }
 }
 
-function fitMermaidSvg(svg) {
+function ganttWidth(text) {
+  // ponytail: duration tokens, not a gantt parse. Overestimates when dates and durations both cover the same span; capped below.
+  const dates = [...text.matchAll(/\d{4}-\d{2}-\d{2}/g)].map(match => Date.parse(match[0])).filter(Number.isFinite)
+  const dateSpan = dates.length ? (Math.max(...dates) - Math.min(...dates)) / 86400000 : 0
+  let extra = 0
+  for (const match of text.matchAll(/(\d+(?:\.\d+)?)(ms|[dwMyhms])/g)) {
+    const n = Number(match[1])
+    extra += { w: n * 7, d: n, M: n * 30, y: n * 365, h: n / 24 }[match[2]] || 0
+  }
+  const span = Math.max(1, dates.length >= 2 ? Math.max(dateSpan, extra) : dateSpan + extra)
+  return Math.round(Math.min(4800, Math.max(800, span * 96 + 180)))
+}
+
+function fitMermaidSvg(svg, diagramType) {
+  const view = svg.viewBox?.baseVal
+  const chart = diagramType === 'gantt' && view?.width > 0 && view?.height > 0
+    ? { x: view.x, y: view.y, width: view.width, height: view.height }
+    : null
   svg.style.removeProperty('max-width')
   svg.removeAttribute('width')
   svg.removeAttribute('height')
   try {
     const box = svg.getBBox()
-    if (box.width > 0 && box.height > 0) {
+    let x = box.x
+    let y = box.y
+    let width = box.width
+    let height = box.height
+    if (chart) {
+      // The today marker is drawn on the time scale even when it falls outside the tasks, and getBBox would stretch the chart out to it.
+      const slack = 48
+      const right = Math.min(x + width, chart.x + chart.width + slack)
+      const bottom = Math.min(y + height, chart.y + chart.height + slack)
+      x = Math.max(x, chart.x - slack)
+      y = Math.max(y, chart.y - slack)
+      width = right - x
+      height = bottom - y
+    }
+    if (width > 0 && height > 0) {
       const pad = 16
-      svg.setAttribute('viewBox', `${box.x - pad} ${box.y - pad} ${box.width + pad * 2} ${box.height + pad * 2}`)
-      svg.style.width = `${Math.ceil(box.width + pad * 2)}px`
-      svg.style.height = `${Math.ceil(box.height + pad * 2)}px`
+      svg.setAttribute('viewBox', `${x - pad} ${y - pad} ${width + pad * 2} ${height + pad * 2}`)
+      svg.style.width = `${Math.ceil(width + pad * 2)}px`
+      svg.style.height = `${Math.ceil(height + pad * 2)}px`
     }
   } catch { /* getBBox throws before the SVG is in the document */ }
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
@@ -1208,6 +1239,7 @@ function MermaidTool({ data, setData }) {
       htmlLabels,
       flowchart: { htmlLabels, curve: 'cardinal', useMaxWidth: false, nodeSpacing: 50, rankSpacing: 50 },
       class: { htmlLabels: false },
+      gantt: diagramType === 'gantt' ? { useMaxWidth: false, useWidth: ganttWidth(text) } : {},
     })
     node.textContent = `%%{init: {"layout":"dagre","flowchart":{"curve":"cardinal","htmlLabels":${htmlLabels},"nodeSpacing":50,"rankSpacing":50},"class":{"htmlLabels":false}}}%%\n${text}`
     mermaid.run({ nodes: [node] }).then(() => {
@@ -1215,15 +1247,21 @@ function MermaidTool({ data, setData }) {
       const svg = host.querySelector('svg')
       if (!svg) { setError('Mermaid did not draw a diagram.'); return }
       if (diagramType === 'classDiagram' || diagramType === 'class') fitClassBoxes(svg)
-      fitMermaidSvg(svg)
+      fitMermaidSvg(svg, diagramType)
       const sw = stage.clientWidth
       const sh = stage.clientHeight
       const bounds = svg.getBoundingClientRect()
       if (sw < 40 || sh < 40 || bounds.width < 1) { moveView({ x: 16, y: 16, scale: 1 }); setError(''); return }
-      const scale = Math.min(1, (sw - 32) / bounds.width, (sh - 32) / bounds.height)
+      const scale = diagramType === 'gantt'
+        ? Math.min(1, (sh - 32) / bounds.height)
+        : Math.min(1, (sw - 32) / bounds.width, (sh - 32) / bounds.height)
       const width = bounds.width * scale
       const height = bounds.height * scale
-      moveView({ scale, x: Math.max(16, (stage.clientWidth - width) / 2), y: Math.max(16, (stage.clientHeight - height) / 2) })
+      moveView({
+        scale,
+        x: diagramType === 'gantt' ? 16 : Math.max(16, (stage.clientWidth - width) / 2),
+        y: Math.max(16, (stage.clientHeight - height) / 2),
+      })
       setError('')
     }).catch(e => {
       if (cancelled) return
