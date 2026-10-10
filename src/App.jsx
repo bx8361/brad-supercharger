@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft, ArrowRight, Bolt, Check, ChevronDown, Command, GripVertical, Home, Scale, Star,
-  Download, Menu, Moon, Search, Settings2, ShieldCheck, Sun, X,
+  Download, EyeOff, Menu, Moon, Search, Settings2, ShieldCheck, Sun, X,
 } from 'lucide-react'
 import { groups, tools } from './catalog.js'
 import { LicensesPage } from './licensesPage.jsx'
@@ -9,7 +9,7 @@ import { renderTool, StatusToast } from './toolViews.jsx'
 import { usePwaInstall } from './usePwaInstall.js'
 import ResizeHandle from './ResizeHandle.jsx'
 
-import { STORAGE_KEY, emptySaved, persistedSaved, readSaved } from './persistence.js'
+import { STORAGE_KEY, emptySaved, readSaved, sessionFromSaved, writeSaved } from './persistence.js'
 
 function adoptPathRoute() {
   const pathMatch = window.location.pathname.match(/\/tools\/([a-z0-9-]+)\/?$/)
@@ -46,7 +46,7 @@ function NavSection({ id, label, icon: Icon, count, saved, onToggle, children })
   </section>
 }
 
-function Sidebar({ active, saved, onSidebarWidth, search, setSearch, onNavigate, onNavigateLicenses, onFavorite, onReorderFavorite, onToggleSection, onClear, pwa, mobileOpen, closeMobile }) {
+function Sidebar({ active, saved, incognito, onToggleIncognito, onSidebarWidth, search, setSearch, onNavigate, onNavigateLicenses, onFavorite, onReorderFavorite, onToggleSection, onClear, pwa, mobileOpen, closeMobile }) {
   const [dragged, setDragged] = useState(null)
   const [dropTarget, setDropTarget] = useState(null)
   const favoriteIds = useMemo(() => new Set(saved.favorites), [saved.favorites])
@@ -101,7 +101,7 @@ function Sidebar({ active, saved, onSidebarWidth, search, setSearch, onNavigate,
           })}
         </>}
       </nav>
-      <div className="sidebar-bottom">{pwa.available && !pwa.installed && <button className="install-app-button" onClick={pwa.install} disabled={pwa.installing}><Download size={14} />Install app</button>}<div className="local-status"><span className="status-dot" /><div><b>Private by design</b><small>Runs entirely in your browser</small></div><ShieldCheck size={16} /></div><button className="clear-data" onClick={onClear}><Settings2 size={14} /> Saved data & preferences</button><button className={`clear-data ${active === 'licenses' ? 'selected' : ''}`} onClick={onNavigateLicenses}><Scale size={14} /> Third-party notices</button><div className="sidebar-foot"><span>SUPERCHARGER</span><span>v1.0 · STAGE 01</span></div></div>
+      <div className="sidebar-bottom">{pwa.available && !pwa.installed && <button className="install-app-button" onClick={pwa.install} disabled={pwa.installing}><Download size={14} />Install app</button>}<button type="button" className={`local-status ${incognito ? 'incognito' : ''}`} aria-pressed={incognito} title={incognito ? 'Nothing is saved. This visit works like the first open.' : 'Runs entirely in your browser'} onClick={onToggleIncognito}><span className="status-dot" /><b>{incognito ? 'Incognito Mode' : 'Private by design'}</b>{incognito ? <EyeOff size={16} /> : <ShieldCheck size={16} />}</button><button className="clear-data" onClick={onClear}><Settings2 size={14} /> Saved data & preferences</button><button className={`clear-data ${active === 'licenses' ? 'selected' : ''}`} onClick={onNavigateLicenses}><Scale size={14} /> Third-party notices</button><div className="sidebar-foot"><span>SUPERCHARGER</span><span>v1.0 · STAGE 01</span></div></div>
       </div>
       <ResizeHandle axis="x" label="Resize sidebar width" value={saved.sidebarWidth || 260} min={220} max={480} onChange={onSidebarWidth} onReset={() => onSidebarWidth(260)} />
     </aside>
@@ -118,11 +118,11 @@ function ToolNavItem({ tool, active, saved, onFavorite, onClick, reorder }) {
   </div>
 }
 
-function TopBar({ current, theme, setTheme, menuOpen, onMenu, onOpenMenu, onBack, onForward, canBack, canForward, search, setSearch }) {
+function TopBar({ current, theme, setTheme, incognito, onToggleIncognito, menuOpen, onMenu, onOpenMenu, onBack, onForward, canBack, canForward, search, setSearch }) {
   const icon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Settings2, ThemeIcon = icon
   const title = current?.name || 'Your everyday toolkit'
   const licensesPage = current?.id === 'licenses'
-  return <header className="topbar"><div className="topbar-left"><button className="mobile-menu" aria-label={menuOpen ? 'Hide sidebar' : 'Show sidebar'} aria-expanded={menuOpen} aria-controls="sidebar-navigation" onClick={onMenu}><Menu size={19} /></button><div className="history-buttons"><button title="Go back" disabled={!canBack} onClick={onBack}><ArrowLeft size={15} /></button><button title="Go forward" disabled={!canForward} onClick={onForward}><ArrowRight size={15} /></button></div><span className="crumb">{licensesPage ? <><span>WORKSPACE</span><i>/</i><b>THIRD-PARTY NOTICES</b></> : current ? <><span>TOOLS</span><i>/</i><b>{title}</b></> : <><span>WORKSPACE</span><i>/</i><b>OVERVIEW</b></>}</span></div><div className="topbar-right"><div className="top-search" onClick={() => { if (window.matchMedia('(max-width: 760px)').matches) { onOpenMenu(); window.setTimeout(() => document.querySelector('.sidebar-search input')?.focus(), 230) } }}><Search size={15} /><input aria-label="Search tools" placeholder="Search tools" value={search} onChange={e => setSearch(e.target.value)} /><kbd><Command size={10} /> K</kbd></div><button className="theme-button" title={`Theme: ${theme}`} aria-label={`Theme is ${theme}; change theme`} onClick={() => setTheme(theme === 'system' ? 'dark' : theme === 'dark' ? 'light' : 'system')}><ThemeIcon size={17} /><ChevronDown size={11} /></button></div></header>
+  return <header className="topbar"><div className="topbar-left"><button className="mobile-menu" aria-label={menuOpen ? 'Hide sidebar' : 'Show sidebar'} aria-expanded={menuOpen} aria-controls="sidebar-navigation" onClick={onMenu}><Menu size={19} /></button><div className="history-buttons"><button title="Go back" disabled={!canBack} onClick={onBack}><ArrowLeft size={15} /></button><button title="Go forward" disabled={!canForward} onClick={onForward}><ArrowRight size={15} /></button></div><span className="crumb">{licensesPage ? <><span>WORKSPACE</span><i>/</i><b>THIRD-PARTY NOTICES</b></> : current ? <><span>TOOLS</span><i>/</i><b>{title}</b></> : <><span>WORKSPACE</span><i>/</i><b>OVERVIEW</b></>}</span></div><div className="topbar-right"><div className="top-search" onClick={() => { if (window.matchMedia('(max-width: 760px)').matches) { onOpenMenu(); window.setTimeout(() => document.querySelector('.sidebar-search input')?.focus(), 230) } }}><Search size={15} /><input aria-label="Search tools" placeholder="Search tools" value={search} onChange={e => setSearch(e.target.value)} /><kbd><Command size={10} /> K</kbd></div><button className={`incognito-button ${incognito ? 'incognito' : ''}`} aria-pressed={incognito} title={incognito ? 'Incognito mode is on. Nothing is saved.' : 'Incognito mode'} aria-label={incognito ? 'Turn off incognito mode' : 'Turn on incognito mode'} onClick={onToggleIncognito}><EyeOff size={17} /></button><button className="theme-button" title={`Theme: ${theme}`} aria-label={`Theme is ${theme}; change theme`} onClick={() => setTheme(theme === 'system' ? 'dark' : theme === 'dark' ? 'light' : 'system')}><ThemeIcon size={17} /><ChevronDown size={11} /></button></div></header>
 }
 
 function HomePage({ saved, onNavigate, onFavorite }) {
@@ -147,13 +147,15 @@ function ToolPage({ tool, saved, setToolData, toggleFavorite }) {
   return <div className="tool-page"><div className="tool-heading"><div className="tool-heading-copy"><h1><ToolBadge tool={tool} large />{tool.name}</h1><p>{tool.description}</p></div><button aria-pressed={isFavorite} aria-label={`${isFavorite ? 'Remove' : 'Add'} ${tool.name} ${isFavorite ? 'from' : 'to'} favorites`} className={`favorite-button ${isFavorite ? 'is-favorite' : ''}`} onClick={() => toggleFavorite(tool.id)}><span>★</span>{isFavorite ? 'Favorited' : 'Add favorite'}</button></div><div className="tool-workspace" style={{ height: data.workspaceHeight ? `${data.workspaceHeight}px` : undefined }}>{renderTool(tool.id, { data, setData: patch => setToolData(tool.id, patch) })}<ResizeHandle axis="y" label="Resize tool workspace height" value={data.workspaceHeight} min={240} max={2400} onChange={workspaceHeight => setToolData(tool.id, { workspaceHeight })} onReset={() => setToolData(tool.id, { workspaceHeight: undefined })} /></div><div className="tool-bottom-note"><span>POWERED BY YOUR BROWSER</span><span>YOUR DATA DOESN’T LEAVE THIS DEVICE <ShieldCheck size={13} /></span></div></div>
 }
 
-function Preferences({ saved, onClose, onTheme, onSaveSensitiveData, onClear, pwa }) {
-  return <div className="modal-scrim" onClick={onClose}><section className="preferences-modal" onClick={e => e.stopPropagation()}><div className="modal-heading"><div><span className="eyebrow">WORKSPACE</span><h2>Saved data & preferences</h2></div><button className="icon-only" onClick={onClose} aria-label="Close"><X size={18} /></button></div><div className="preference-row"><div><b>Color theme</b><small>Choose how the toolbox looks.</small></div><select value={saved.theme} onChange={e => onTheme(e.target.value)}><option value="system">Follow system</option><option value="dark">Dark</option><option value="light">Light</option></select></div><div className="preference-row"><div><b>Always saved locally</b><small>Favorites, recent tools, theme, navigation, and tool options.</small></div><span className="local-tag"><ShieldCheck size={14} /> ON THIS DEVICE</span></div><div className="preference-row"><div><b id="save-sensitive-label">Save tool inputs & generated text</b><small id="save-sensitive-description">Off by default. When off, text stays in this session and previously saved text is removed.</small></div><input className="preference-checkbox" type="checkbox" checked={saved.saveSensitiveData === true} aria-labelledby="save-sensitive-label" aria-describedby="save-sensitive-description" onChange={e => onSaveSensitiveData(e.target.checked)} /></div><div className="preference-row install-preference"><div><b>Install Supercharger</b><small>{pwa.installed ? 'Installed. Open Supercharger from your apps.' : pwa.available ? 'Open in its own window and use tools offline.' : 'In Chrome, use the address bar install icon or the install option in the browser menu.'}</small>{pwa.error && <small role="alert">{pwa.error}</small>}</div>{pwa.installed ? <span className="local-tag"><Check size={14} /> INSTALLED</span> : pwa.available && <button className="install-app-button" onClick={pwa.install} disabled={pwa.installing}><Download size={14} />{pwa.installing ? 'Installing…' : 'Install app'}</button>}</div><div className="modal-footer"><span>Clear all saved toolbox data from this browser.</span><button className="danger-button" onClick={onClear}>Clear saved data</button></div></section></div>
+function Preferences({ saved, incognito, onClose, onTheme, onSaveSensitiveData, onAlwaysIncognito, onClear, pwa }) {
+  return <div className="modal-scrim" onClick={onClose}><section className="preferences-modal" onClick={e => e.stopPropagation()}><div className="modal-heading"><div><span className="eyebrow">WORKSPACE</span><h2>Saved data & preferences</h2></div><button className="icon-only" onClick={onClose} aria-label="Close"><X size={18} /></button></div><div className="preference-row"><div><b>Color theme</b><small>Choose how the toolbox looks.</small></div><select value={saved.theme} onChange={e => onTheme(e.target.value)}><option value="system">Follow system</option><option value="dark">Dark</option><option value="light">Light</option></select></div><div className="preference-row"><div><b>Always saved locally</b><small>Favorites, recent tools, theme, navigation, and tool options.</small></div><span className="local-tag"><ShieldCheck size={14} /> ON THIS DEVICE</span></div><div className="preference-row"><div><b id="save-sensitive-label">Save tool inputs & generated text</b><small id="save-sensitive-description">Off by default. When off, text stays in this session and previously saved text is removed.</small></div><input className="preference-checkbox" type="checkbox" checked={!incognito && saved.saveSensitiveData === true} disabled={incognito} aria-labelledby="save-sensitive-label" aria-describedby="save-sensitive-description" onChange={e => onSaveSensitiveData(e.target.checked)} /></div><div className="preference-row"><div><b id="always-incognito-label">Always enable incognito mode</b><small id="always-incognito-description">Each visit starts blank. Favorites, theme, and tool text from this mode are not saved.</small></div><input className="preference-checkbox" type="checkbox" checked={saved.alwaysIncognito === true} aria-labelledby="always-incognito-label" aria-describedby="always-incognito-description" onChange={e => onAlwaysIncognito(e.target.checked)} /></div><div className="preference-row install-preference"><div><b>Install Supercharger</b><small>{pwa.installed ? 'Installed. Open Supercharger from your apps.' : pwa.available ? 'Open in its own window and use tools offline.' : 'In Chrome, use the address bar install icon or the install option in the browser menu.'}</small>{pwa.error && <small role="alert">{pwa.error}</small>}</div>{pwa.installed ? <span className="local-tag"><Check size={14} /> INSTALLED</span> : pwa.available && <button className="install-app-button" onClick={pwa.install} disabled={pwa.installing}><Download size={14} />{pwa.installing ? 'Installing…' : 'Install app'}</button>}</div><div className="modal-footer"><span>Clear all saved toolbox data from this browser.</span><button className="danger-button" onClick={onClear}>Clear saved data</button></div></section></div>
 }
 
 export default function App() {
   const pwa = usePwaInstall()
-  const [saved, setSaved] = useState(readSaved)
+  const [boot] = useState(() => sessionFromSaved(readSaved()))
+  const [incognito, setIncognito] = useState(boot.incognito)
+  const [saved, setSaved] = useState(boot.saved)
   const [active, setActive] = useState(getRoute)
   const [search, setSearch] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -172,9 +174,12 @@ export default function App() {
   useEffect(() => { const update = () => setActive(getRoute()); window.addEventListener('hashchange', update); return () => window.removeEventListener('hashchange', update) }, [])
   useEffect(() => { document.documentElement.dataset.theme = saved.theme }, [saved.theme])
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedSaved(saved))); setSaveError(false) }
-    catch { setSaveError(true) }
-  }, [saved])
+    try {
+      if (incognito && readSaved().alwaysIncognito === (saved.alwaysIncognito === true)) return
+      writeSaved(saved, { incognito })
+      setSaveError(false)
+    } catch { setSaveError(true) }
+  }, [saved, incognito])
   useEffect(() => {
     const focusSearch = () => { if (window.matchMedia('(max-width: 760px)').matches) setMobileOpen(true); else setSidebarCollapsed(false); window.setTimeout(() => document.querySelector('.sidebar-search input')?.focus(), 230) }
     const handler = e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); focusSearch() } else if (e.key === '/' && !['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) { e.preventDefault(); focusSearch() } else if (e.key === 'Escape') { setMobileOpen(false); setShowPreferences(false) } }
@@ -202,9 +207,19 @@ export default function App() {
       return { ...s, favorites }
     })
   }
-  function clearSaved() { if (!window.confirm('Clear all saved inputs, generated text, favorites, and preferences from this browser?')) return; localStorage.removeItem(STORAGE_KEY); setSaved(emptySaved); setShowPreferences(false) }
+  function toggleIncognito() {
+    if (incognito) { setIncognito(false); setSaved({ ...readSaved(), alwaysIncognito: false }); return }
+    setIncognito(true)
+    setSaved(s => ({ ...emptySaved, alwaysIncognito: s.alwaysIncognito === true }))
+  }
+  function onAlwaysIncognito(on) {
+    if (on) { setIncognito(true); setSaved({ ...emptySaved, alwaysIncognito: true }); return }
+    setIncognito(false)
+    setSaved({ ...readSaved(), alwaysIncognito: false })
+  }
+  function clearSaved() { if (!window.confirm('Clear all saved inputs, generated text, favorites, and preferences from this browser?')) return; localStorage.removeItem(STORAGE_KEY); setIncognito(false); setSaved(emptySaved); setShowPreferences(false) }
   const [historyState, setHistoryState] = useState({ back: false, forward: false })
   useEffect(() => { const sync = () => { setHistoryState({ back: history.length > 1, forward: false }) }; addEventListener('popstate', sync); return () => removeEventListener('popstate', sync) }, [])
 
-  return <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`} style={{ '--sidebar-width': `${Math.max(220, Math.min(480, Number(saved.sidebarWidth) || 260))}px` }}><Sidebar onSidebarWidth={sidebarWidth => setSaved(s => ({ ...s, sidebarWidth }))} active={active} saved={saved} search={search} setSearch={setSearch} onNavigate={navigate} onNavigateLicenses={() => navigate('licenses')} onFavorite={toggleFavorite} onReorderFavorite={reorderFavorite} onToggleSection={toggleSection} onClear={() => setShowPreferences(true)} pwa={pwa} mobileOpen={mobileOpen} closeMobile={() => setMobileOpen(false)} /><div className="main-column"><TopBar current={current} theme={saved.theme} setTheme={theme => setSaved(s => ({ ...s, theme }))} menuOpen={isMobile ? mobileOpen : !sidebarCollapsed} onMenu={() => { if (isMobile) setMobileOpen(open => !open); else setSidebarCollapsed(collapsed => !collapsed) }} onOpenMenu={() => setMobileOpen(true)} onBack={() => history.back()} onForward={() => history.forward()} canBack={historyState.back} canForward={historyState.forward} search={search} setSearch={setSearch} /><main className="main-content">{active === 'licenses' ? <LicensesPage /> : active === 'home' || !tools.some(t => t.id === active) ? <HomePage saved={saved} onNavigate={navigate} onFavorite={toggleFavorite} /> : <ToolPage tool={current} saved={saved} setToolData={setToolData} toggleFavorite={toggleFavorite} />}</main>{saveError && <div className="save-warning">Browser storage is full. This session will continue without saving new changes.</div>}<StatusToast /></div>{showPreferences && <Preferences pwa={pwa} saved={saved} onClose={() => setShowPreferences(false)} onTheme={theme => setSaved(s => ({ ...s, theme }))} onSaveSensitiveData={saveSensitiveData => setSaved(s => ({ ...s, saveSensitiveData }))} onClear={clearSaved} />}</div>
+  return <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`} style={{ '--sidebar-width': `${Math.max(220, Math.min(480, Number(saved.sidebarWidth) || 260))}px` }}><Sidebar incognito={incognito} onToggleIncognito={toggleIncognito} onSidebarWidth={sidebarWidth => setSaved(s => ({ ...s, sidebarWidth }))} active={active} saved={saved} search={search} setSearch={setSearch} onNavigate={navigate} onNavigateLicenses={() => navigate('licenses')} onFavorite={toggleFavorite} onReorderFavorite={reorderFavorite} onToggleSection={toggleSection} onClear={() => setShowPreferences(true)} pwa={pwa} mobileOpen={mobileOpen} closeMobile={() => setMobileOpen(false)} /><div className="main-column"><TopBar current={current} theme={saved.theme} setTheme={theme => setSaved(s => ({ ...s, theme }))} incognito={incognito} onToggleIncognito={toggleIncognito} menuOpen={isMobile ? mobileOpen : !sidebarCollapsed} onMenu={() => { if (isMobile) setMobileOpen(open => !open); else setSidebarCollapsed(collapsed => !collapsed) }} onOpenMenu={() => setMobileOpen(true)} onBack={() => history.back()} onForward={() => history.forward()} canBack={historyState.back} canForward={historyState.forward} search={search} setSearch={setSearch} /><main className="main-content">{active === 'licenses' ? <LicensesPage /> : active === 'home' || !tools.some(t => t.id === active) ? <HomePage saved={saved} onNavigate={navigate} onFavorite={toggleFavorite} /> : <ToolPage tool={current} saved={saved} setToolData={setToolData} toggleFavorite={toggleFavorite} />}</main>{saveError && <div className="save-warning">Browser storage is full. This session will continue without saving new changes.</div>}<StatusToast /></div>{showPreferences && <Preferences pwa={pwa} saved={saved} incognito={incognito} onClose={() => setShowPreferences(false)} onTheme={theme => setSaved(s => ({ ...s, theme }))} onSaveSensitiveData={saveSensitiveData => setSaved(s => ({ ...s, saveSensitiveData }))} onAlwaysIncognito={onAlwaysIncognito} onClear={clearSaved} />}</div>
 }

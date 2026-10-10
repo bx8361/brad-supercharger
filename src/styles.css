@@ -37,11 +37,11 @@ kbd { display:inline-flex;align-items:center;gap:3px;white-space:nowrap;padding:
 .nav-favorite:hover,.nav-favorite.is-favorite,.favorite-mark { color:var(--accent); }
 .empty-search { color:var(--muted);font-size:14.5px;padding:0 10px; }
 .sidebar-bottom { padding:12px 2px 0; }
-.local-status { display:flex;align-items:center;gap:9px;padding:11px 9px;margin-bottom:7px;border:1px solid var(--border-soft);border-radius:7px;background:var(--bg);color:var(--muted); }
-.local-status>div { flex:1; }
-.local-status b,.local-status small { display:block; }
-.local-status b { color:var(--text);font-size:12px;font-weight:600; }
-.local-status small { margin-top:3px;color:var(--muted-2);font-size:11px; }
+.local-status { display:flex;align-items:center;gap:9px;width:100%;padding:6px 9px;margin-bottom:7px;border:1px solid var(--border-soft);border-radius:7px;background:var(--bg);color:var(--muted);text-align:left; }
+.local-status b { flex:1;color:var(--text);font-size:12px;font-weight:600;line-height:1.2; }
+.local-status.incognito { border-color:#e2b340;background:#3a2c09;color:#ffe7a3;box-shadow:0 0 0 1px #e2b34066; }
+.local-status.incognito b { color:#ffe7a3; }
+.local-status.incognito .status-dot { background:#ffd15c;box-shadow:0 0 10px #ffd15c; }
 .status-dot { width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px #b8f46788; }
 .clear-data { width:100%;height:30px;display:flex;align-items:center;gap:7px;padding:0 9px;border:0;background:none;color:var(--muted);font-size:12px;text-align:left; }
 .clear-data:hover { color:var(--text); }
@@ -52,8 +52,9 @@ kbd { display:inline-flex;align-items:center;gap:3px;white-space:nowrap;padding:
 .topbar-left,.topbar-right,.history-buttons { display:flex;align-items:center; }
 .topbar-left { gap:15px; }
 .history-buttons { gap:4px; }
-.history-buttons button,.theme-button,.mobile-menu { width:27px;height:27px;display:grid;place-items:center;border:0;border-radius:5px;background:transparent;color:var(--muted); }
-.history-buttons button:hover,.theme-button:hover { color:var(--text);background:var(--surface-3); }
+.history-buttons button,.theme-button,.incognito-button,.mobile-menu { width:27px;height:27px;display:grid;place-items:center;border:0;border-radius:5px;background:transparent;color:var(--muted); }
+.history-buttons button:hover,.theme-button:hover,.incognito-button:hover { color:var(--text);background:var(--surface-3); }
+.incognito-button.incognito,.incognito-button.incognito:hover { color:#ffe7a3;background:#3a2c09;box-shadow:inset 0 0 0 1px #e2b340; }
 .history-buttons button:disabled { opacity:.32;cursor:default; }
 .crumb { display:flex;align-items:center;gap:9px;font:12px 'DM Mono',monospace;letter-spacing:.65px; }
 .crumb span,.crumb i { color:var(--muted-2);font-style:normal; }

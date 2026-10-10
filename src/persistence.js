@@ -1,7 +1,7 @@
 export const STORAGE_KEY = 'brads-supercharger:v1'
 export const emptySaved = {
   theme: 'system', favorites: [], recent: [], tools: {}, collapsedSections: {},
-  saveSensitiveData: false, sidebarWidth: 260,
+  saveSensitiveData: false, sidebarWidth: 260, alwaysIncognito: false,
 }
 
 // Only known tool options may be saved without consent. New fields default to private.
@@ -31,8 +31,21 @@ export function persistedSaved(saved) {
   )
   return {
     version: 1, theme: saved.theme, favorites: saved.favorites, recent: saved.recent,
-    collapsedSections: saved.collapsedSections, sidebarWidth: saved.sidebarWidth, saveSensitiveData, tools,
+    collapsedSections: saved.collapsedSections, sidebarWidth: saved.sidebarWidth, saveSensitiveData,
+    alwaysIncognito: saved.alwaysIncognito === true, tools,
   }
+}
+
+// ponytail: incognito is session-only; alwaysIncognito is the one field written back so the next launch stays blank
+export function writeSaved(saved, { incognito = false, storage = localStorage } = {}) {
+  const alwaysIncognito = saved.alwaysIncognito === true
+  const next = incognito ? persistedSaved({ ...readSaved(storage), alwaysIncognito }) : persistedSaved(saved)
+  storage.setItem(STORAGE_KEY, JSON.stringify(next))
+}
+
+export function sessionFromSaved(stored) {
+  if (stored.alwaysIncognito !== true) return { incognito: false, saved: stored }
+  return { incognito: true, saved: { ...emptySaved, alwaysIncognito: true } }
 }
 
 export function readSaved(storage = localStorage) {

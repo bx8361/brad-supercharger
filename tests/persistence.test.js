@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { emptySaved, persistedSaved, readSaved } from '../src/persistence.js'
+import { emptySaved, persistedSaved, readSaved, sessionFromSaved, writeSaved } from '../src/persistence.js'
 
 const tools = {
   json: { input: 'private JSON', mode: 'minify', indent: '4' },
@@ -63,6 +63,25 @@ test('missing, corrupt, or inaccessible storage uses private defaults', () => {
   }
 })
 
+
+test('incognito leaves stored data in place and keeps only the always flag', () => {
+  let raw = JSON.stringify(persistedSaved({ ...state, saveSensitiveData: true, sidebarWidth: 340 }))
+  const storage = { getItem: () => raw, setItem: (_key, value) => { raw = value } }
+  writeSaved({ ...emptySaved, alwaysIncognito: true, tools: { json: { input: 'session only' } }, favorites: [] }, { incognito: true, storage })
+  const after = JSON.parse(raw)
+  assert.equal(after.alwaysIncognito, true)
+  assert.equal(after.sidebarWidth, 340)
+  assert.equal(after.tools.json.input, 'private JSON')
+  assert.deepEqual(after.favorites, ['json'])
+  assert.deepEqual(sessionFromSaved(after), { incognito: true, saved: { ...emptySaved, alwaysIncognito: true } })
+})
+
+test('always incognito stays off unless it is exactly true', () => {
+  assert.equal(sessionFromSaved(readSaved(storage({ version: 1, favorites: ['json'] }))).incognito, false)
+  for (const alwaysIncognito of ['true', 1, {}, null]) {
+    assert.equal(readSaved(storage({ version: 1, alwaysIncognito })).alwaysIncognito, false)
+  }
+})
 
 test('workspace dimensions survive reload without saving tool text', () => {
   const saved = persistedSaved({ ...state, sidebarWidth: 340, tools: {
