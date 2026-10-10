@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { formatJson, formatSql, formatXml } from '../src/formatOps.js'
-import { findRanges, paint } from '../src/highlight.js'
+import { findRanges, paint, replaceRanges } from '../src/highlight.js'
 
 test('json sort orders keys at every level', () => {
   const input = '{"b":1,"a":{"z":true,"m":[ {"d":1,"c":2} ]}}'
@@ -57,9 +57,18 @@ test('xml formatter indents and can break attributes', () => {
 
 test('find ranges and highlight marks cover the query', () => {
   assert.deepEqual(findRanges('Ab ab', 'ab'), [{ start: 0, end: 2 }, { start: 3, end: 5 }])
+  assert.deepEqual(findRanges('Ab ab', 'ab', { caseSensitive: true }), [{ start: 3, end: 5 }])
+  assert.deepEqual(findRanges('cat cats', 'cat', { wholeWord: true }), [{ start: 0, end: 3 }])
+  assert.deepEqual(findRanges('a1 b2', '\\d', { regex: true }), [{ start: 1, end: 2 }, { start: 4, end: 5 }])
+  assert.deepEqual(findRanges('a', '(', { regex: true }), [])
   const parts = paint('{"a":1}', 'json', findRanges('{"a":1}', 'a'), 0)
   const commented = paint('{ "a": 1, // note\n "b": "http://x" /* keep */ }', 'json')
   assert.deepEqual(commented.filter(part => part.kind === 'comment').map(part => part.text), ['// note', '/* keep */'])
   assert.equal(parts.map(part => part.text).join(''), '{"a":1}')
   assert.equal(parts.find(part => part.find).text, 'a')
+  assert.equal(replaceRanges('Ab ab', 'ab', 'X', {}, 0), 'X ab')
+  assert.equal(replaceRanges('ab ab', 'ab', '$', {}), '$ $')
+  assert.equal(replaceRanges('cat cats', 'cat', 'dog', { wholeWord: true }), 'dog cats')
+  assert.equal(replaceRanges('a1 b2', '(\\d)', '[$1]', { regex: true }), 'a[1] b[2]')
+  assert.equal(replaceRanges('a1 b2', '(\\d)', '[$1]', { regex: true }, 1), 'a1 b[2]')
 })

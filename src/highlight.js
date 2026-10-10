@@ -67,19 +67,61 @@ const scanners = {
   sql: text => scan(text, sqlRe, classifySql),
 }
 
-export function findRanges(text, query) {
-  if (!query) return []
-  const hay = text.toLowerCase()
-  const needle = query.toLowerCase()
+export function findPattern(query, { caseSensitive = false, wholeWord = false, regex = false } = {}) {
+  if (!query) return null
+  let source = regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  if (wholeWord) source = `\\b(?:${source})\\b`
+  return new RegExp(source, caseSensitive ? 'gm' : 'gim')
+}
+
+export function findRanges(text, query, options) {
+  let re
+  try { re = findPattern(query, options) } catch { return [] }
+  if (!re) return []
   const ranges = []
-  let index = 0
-  while (ranges.length < 500) {
-    const at = hay.indexOf(needle, index)
-    if (at < 0) break
-    ranges.push({ start: at, end: at + needle.length })
-    index = at + Math.max(needle.length, 1)
+  let match
+  while ((match = re.exec(text)) && ranges.length < 500) {
+    ranges.push({ start: match.index, end: match.index + match[0].length })
+    if (re.lastIndex === match.index) re.lastIndex++
   }
   return ranges
+}
+
+function substitute(replacement, match, groups, named, offset, text) {
+  return replacement.replace(/\$\$|\$&|\$`|\$'|\$<([^>]*)>|\$(\d{1,2})/g, (token, name, num) => {
+    if (token === '$$') return '$'
+    if (token === '$&') return match
+    if (token === '$`') return text.slice(0, offset)
+    if (token === "$'") return text.slice(offset + match.length)
+    if (name != null) return named?.[name] ?? ''
+    let n = Number(num)
+    if (n > groups.length && num.length === 2) {
+      const first = Number(num[0])
+      if (first > 0 && first <= groups.length) return (groups[first - 1] ?? '') + num[1]
+    }
+    if (n > 0 && n <= groups.length) return groups[n - 1] ?? ''
+    return token
+  })
+}
+
+export function replaceRanges(text, query, replacement, options = {}, index) {
+  let re
+  try { re = findPattern(query, options) } catch { return text }
+  if (!re) return text
+  const literal = !options.regex
+  const one = index != null
+  if (!one && !literal) return text.replace(re, replacement)
+  let n = 0
+  return text.replace(re, (...args) => {
+    const match = args[0]
+    if (one && n++ !== index) return match
+    if (literal) return replacement
+    const named = args.at(-1) && typeof args.at(-1) === 'object' ? args.at(-1) : undefined
+    const string = named ? args.at(-2) : args.at(-1)
+    const offset = named ? args.at(-3) : args.at(-2)
+    const groups = args.slice(1, named ? -3 : -2)
+    return substitute(replacement, match, groups, named, offset, string)
+  })
 }
 
 function splitMarks(parts, ranges, active) {

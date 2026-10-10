@@ -4,7 +4,7 @@ import { diffLines, diffWordsWithSpace } from 'diff'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { parse as parseYAML, stringify as stringifyYAML } from 'yaml'
-import { ClipboardPaste, Clock3, Copy, Download, ExternalLink, FileUp, Fingerprint, GripHorizontal, GripVertical, LockKeyhole, Maximize2, Minimize2, Pause, Play, RefreshCw, Save, Search, Sparkles, Trash2, X } from 'lucide-react'
+import { CaseSensitive, ClipboardPaste, Clock3, Copy, Download, ExternalLink, FileUp, Fingerprint, GripHorizontal, GripVertical, LockKeyhole, Maximize2, Minimize2, Pause, Play, RefreshCw, Regex, Replace, Save, Search, Sparkles, Trash2, WholeWord, X } from 'lucide-react'
 import QRCode from 'qrcode'
 import jsQR from 'jsqr'
 import { initialSamples, jsxGraphExamples, mermaidExamples } from './catalog.js'
@@ -16,7 +16,7 @@ import {
   parseDataUrl, toDataUrl,
 } from './encodeOps.js'
 import { formatJson, formatSql, formatXml, sqlLanguages } from './formatOps.js'
-import { findRanges, paint } from './highlight.js'
+import { findPattern, findRanges, paint, replaceRanges } from './highlight.js'
 import { convertFromBase } from './numberBaseOps.js'
 import { compareDigests, generateLipsum, generateUuid } from './generateOps.js'
 import { decryptShareText, encryptShareText } from './cryptoShareOps.js'
@@ -86,14 +86,30 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   const areaRef = useRef(null)
   const layerRef = useRef(null)
   const findRef = useRef(null)
+  const replaceRef = useRef(null)
+  const focusFind = useRef(true)
   const [findOpen, setFindOpen] = useState(false)
+  const [replaceOpen, setReplaceOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [replacement, setReplacement] = useState('')
+  const [caseSensitive, setCaseSensitive] = useState(false)
+  const [wholeWord, setWholeWord] = useState(false)
+  const [regex, setRegex] = useState(false)
   const [active, setActive] = useState(0)
   const text = value ?? ''
-  const ranges = useMemo(() => findRanges(text, findOpen ? query : ''), [text, query, findOpen])
+  const findOpts = useMemo(() => ({ caseSensitive, wholeWord, regex }), [caseSensitive, wholeWord, regex])
+  const ranges = useMemo(() => findRanges(text, findOpen ? query : '', findOpts), [text, query, findOpen, findOpts])
+  const findError = useMemo(() => {
+    if (!regex || !query) return ''
+    try { findPattern(query, findOpts); return '' } catch (error) { return error.message }
+  }, [regex, query, findOpts])
   const current = ranges.length ? active % ranges.length : 0
   const parts = useMemo(() => paint(text, error ? '' : language, ranges, current), [text, error, language, ranges, current])
-  useEffect(() => { if (findOpen) findRef.current?.focus() }, [findOpen])
+  useEffect(() => {
+    if (!findOpen) return
+    const field = focusFind.current ? findRef.current : replaceRef.current
+    field?.focus()
+  }, [findOpen, replaceOpen])
   useLayoutEffect(() => {
     const area = areaRef.current
     const layer = layerRef.current
@@ -117,22 +133,83 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     if (!ranges.length) return
     setActive(index => (index + step + ranges.length) % ranges.length)
   }
+  function closeFind(focusArea) {
+    setFindOpen(false)
+    setReplaceOpen(false)
+    setQuery('')
+    setReplacement('')
+    if (focusArea) areaRef.current?.focus()
+  }
+  function showFind() {
+    focusFind.current = true
+    setFindOpen(true)
+    findRef.current?.focus()
+  }
+  function showReplace() {
+    if (!onChange || readOnly) return showFind()
+    focusFind.current = false
+    setFindOpen(true)
+    setReplaceOpen(true)
+    replaceRef.current?.focus()
+  }
+  function toggleOpt(setFlag) {
+    setFlag(value => !value)
+    setActive(0)
+  }
+  function applyReplace(all) {
+    if (!onChange || readOnly || !ranges.length || findError) return
+    if (all) {
+      onChange(replaceRanges(text, query, replacement, findOpts))
+      setActive(0)
+      return
+    }
+    const range = ranges[current]
+    const next = replaceRanges(text, query, replacement, findOpts, current)
+    onChange(next)
+    const cursor = range.end + next.length - text.length
+    const nextRanges = findRanges(next, query, findOpts)
+    const at = nextRanges.findIndex(item => item.start >= cursor)
+    setActive(at < 0 ? 0 : at)
+  }
   return <section className={`editor-card${output ? ' output-card' : ''}${error ? ' has-error' : ''}`}>
-    <div className="panel-top">{output ? <span>{label}</span> : <label>{label}</label>}<div className="panel-actions"><button type="button" className="icon-action" title="Find in this text (Ctrl+F)" aria-label={`Find in ${label}`} onClick={() => setFindOpen(true)}><Search size={14} /></button>{actions}</div></div>
+    <div className="panel-top">{output ? <span>{label}</span> : <label>{label}</label>}<div className="panel-actions"><button type="button" className="icon-action" title="Find in this text (Ctrl+F)" aria-label={`Find in ${label}`} onClick={() => { setReplaceOpen(false); showFind() }}><Search size={14} /></button>{onChange && !readOnly && <button type="button" className="icon-action" title="Replace in this text (Ctrl+H)" aria-label={`Replace in ${label}`} onClick={showReplace}><Replace size={14} /></button>}{actions}</div></div>
     {findOpen && <div className="find-bar">
-      <input ref={findRef} value={query} aria-label={`Find in ${label}`} placeholder="Find" spellCheck="false" onChange={e => { setQuery(e.target.value); setActive(0) }} onKeyDown={e => {
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); e.currentTarget.select() }
-        if (e.key === 'Escape') { e.preventDefault(); setFindOpen(false); setQuery(''); areaRef.current?.focus() }
-        if (e.key === 'Enter') { e.preventDefault(); cycle(e.shiftKey ? -1 : 1) }
-      }} />
-      <span className="find-count">{ranges.length ? current + 1 : 0}/{ranges.length}</span>
-      <button type="button" className="icon-action" aria-label="Previous match" onClick={() => cycle(-1)}>↑</button>
-      <button type="button" className="icon-action" aria-label="Next match" onClick={() => cycle(1)}>↓</button>
-      <button type="button" className="icon-action" aria-label="Close find" onClick={() => { setFindOpen(false); setQuery('') }}><X size={14} /></button>
+      <div className="find-row">
+        <input ref={findRef} className={findError ? 'find-bad' : undefined} value={query} aria-label={`Find in ${label}`} aria-invalid={findError ? true : undefined} title={findError || undefined} placeholder="Find" spellCheck="false" onChange={e => { setQuery(e.target.value); setActive(0) }} onKeyDown={e => {
+          const mod = e.metaKey || e.ctrlKey
+          if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); e.currentTarget.select() }
+          if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); showReplace() }
+          if (e.key === 'Escape') { e.preventDefault(); closeFind(true) }
+          if (e.key === 'Enter') { e.preventDefault(); cycle(e.shiftKey ? -1 : 1) }
+        }} />
+        <button type="button" className="icon-action find-opt" aria-pressed={caseSensitive} title="Match case" aria-label="Match case" onClick={() => toggleOpt(setCaseSensitive)}><CaseSensitive size={14} /></button>
+        <button type="button" className="icon-action find-opt" aria-pressed={wholeWord} title="Match whole word" aria-label="Match whole word" onClick={() => toggleOpt(setWholeWord)}><WholeWord size={14} /></button>
+        <button type="button" className="icon-action find-opt" aria-pressed={regex} title="Use regular expression" aria-label="Use regular expression" onClick={() => toggleOpt(setRegex)}><Regex size={14} /></button>
+        <span className="find-count">{ranges.length ? current + 1 : 0}/{ranges.length}</span>
+        <button type="button" className="icon-action" aria-label="Previous match" onClick={() => cycle(-1)}>↑</button>
+        <button type="button" className="icon-action" aria-label="Next match" onClick={() => cycle(1)}>↓</button>
+        <button type="button" className="icon-action" aria-label="Close find" onClick={() => closeFind(false)}><X size={14} /></button>
+      </div>
+      {replaceOpen && <div className="find-row">
+        <input ref={replaceRef} value={replacement} aria-label={`Replace in ${label}`} placeholder="Replace" spellCheck="false" onChange={e => setReplacement(e.target.value)} onKeyDown={e => {
+          const mod = e.metaKey || e.ctrlKey
+          if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); showFind() }
+          if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); e.currentTarget.select() }
+          if (e.key === 'Escape') { e.preventDefault(); closeFind(true) }
+          if (e.key === 'Enter') { e.preventDefault(); applyReplace(mod) }
+        }} />
+        <button type="button" className="icon-action" title="Replace (Enter)" disabled={!ranges.length || !!findError} onClick={() => applyReplace(false)}>Replace</button>
+        <button type="button" className="icon-action" title="Replace all (Ctrl+Enter)" disabled={!ranges.length || !!findError} onClick={() => applyReplace(true)}>All</button>
+      </div>}
     </div>}
     <div className={`code-shell${lineWrap ? ' wrap-lines' : ''}${multiline === false ? ' single-line' : ''}`}>
       {parts && <pre ref={layerRef} className="code-highlight" aria-hidden="true">{parts.map((part, index) => <span key={index} className={[part.kind && `tok-${part.kind}`, part.find && 'tok-find', part.current && 'current'].filter(Boolean).join(' ') || undefined}>{part.text}</span>)}</pre>}
-      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${parts ? ' syntax' : ''}`} value={text} readOnly={readOnly} onChange={onChange ? e => onChange(e.target.value) : undefined} onSelect={onSelect} onScroll={e => { if (layerRef.current) { layerRef.current.scrollTop = e.target.scrollTop; layerRef.current.scrollLeft = e.target.scrollLeft } }} onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); setFindOpen(true) } else onKeyDown?.(e) }} placeholder={placeholder} rows={lineRows} spellCheck="false" />
+      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${parts ? ' syntax' : ''}`} value={text} readOnly={readOnly} onChange={onChange ? e => onChange(e.target.value) : undefined} onSelect={onSelect} onScroll={e => { if (layerRef.current) { layerRef.current.scrollTop = e.target.scrollTop; layerRef.current.scrollLeft = e.target.scrollLeft } }} onKeyDown={e => {
+        const mod = (e.metaKey || e.ctrlKey) && !e.altKey
+        if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); showFind() }
+        else if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); showReplace() }
+        else onKeyDown?.(e)
+      }} placeholder={placeholder} rows={lineRows} spellCheck="false" />
     </div>
     {footer && <div className="panel-footer">{footer}</div>}
   </section>
