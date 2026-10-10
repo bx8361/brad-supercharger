@@ -38,6 +38,7 @@ import { renderHistogram } from "./visualization/histogram";
 import { renderBoxPlot, renderBarChart, renderLineChart } from "./visualization/box";
 import { exportPng, purgePlot } from "./visualization/plot";
 import { downloadText, matrixToCsv, rowsToCsv } from "./utils/export";
+import { subscribeLocale, t } from "../i18n.js";
 
 let appRoot: HTMLElement | null = null;
 let onViewChange: (view: "data" | "analyze" | "visualize") => void;
@@ -58,7 +59,7 @@ export function runAnalysis(): void {
   const state = getState();
   const dataset = state.dataset;
   if (!dataset) {
-    showToast(toastRoot, "Load a dataset first.", "error");
+    showToast(toastRoot, t("Load a dataset first."), "error");
     return;
   }
   const analysis = state.analysis;
@@ -72,7 +73,7 @@ export function runAnalysis(): void {
         xColumn: analysis.xColumn,
         yColumn: analysis.yColumn,
         colorColumn: analysis.colorColumn,
-        interpretation: "Direct visualization of raw data.",
+        interpretation: t("Direct visualization of raw data."),
         warnings: [],
       },
     });
@@ -200,7 +201,7 @@ function renderCharts(): void {
   if (pngButton) pngButton.disabled = !result || result.kind === "descriptive";
   if (csvButton) csvButton.disabled = !result || !["pca", "correlation", "similarity", "distance", "kmeans"].includes(result.kind);
   if (!dataset || !result) {
-    chartEl.innerHTML = '<p class="placeholder">Run an analysis or visualization to see results.</p>';
+    chartEl.innerHTML = `<p class="placeholder">${escape(t("Run an analysis or visualization to see results."))}</p>`;
     chartSecondaryEl.innerHTML = "";
     return;
   }
@@ -302,7 +303,7 @@ function renderDetailPanel(container: HTMLElement): void {
     }
   }
   if (row === null) {
-    let html = `<p class="muted">Click a chart point to inspect a sample.</p>`;
+    let html = `<p class="muted">${escape(t("Click a chart point to inspect a sample."))}</p>`;
     if (result?.interpretation) {
       html += `<p>${escape(result.interpretation)}</p>`;
       if (result.warnings.length) {
@@ -406,18 +407,18 @@ function renderDataSummary(el: HTMLElement): void {
   const missing = dataset.columns.reduce((s, c) => s + c.missingCount, 0);
   const warn =
     dataset.rows.length > 50000
-      ? '<p class="warn">Large dataset: O(n²) analyses may be slow.</p>'
+      ? `<p class="warn">${escape(t("Large dataset: O(n²) analyses may be slow."))}</p>`
       : dataset.rows.length > 10000
-        ? '<p class="warn">Dataset has 10k+ rows; some analyses may be heavy.</p>'
+        ? `<p class="warn">${escape(t("Dataset has 10k+ rows; some analyses may be heavy."))}</p>`
         : "";
   el.innerHTML = `
     ${warn}
     <dl class="stats-dl">
-      <dt>Rows</dt><dd>${dataset.rows.length}</dd>
-      <dt>Columns</dt><dd>${dataset.columns.length}</dd>
-      <dt>Numeric</dt><dd>${numeric.length}</dd>
-      <dt>Categorical</dt><dd>${categorical.length}</dd>
-      <dt>Missing values</dt><dd>${missing}</dd>
+      <dt>${escape(t("Rows"))}</dt><dd>${dataset.rows.length}</dd>
+      <dt>${escape(t("Columns"))}</dt><dd>${dataset.columns.length}</dd>
+      <dt>${escape(t("Numeric"))}</dt><dd>${numeric.length}</dd>
+      <dt>${escape(t("Categorical"))}</dt><dd>${categorical.length}</dd>
+      <dt>${escape(t("Missing values"))}</dt><dd>${missing}</dd>
     </dl>
   `;
 }
@@ -429,14 +430,14 @@ function renderMissingNote(el: HTMLElement): void {
   const strat = state.preprocessing.missingStrategy;
   const label =
     strat === "drop"
-      ? "Rows with missing values will be dropped"
+      ? t("Rows with missing values will be dropped")
       : strat === "median"
-        ? "Median imputation will be applied"
-        : "Mean imputation will be applied";
+        ? t("Median imputation will be applied")
+        : t("Mean imputation will be applied");
   el.textContent =
     n > 0
-      ? `${n} missing values in selected features. ${label}.`
-      : "No missing values in selected features.";
+      ? t("{n} missing values in selected features. {action}.", { n, action: label })
+      : t("No missing values in selected features.");
 }
 
 function exportResultCsv(): void {
@@ -475,25 +476,25 @@ export function render(): void {
   purgePlot(chartSecondaryEl);
   app.innerHTML = `
     <header class="app-header">
-      <p class="privacy">Your data stays in this browser. Files are processed locally and are not uploaded.</p>
+      <p class="privacy">${escape(t("Your data stays in this browser. Files are processed locally and are not uploaded."))}</p>
       <div class="header-actions">
-        <button type="button" id="btn-sample-iris">Load Iris</button>
-        <button type="button" id="btn-sample-customers">Load customers</button>
-        <button type="button" id="btn-clear">Clear</button>
+        <button type="button" id="btn-sample-iris">${escape(t("Load Iris"))}</button>
+        <button type="button" id="btn-sample-customers">${escape(t("Load customers"))}</button>
+        <button type="button" id="btn-clear">${escape(t("Clear"))}</button>
       </div>
     </header>
     <nav class="main-nav">
-      <button type="button" data-view="data" class="${state.mainView === "data" ? "active" : ""}">Data</button>
-      <button type="button" data-view="analyze" class="${state.mainView === "analyze" ? "active" : ""}">Analyze</button>
-      <button type="button" data-view="visualize" class="${state.mainView === "visualize" ? "active" : ""}">Visualize</button>
+      <button type="button" data-view="data" class="${state.mainView === "data" ? "active" : ""}">${escape(t("Data"))}</button>
+      <button type="button" data-view="analyze" class="${state.mainView === "analyze" ? "active" : ""}">${escape(t("Analyze"))}</button>
+      <button type="button" data-view="visualize" class="${state.mainView === "visualize" ? "active" : ""}">${escape(t("Visualize"))}</button>
     </nav>
     <div class="workspace">
       <aside class="playground-sidebar" id="sidebar"></aside>
       <main class="result-area">
         <div class="result-toolbar">
-          <span id="status-line">${state.statusMessage ?? ""}</span>
-          <button type="button" id="btn-export-png">Export PNG</button>
-          <button type="button" id="btn-export-csv">Export CSV</button>
+          <span id="status-line">${escape(state.dataset ? t("{rows} rows × {columns} columns loaded", { rows: state.dataset.rows.length, columns: state.dataset.columns.length }) : "")}</span>
+          <button type="button" id="btn-export-png">${escape(t("Export PNG"))}</button>
+          <button type="button" id="btn-export-csv">${escape(t("Export CSV"))}</button>
         </div>
         <div id="chart" class="chart"></div>
         <div id="chart-secondary" class="chart chart-secondary"></div>
@@ -542,7 +543,7 @@ export function render(): void {
     patchState({ analysis: { kind: "pca", components: 2, colorColumn: "species" } });
     setMainView(getState().mainView);
     render();
-    showToast(toastRoot, "Iris dataset loaded — try PCA.");
+    showToast(toastRoot, t("Iris dataset loaded — try PCA."));
   });
   find("btn-sample-customers")!.addEventListener("click", () => {
     setDataset(loadSample("customers"));
@@ -567,65 +568,65 @@ function renderSidebarContent(state: ReturnType<typeof getState>): string {
   let analyzeParams = "";
   if (analysis.kind === "pca") {
     analyzeParams = `
-      <label>Components <input type="number" id="pca-components" min="2" max="10" value="${analysis.components}" /></label>
-      <label>Color by
+      <label>${escape(t("Components"))} <input type="number" id="pca-components" min="2" max="10" value="${analysis.components}" /></label>
+      <label>${escape(t("Color by"))}
         <select id="pca-color">${optionTags(catCols.map((c) => c.name), analysis.colorColumn)}</select>
       </label>`;
   } else if (analysis.kind === "similarity") {
-    analyzeParams = `<label>Metric <select id="sim-metric"><option value="cosine" ${analysis.metric === "cosine" ? "selected" : ""}>Cosine</option><option value="pearson" ${analysis.metric === "pearson" ? "selected" : ""}>Pearson</option></select></label>`;
+    analyzeParams = `<label>${escape(t("Metric"))} <select id="sim-metric"><option value="cosine" ${analysis.metric === "cosine" ? "selected" : ""}>${escape(t("Cosine"))}</option><option value="pearson" ${analysis.metric === "pearson" ? "selected" : ""}>${escape(t("Pearson"))}</option></select></label>`;
   } else if (analysis.kind === "distance") {
-    analyzeParams = `<label>Metric <select id="dist-metric"><option value="euclidean" ${analysis.metric === "euclidean" ? "selected" : ""}>Euclidean</option><option value="manhattan" ${analysis.metric === "manhattan" ? "selected" : ""}>Manhattan</option></select></label>`;
+    analyzeParams = `<label>${escape(t("Metric"))} <select id="dist-metric"><option value="euclidean" ${analysis.metric === "euclidean" ? "selected" : ""}>${escape(t("Euclidean"))}</option><option value="manhattan" ${analysis.metric === "manhattan" ? "selected" : ""}>${escape(t("Manhattan"))}</option></select></label>`;
   } else if (analysis.kind === "kmeans") {
     analyzeParams = `
-      <label>K <input type="number" id="kmeans-k" min="2" value="${analysis.k}" /></label>
-      <label>Seed <input type="number" id="kmeans-seed" value="${analysis.seed}" /></label>
-      <label>Max iterations <input type="number" id="kmeans-iter" value="${analysis.maxIterations}" /></label>`;
+      <label>${escape(t("K"))} <input type="number" id="kmeans-k" min="2" value="${analysis.k}" /></label>
+      <label>${escape(t("Seed"))} <input type="number" id="kmeans-seed" value="${analysis.seed}" /></label>
+      <label>${escape(t("Max iterations"))} <input type="number" id="kmeans-iter" value="${analysis.maxIterations}" /></label>`;
   }
 
   const dataPanel =
     state.mainView === "data"
       ? `
     <section>
-      <h2>CSV input</h2>
+      <h2>${escape(t("CSV input"))}</h2>
       <div id="csv-editor-host"></div>
-      <button type="button" id="btn-parse">Parse CSV</button>
-      <label class="file-label">Upload CSV <input type="file" id="csv-file" accept=".csv,text/csv" /></label>
+      <button type="button" id="btn-parse">${escape(t("Parse CSV"))}</button>
+      <label class="file-label">${escape(t("Upload CSV"))} <input type="file" id="csv-file" accept=".csv,text/csv" /></label>
     </section>
-    <section><h2>Dataset</h2><div id="data-summary"></div></section>
-    <section><h2>Preview</h2><p class="muted">See table below after load.</p></section>`
+    <section><h2>${escape(t("Dataset"))}</h2><div id="data-summary"></div></section>
+    <section><h2>${escape(t("Preview"))}</h2><p class="muted">${escape(t("See table below after load."))}</p></section>`
       : "";
 
   const analyzePanel =
     state.mainView === "analyze"
       ? `
     <section>
-      <h2>Analysis</h2>
+      <h2>${escape(t("Analysis"))}</h2>
       <select id="analysis-kind">
         <option value="pca" ${analysis.kind === "pca" ? "selected" : ""}>PCA</option>
-        <option value="correlation" ${analysis.kind === "correlation" ? "selected" : ""}>Correlation</option>
-        <option value="similarity" ${analysis.kind === "similarity" ? "selected" : ""}>Similarity</option>
-        <option value="distance" ${analysis.kind === "distance" ? "selected" : ""}>Distance</option>
-        <option value="kmeans" ${analysis.kind === "kmeans" ? "selected" : ""}>K-means</option>
-        <option value="descriptive" ${analysis.kind === "descriptive" ? "selected" : ""}>Descriptive stats</option>
+        <option value="correlation" ${analysis.kind === "correlation" ? "selected" : ""}>${escape(t("Correlation"))}</option>
+        <option value="similarity" ${analysis.kind === "similarity" ? "selected" : ""}>${escape(t("Similarity"))}</option>
+        <option value="distance" ${analysis.kind === "distance" ? "selected" : ""}>${escape(t("Distance"))}</option>
+        <option value="kmeans" ${analysis.kind === "kmeans" ? "selected" : ""}>${escape(t("K-means"))}</option>
+        <option value="descriptive" ${analysis.kind === "descriptive" ? "selected" : ""}>${escape(t("Descriptive stats"))}</option>
       </select>
       ${analyzeParams}
     </section>
     <section>
-      <h2>Features</h2>
+      <h2>${escape(t("Features"))}</h2>
       <div id="feature-list"></div>
     </section>
     <section>
-      <h2>Preprocessing</h2>
-      <label>Missing values
+      <h2>${escape(t("Preprocessing"))}</h2>
+      <label>${escape(t("Missing values"))}
         <select id="missing-strategy">
-          <option value="drop" ${state.preprocessing.missingStrategy === "drop" ? "selected" : ""}>Drop rows</option>
-          <option value="mean" ${state.preprocessing.missingStrategy === "mean" ? "selected" : ""}>Replace with mean</option>
-          <option value="median" ${state.preprocessing.missingStrategy === "median" ? "selected" : ""}>Replace with median</option>
+          <option value="drop" ${state.preprocessing.missingStrategy === "drop" ? "selected" : ""}>${escape(t("Drop rows"))}</option>
+          <option value="mean" ${state.preprocessing.missingStrategy === "mean" ? "selected" : ""}>${escape(t("Replace with mean"))}</option>
+          <option value="median" ${state.preprocessing.missingStrategy === "median" ? "selected" : ""}>${escape(t("Replace with median"))}</option>
         </select>
       </label>
-      <label class="checkbox-row"><input type="checkbox" id="standardize" ${state.preprocessing.standardize ? "checked" : ""} /> Standardize (z-score)</label>
+      <label class="checkbox-row"><input type="checkbox" id="standardize" ${state.preprocessing.standardize ? "checked" : ""} /> ${escape(t("Standardize (z-score)"))}</label>
       <p id="missing-note" class="muted small"></p>
-      <button type="button" id="btn-run" class="primary">Run</button>
+      <button type="button" id="btn-run" class="primary">${escape(t("Run"))}</button>
     </section>`
       : "";
 
@@ -634,18 +635,18 @@ function renderSidebarContent(state: ReturnType<typeof getState>): string {
     state.mainView === "visualize"
       ? `
     <section>
-      <h2>Chart</h2>
+      <h2>${escape(t("Chart"))}</h2>
       <select id="viz-type">
-        <option value="scatter" ${viz?.chartType === "scatter" ? "selected" : ""}>Scatter</option>
-        <option value="histogram" ${viz?.chartType === "histogram" ? "selected" : ""}>Histogram</option>
-        <option value="box" ${viz?.chartType === "box" ? "selected" : ""}>Box plot</option>
-        <option value="line" ${viz?.chartType === "line" ? "selected" : ""}>Line</option>
-        <option value="bar" ${viz?.chartType === "bar" ? "selected" : ""}>Bar</option>
+        <option value="scatter" ${viz?.chartType === "scatter" ? "selected" : ""}>${escape(t("Scatter"))}</option>
+        <option value="histogram" ${viz?.chartType === "histogram" ? "selected" : ""}>${escape(t("Histogram"))}</option>
+        <option value="box" ${viz?.chartType === "box" ? "selected" : ""}>${escape(t("Box plot"))}</option>
+        <option value="line" ${viz?.chartType === "line" ? "selected" : ""}>${escape(t("Line"))}</option>
+        <option value="bar" ${viz?.chartType === "bar" ? "selected" : ""}>${escape(t("Bar"))}</option>
       </select>
       <label>X <select id="viz-x">${optionTags(numericCols.map((c) => c.name), viz?.xColumn ?? numericCols[0]?.name)}</select></label>
       <label>Y <select id="viz-y">${optionTags(numericCols.map((c) => c.name), viz?.yColumn ?? numericCols[1]?.name ?? numericCols[0]?.name)}</select></label>
       <label>Color <select id="viz-color">${optionTags(["", ...catCols.map((c) => c.name)], viz?.colorColumn ?? "")}</select></label>
-      <button type="button" id="btn-viz-run" class="primary">Render</button>
+      <button type="button" id="btn-viz-run" class="primary">${escape(t("Render"))}</button>
     </section>`
       : "";
 
@@ -655,7 +656,7 @@ function renderSidebarContent(state: ReturnType<typeof getState>): string {
 function optionTags(values: string[], selected: string | null): string {
   return values
     .map((v) => {
-      const label = v === "" ? "(none)" : v;
+      const label = v === "" ? t("(none)") : v;
       return `<option value="${escape(v)}" ${v === selected ? "selected" : ""}>${escape(label)}</option>`;
     })
     .join("");
@@ -810,7 +811,9 @@ export function mountPlayground(
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const updateTheme = () => renderCharts();
   media.addEventListener("change", updateTheme);
+  const stopLocale = subscribeLocale(() => render());
   return () => {
+    stopLocale();
     observer.disconnect();
     media.removeEventListener("change", updateTheme);
     purgePlot(chartEl);

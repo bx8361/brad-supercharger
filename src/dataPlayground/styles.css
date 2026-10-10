@@ -17,8 +17,8 @@
 
 .privacy {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--muted);
+  font: 500 0.85rem/1.45 var(--font-sans);
+  color: var(--text-caption);
   flex: 1;
 }
 
@@ -80,9 +80,9 @@
 .playground-sidebar h2 {
   margin: 0 0 0.5rem;
   font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text);
 }
 
 .result-area {
@@ -100,8 +100,8 @@
 
 #status-line {
   flex: 1;
-  font-size: 0.9rem;
-  color: var(--muted);
+  font: 500 0.9rem/1.45 var(--font-sans);
+  color: var(--text-caption);
 }
 
 .chart {
@@ -193,7 +193,8 @@
 }
 
 .stats-dl dt {
-  color: var(--muted);
+  color: var(--text-caption);
+  font-weight: 500;
 }
 
 .stats-dl dd {
@@ -225,7 +226,8 @@ button:hover {
 label {
   display: block;
   margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  font: 500 0.9rem/1.45 var(--font-sans);
+  color: var(--text);
 }
 
 select,
@@ -245,7 +247,8 @@ input[type="text"] {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
-  font-size: 0.85rem;
+  font: 500 0.85rem/1.45 var(--font-sans);
+  color: var(--text);
 }
 
 .checkbox-row input {
@@ -258,7 +261,7 @@ input[type="text"] {
 }
 
 .muted { color: var(--muted); }
-.small { font-size: .85rem; }
+.small { font: 500 0.85rem/1.45 var(--font-sans); color: var(--text-caption); }
 .warn { color: var(--red); }
 .toast { position: fixed; bottom: 1rem; right: 1rem; padding: .75rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; z-index: 100; }
 .toast-error { border-color: var(--red); }

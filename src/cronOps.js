@@ -1,3 +1,5 @@
+import { t } from './i18n.js'
+
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -117,11 +119,11 @@ function matchesDate(date, parsed) {
 }
 
 function describeList(field, formatter) {
-  if (field.any) return 'every value'
+  if (field.any) return t('every value')
   const items = [...field.values].sort((a, b) => a - b).map(formatter)
   if (items.length === 1) return items[0]
   if (items.length <= 4) return items.join(', ')
-  return `${items.slice(0, 3).join(', ')}, and ${items.length - 3} more`
+  return t('{list}, and {count} more', { list: items.slice(0, 3).join(', '), count: items.length - 3 })
 }
 
 export function describeCron(parsed) {
@@ -134,27 +136,30 @@ export function describeCron(parsed) {
   const second = parsed.hasSeconds ? parsed.fields[0] : null
 
   const timeBits = []
-  if (second && !second.any) timeBits.push(`at second ${describeList(second, v => String(v))}`)
-  if (!hour.any && minute.any) timeBits.push(`at minute ${describeList(minute, v => String(v))} past every hour`)
+  if (second && !second.any) timeBits.push(t('at second {list}', { list: describeList(second, v => String(v)) }))
+  if (!hour.any && minute.any) timeBits.push(t('at minute {list} past every hour', { list: describeList(minute, v => String(v)) }))
   else if (!hour.any && !minute.any) {
     const mins = [...minute.values].sort((a, b) => a - b)
     const hours = [...hour.values].sort((a, b) => a - b)
     if (hours.length === 1 && mins.length === 1) {
-      timeBits.push(`at ${String(hours[0]).padStart(2, '0')}:${String(mins[0]).padStart(2, '0')}`)
+      timeBits.push(t('at {time}', { time: `${String(hours[0]).padStart(2, '0')}:${String(mins[0]).padStart(2, '0')}` }))
     } else {
-      timeBits.push(`at ${describeList(minute, v => String(v).padStart(2, '0'))} past ${describeList(hour, v => String(v).padStart(2, '0'))}:00`)
+      timeBits.push(t('at {minutes} past {hours}:00', {
+        minutes: describeList(minute, v => String(v).padStart(2, '0')),
+        hours: describeList(hour, v => String(v).padStart(2, '0')),
+      }))
     }
   } else if (!minute.any) {
-    timeBits.push(`at minute ${describeList(minute, v => String(v))} every hour`)
+    timeBits.push(t('at minute {list} every hour', { list: describeList(minute, v => String(v)) }))
   }
 
   const dateBits = []
-  if (!month.any) dateBits.push(`in ${describeList(month, v => MONTHS[v - 1])}`)
-  if (!dom.any) dateBits.push(`on day ${describeList(dom, v => String(v))} of the month`)
-  if (!dow.any) dateBits.push(`on ${describeList(dow, v => DOW[v])}`)
+  if (!month.any) dateBits.push(t('in {months}', { months: describeList(month, v => t(MONTHS[v - 1])) }))
+  if (!dom.any) dateBits.push(t('on day {days} of the month', { days: describeList(dom, v => String(v)) }))
+  if (!dow.any) dateBits.push(t('on {days}', { days: describeList(dow, v => t(DOW[v])) }))
 
   const chunks = [...timeBits, ...dateBits]
-  if (!chunks.length) return 'Every second.'
+  if (!chunks.length) return t('Every second.')
   return chunks.join(', ') + '.'
 }
 

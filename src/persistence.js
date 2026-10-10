@@ -1,3 +1,5 @@
+import { knownLocale } from './i18n.js'
+
 export const STORAGE_KEY = 'brads-supercharger:v1'
 export const emptySaved = {
   theme: 'system', favorites: [], recent: [], tools: {}, collapsedSections: {},
@@ -29,23 +31,32 @@ export function persistedSaved(saved) {
       return Object.keys(options).length ? [[id, options]] : []
     }),
   )
+  const locale = knownLocale(saved.locale)
   return {
     version: 1, theme: saved.theme, favorites: saved.favorites, recent: saved.recent,
     collapsedSections: saved.collapsedSections, sidebarWidth: saved.sidebarWidth, saveSensitiveData,
     alwaysIncognito: saved.alwaysIncognito === true, tools,
+    ...(locale ? { locale } : {}),
   }
 }
 
-// ponytail: incognito is session-only; alwaysIncognito is the one field written back so the next launch stays blank
+// ponytail: incognito is session-only; alwaysIncognito and locale are written back so the next launch stays blank in the chosen language
 export function writeSaved(saved, { incognito = false, storage = localStorage } = {}) {
   const alwaysIncognito = saved.alwaysIncognito === true
-  const next = incognito ? persistedSaved({ ...readSaved(storage), alwaysIncognito }) : persistedSaved(saved)
+  if (!incognito) {
+    storage.setItem(STORAGE_KEY, JSON.stringify(persistedSaved(saved)))
+    return
+  }
+  const stored = readSaved(storage)
+  const locale = knownLocale(saved.locale) || knownLocale(stored.locale)
+  const next = persistedSaved({ ...stored, alwaysIncognito, ...(locale ? { locale } : {}) })
   storage.setItem(STORAGE_KEY, JSON.stringify(next))
 }
 
 export function sessionFromSaved(stored) {
+  const locale = knownLocale(stored.locale) ? { locale: stored.locale } : {}
   if (stored.alwaysIncognito !== true) return { incognito: false, saved: stored }
-  return { incognito: true, saved: { ...emptySaved, alwaysIncognito: true } }
+  return { incognito: true, saved: { ...emptySaved, alwaysIncognito: true, ...locale } }
 }
 
 export function readSaved(storage = localStorage) {

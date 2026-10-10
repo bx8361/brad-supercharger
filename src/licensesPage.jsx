@@ -1,4 +1,5 @@
 import { ExternalLink, Scale } from 'lucide-react'
+import { t } from './i18n.js'
 import { npmPackages, referencedProjects } from './thirdPartyNotices.js'
 
 function NoticeRow({ name, license, url, note }) {
@@ -31,11 +32,10 @@ export function LicensesPage() {
             <span className="tool-badge large">
               <Scale size={22} strokeWidth={1.8} />
             </span>
-            Third-party notices
+            {t('Third-party notices')}
           </h1>
           <p>
-            Projects and libraries this toolbox references or ships. Brad&apos;s Supercharger UI and JavaScript
-            implementation are original unless noted below.
+            {t("Projects and libraries this toolbox references or ships. Brad's Supercharger UI and JavaScript implementation are original unless noted below.")}
           </p>
         </div>
       </div>
@@ -43,10 +43,10 @@ export function LicensesPage() {
       <section className="license-section">
         <div className="section-title">
           <div>
-            <span className="eyebrow">REFERENCES</span>
-            <h2>Tools &amp; repos</h2>
+            <span className="eyebrow">{t("REFERENCES")}</span>
+            <h2>{t('Tools & repos')}</h2>
           </div>
-          <span className="section-count">{String(referencedProjects.length).padStart(2, '0')} LISTED</span>
+          <span className="section-count">{t('{count} LISTED', { count: String(referencedProjects.length).padStart(2, '0') })}</span>
         </div>
         <div className="license-list">
           {referencedProjects.map(item => (
@@ -58,14 +58,13 @@ export function LicensesPage() {
       <section className="license-section">
         <div className="section-title">
           <div>
-            <span className="eyebrow">RUNTIME</span>
-            <h2>JavaScript packages</h2>
+            <span className="eyebrow">{t("RUNTIME")}</span>
+            <h2>{t("JavaScript packages")}</h2>
           </div>
-          <span className="section-count">{String(npmPackages.length).padStart(2, '0')} PACKAGES</span>
+          <span className="section-count">{t('{count} PACKAGES', { count: String(npmPackages.length).padStart(2, '0') })}</span>
         </div>
         <p className="license-lead">
-          Production dependencies bundled with the app. Full license texts live in each package&apos;s npm
-          metadata and in <code>package-lock.json</code>.
+          {t('Production dependencies bundled with the app. Full license texts live in each package’s npm metadata and in package-lock.json.')}
         </p>
         <div className="license-list compact">
           {npmPackages.map(item => (
@@ -75,8 +74,8 @@ export function LicensesPage() {
       </section>
 
       <div className="tool-bottom-note">
-        <span>NOT LEGAL ADVICE</span>
-        <span>SEE LICENSES.MD IN THE REPO FOR FULL NOTICES</span>
+        <span>{t("NOT LEGAL ADVICE")}</span>
+        <span>{t("SEE LICENSES.MD IN THE REPO FOR FULL NOTICES")}</span>
       </div>
     </div>
   )

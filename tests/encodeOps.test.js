@@ -65,7 +65,7 @@ test('gzip compresses to base64 and round-trips text', async () => {
   assert.ok(compressed.data.length > 0)
   const restored = await decompressGzip(compressed.data)
   assert.equal(restored.data, sample)
-  assert.equal((await decompressGzip('Hello')).data, '<Invalid GZip data>')
+  assert.equal((await decompressGzip('Hello')).data, 'Invalid GZip data.')
 })
 
 test('jwt decode and hs256 encode', async () => {

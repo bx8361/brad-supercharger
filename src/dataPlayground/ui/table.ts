@@ -1,4 +1,5 @@
 import type { Dataset } from "../data/dataset";
+import { t } from "../../i18n.js";
 
 export function renderDataTable(
   container: HTMLElement,
@@ -26,7 +27,7 @@ export function renderDataTable(
     })
     .join("");
   container.innerHTML = `
-    <p class="table-caption">Showing first ${shown.length} of ${dataset.rows.length.toLocaleString()} rows</p>
+    <p class="table-caption">${escapeHtml(t("Showing first {shown} of {total} rows", { shown: shown.length, total: dataset.rows.length.toLocaleString() }))}</p>
     <div class="table-scroll">
       <table class="data-table">
         <thead><tr>${thead}</tr></thead>

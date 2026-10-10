@@ -159,7 +159,7 @@ export async function compressGzip(text) {
 }
 
 export async function decompressGzip(base64Input) {
-  const invalid = '<Invalid GZip data>'
+  const invalid = 'Invalid GZip data.'
   if (base64Input == null) return { data: '', ratio: 0 }
   const trimmed = base64Input.trim()
   if (!trimmed) return { data: '', ratio: 0 }
