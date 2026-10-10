@@ -1514,15 +1514,13 @@ function CipherTool({ data, setData }) {
   return <div className="tool-content">
     <div className="inline-controls">
       <Sample onClick={() => setData({ input: initialSamples.cipher, key: initialSamples['cipher-key'], output: '', lastMode: '' })} />
+      <button type="button" className="text-action" onClick={() => run('encrypt')}><LockKeyhole size={14} /> {t("Encrypt")}</button>
+      <button type="button" className="text-action" onClick={() => run('decrypt')}><Fingerprint size={14} /> {t("Decrypt")}</button>
+      {output && <CopyAction value={output} />}
       <span className="muted-tip">{t("AES passphrase mode (CryptoJS-compatible).")}</span>
     </div>
     <Split axis="y" storageKey="cipher-height" className="compare-stack">
       <Split><Editor label="Plain or ciphertext" value={input} onChange={v => set(setData, 'input', v)} /><Editor label="Key" value={key} onChange={v => set(setData, 'key', v)} rows={4} multiline={false} /></Split>
-      <div className="inline-controls">
-        <button type="button" className="text-action" onClick={() => run('encrypt')}><LockKeyhole size={14} /> {t("Encrypt")}</button>
-        <button type="button" className="text-action" onClick={() => run('decrypt')}><Fingerprint size={14} /> {t("Decrypt")}</button>
-        {output && <CopyAction value={output} />}
-      </div>
       <Output label="Result" value={output} placeholder={t("Encrypt or decrypt to see output here.")} />
     </Split>
     {error && <p className="error-note">{t(error)}</p>}
@@ -2007,7 +2005,7 @@ function ImageConverterTool({ data, setData }) {
           <img src={item.preview} alt="" />
           {item.outputUrl ? <img src={item.outputUrl} alt="" /> : <div className="image-converter-placeholder">{item.error ? t(item.error) : t('Converted preview')}</div>}
         </div>
-        <div className="inline-controls">
+        <div className="panel-footer inline-controls">
           <button type="button" className="text-action" onClick={() => convertItem(item.id)}><RefreshCw size={14} /> {t("Convert")}</button>
           <button type="button" className="text-action" onClick={async () => {
             const blob = await blobForItem(item)
@@ -2015,7 +2013,7 @@ function ImageConverterTool({ data, setData }) {
             downloadBlob(blob, `${base}.${format}`)
           }} disabled={item.status === 'working'}><Download size={14} /> {t("Save")}</button>
         </div>
-        {item.error && <p className="error-note">{t(item.error)}</p>}
+        {item.error && <p className="error-note image-converter-error">{t(item.error)}</p>}
       </section>) : <p className="subtle">{t("Choose one or more images to convert.")}</p>}
     </div>
   </div>
@@ -2158,8 +2156,10 @@ function RegexTool({ data, setData }) {
       {mode !== 'match' && <Output label={outputLabel} value={state.output} placeholder={t(mode === 'substitution' ? 'The test text with matches replaced.' : 'One line per match.')} />}
     </>}
     <section className="editor-card regex-help">
-      <div className="panel-top"><span>{t('{flavor} syntax', { flavor: flavorName })}</span></div>
-      <p className="subtle regex-help-note">{t('Substitution rewrites each match in the test text. Extraction lists the template once per match. An empty extraction template lists the full matches. Syntax and replacements follow the selected flavor. The match itself runs in the browser, and anything that flavor cannot express is reported here.')}</p>
+      <div className="panel-top regex-help-head">
+        <span>{t('{flavor} syntax', { flavor: flavorName })}</span>
+        <p className="regex-help-note">{t('Substitution rewrites each match in the test text. Extraction lists the template once per match. An empty extraction template lists the full matches. Syntax and replacements follow the selected flavor. The match itself runs in the browser, and anything that flavor cannot express is reported here.')}</p>
+      </div>
       <div className="cheat-sheet-scroll"><table className="json-table cheat-sheet-table"><thead><tr><th>{t("Syntax")}</th><th>{t("Meaning")}</th></tr></thead><tbody>{regexHelp(flavor).map(([syntax, meaning]) => <tr key={syntax}><td><code>{syntax}</code></td><td>{t(meaning)}</td></tr>)}</tbody></table></div>
     </section>
   </div>
