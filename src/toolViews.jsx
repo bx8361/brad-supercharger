@@ -1,6 +1,5 @@
 import { lazy, Suspense, Children, createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { diffLines, diffWordsWithSpace } from 'diff'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { parse as parseYAML, stringify as stringifyYAML } from 'yaml'
@@ -33,7 +32,7 @@ import {
   cloneCalculatorSession, createCalculatorSession, evaluateCalculatorExpression, formatCalculatorExpression, formatCalculatorResult, resultFormats, searchCalculatorSymbols,
 } from './calculatorOps.js'
 import { queryJsonPath, regexControls, regexFlavors, regexHelp, validateXmlAgainstXsd } from './testerOps.js'
-import { analyze, caretInfo, compareLists, escapeString, reverseLines, shuffleLines, sideBySideRows, sortByLast, sortLines, toAlternating, toCamel, toCobol, toConstant, toCRLF, toInverse, toKebab, toLF, toPascal, toRandomCase, toSentence, toSnake, toTitle, toTrain, trimLines, unescapeString, uniqueLines } from './textOps.js'
+import { analyze, caretInfo, compareChangeParts, compareLists, escapeString, reverseLines, shuffleLines, sideBySideRows, sortByLast, sortLines, toAlternating, toCamel, toCobol, toConstant, toCRLF, toInverse, toKebab, toLF, toPascal, toRandomCase, toSentence, toSnake, toTitle, toTrain, trimLines, unescapeString, uniqueLines } from './textOps.js'
 import { JSXGraph } from 'jsxgraph'
 import '../node_modules/jsxgraph/distrib/jsxgraph.css'
 import mermaid from 'mermaid'
@@ -2208,17 +2207,33 @@ function DiffSpans({ parts }) {
   return parts.map((part, i) => part.kind === 'add' ? <ins key={i}>{part.text}</ins> : part.kind === 'remove' ? <del key={i}>{part.text}</del> : <span key={i}>{part.text}</span>)
 }
 
+const compareFlags = [
+  ['ignoreLead', 'Ignore leading spaces'],
+  ['ignoreTrail', 'Ignore trailing spaces'],
+  ['ignoreEmbedded', 'Ignore embedded spaces'],
+  ['ignoreCase', 'Ignore case'],
+  ['ignoreNewlines', 'Ignore newline characters'],
+]
+
 function CompareTool({ data, setData }) {
   const left = textValue(data, 'left', initialSamples.compareLeft), right = textValue(data, 'right', initialSamples.compareRight)
   const mode = textValue(data, 'mode', 'words'), layout = textValue(data, 'layout', 'side')
+  const compareOpts = {
+    lead: data.ignoreLead === true || data.ignoreLead === 'true',
+    trail: data.ignoreTrail === true || data.ignoreTrail === 'true',
+    embedded: data.ignoreEmbedded === true || data.ignoreEmbedded === 'true',
+    ignoreCase: data.ignoreCase === true || data.ignoreCase === 'true',
+    ignoreNewlines: data.ignoreNewlines === true || data.ignoreNewlines === 'true',
+  }
   const [pane, setPane] = useState(() => readSplit(SPLIT_KEY))
-  const parts = useMemo(() => mode === 'lines' ? diffLines(left, right) : diffWordsWithSpace(left, right), [left,right,mode]), added = parts.filter(x => x.added).reduce((n,x) => n+(x.count || 0),0), removed = parts.filter(x => x.removed).reduce((n,x) => n+(x.count || 0),0)
+  const parts = useMemo(() => compareChangeParts(left, right, mode, compareOpts), [left, right, mode, compareOpts.lead, compareOpts.trail, compareOpts.embedded, compareOpts.ignoreCase, compareOpts.ignoreNewlines]), added = parts.filter(x => x.added).reduce((n,x) => n+(x.count || 0),0), removed = parts.filter(x => x.removed).reduce((n,x) => n+(x.count || 0),0)
   const markup = parts.map((part,i) => part.added ? <ins key={i}>{part.value}</ins> : part.removed ? <del key={i}>{part.value}</del> : <span key={i}>{part.value}</span>)
-  const rows = useMemo(() => layout === 'side' ? sideBySideRows(left, right, mode) : null, [layout, left, right, mode])
+  const rows = useMemo(() => layout === 'side' ? sideBySideRows(left, right, mode, compareOpts) : null, [layout, left, right, mode, compareOpts.lead, compareOpts.trail, compareOpts.embedded, compareOpts.ignoreCase, compareOpts.ignoreNewlines])
   const linked = layout === 'side' ? { ratio: pane, onRatio: setPane } : {}
   const editors = <Split axis={layout === 'inline' ? 'y' : 'x'} storageKey={layout === 'inline' ? 'compare-inline' : SPLIT_KEY} className="compare-editors" {...linked}><Editor label="Original text" value={left} onChange={v => set(setData, 'left', v)} /><Editor label="Changed text" value={right} onChange={v => set(setData, 'right', v)} /></Split>
   return <div className="tool-content"><div className="inline-controls"><label>{t("Compare by")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="words">{t("Words")}</option><option value="lines">{t("Lines")}</option></select></label><label>{t("View")}<select value={layout} onChange={e => set(setData, 'layout', e.target.value)}><option value="side">{t("Side by side")}</option><option value="inline">{t("Inline")}</option></select></label><Sample onClick={() => setData({ left: initialSamples.compareLeft, right: initialSamples.compareRight })} /><span className="change-count"><b className="added">+{added}</b> <b className="removed">−{removed}</b> {t("changes")}</span></div>
-    <Split axis="y" storageKey="compare-height" className="compare-stack">{editors}<section className="editor-card diff-card"><div className="panel-top"><span>{t(layout === 'side' ? 'Side by side' : 'Inline')} · {t(mode === 'lines' ? 'Lines' : 'Words')}</span><span className="diff-legend"><i className="added-bg" /> {t("Added")}<i className="removed-bg" /> {t("Removed")}</span></div>{rows ? <Split className="side-diff" storageKey={SPLIT_KEY} {...linked}><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.left} /></pre>)}</div><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.right} /></pre>)}</div></Split> : <pre>{markup}</pre>}</section></Split></div>
+    <div className="check-grid">{compareFlags.map(([key, label]) => <label className="check-pill" key={key}><input type="checkbox" checked={data[key] === true || data[key] === 'true'} onChange={e => set(setData, key, e.target.checked)} />{t(label)}</label>)}</div>
+    <Split axis="y" storageKey="compare-height" className="compare-stack">{editors}<section className={`editor-card diff-card${added || removed ? '' : ' is-same'}`}><div className="panel-top"><span>{t(layout === 'side' ? 'Side by side' : 'Inline')} · {t(mode === 'lines' ? 'Lines' : 'Words')}</span><span className="diff-legend"><i className="added-bg" /> {t("Added")}<i className="removed-bg" /> {t("Removed")}</span></div>{rows ? <Split className="side-diff" storageKey={SPLIT_KEY} {...linked}><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.left} /></pre>)}</div><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.right} /></pre>)}</div></Split> : <pre>{markup}</pre>}</section></Split></div>
 }
 
 function EscapeTool({ data, setData }) {

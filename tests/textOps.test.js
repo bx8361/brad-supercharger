@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { analyze, compareLists, escapeString, lineEnding, sideBySideRows, toCamel, toSnake, unescapeString } from '../src/textOps.js'
+import { analyze, compareChangeParts, compareLists, escapeString, lineEnding, sideBySideRows, toCamel, toSnake, unescapeString } from '../src/textOps.js'
 
 test('json escape round-trips quotes and newlines', () => {
   const raw = 'Say "hello"\nnext'
@@ -34,6 +34,26 @@ test('side by side keeps one row per source line', () => {
   assert.equal(inserted[1].left, null)
   assert.equal(text(inserted[1].right), 'b')
   assert.deepEqual(inserted.map(row => row.kind), ['same', 'add', 'same'])
+})
+
+test('compare options ignore leading, trailing, and embedded spaces, case, and newline characters', () => {
+  const text = rows => rows.map(row => ({
+    l: (row.left || []).map(part => part.kind + ':' + part.text).join('|'),
+    r: (row.right || []).map(part => part.kind + ':' + part.text).join('|'),
+  }))
+  assert.deepEqual(text(sideBySideRows('  cat', 'cat', 'lines', { lead: true })), [{ l: 'same:  cat', r: 'same:cat' }])
+  assert.deepEqual(text(sideBySideRows('cat  ', 'cat', 'lines', { trail: true })), [{ l: 'same:cat  ', r: 'same:cat' }])
+  assert.deepEqual(text(sideBySideRows('a b', 'ab', 'lines', { embedded: true })), [{ l: 'same:a b', r: 'same:ab' }])
+  assert.deepEqual(text(sideBySideRows('Cat', 'cat', 'lines', { ignoreCase: true })), [{ l: 'same:Cat', r: 'same:cat' }])
+  assert.deepEqual(text(sideBySideRows('a\r\nb', 'a\nb', 'lines', { ignoreNewlines: true })), [
+    { l: 'same:a', r: 'same:a' },
+    { l: 'same:b', r: 'same:b' },
+  ])
+  assert.deepEqual(text(sideBySideRows('  cat', '  dog', 'words', { lead: true })), [{ l: 'same:  |remove:cat', r: 'same:  |add:dog' }])
+  const inline = compareChangeParts('  Cat\nfoo bar', 'cat\nfoobar', 'words', { lead: true, embedded: true, ignoreCase: true })
+  assert.equal(inline.some(part => part.added || part.removed), false)
+  const endings = compareChangeParts('a\r\nb', 'a\nb', 'lines', { ignoreNewlines: true })
+  assert.equal(endings.some(part => part.added || part.removed), false)
 })
 
 test('case splits and line endings', () => {

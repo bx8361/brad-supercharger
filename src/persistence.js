@@ -18,7 +18,7 @@ const toolOptions = {
   'image-converter': ['format'],
   jsonpath: ['query'],
   regex: ['flavor', 'mode', 'allMatches', 'ignoreCase', 'ignoreWhitespace', 'multiline', 'dotAll', 'singleline', 'rightToLeft', 'unicode'],
-  compare: ['mode', 'layout'],
+  compare: ['mode', 'layout', 'ignoreLead', 'ignoreTrail', 'ignoreEmbedded', 'ignoreCase', 'ignoreNewlines'],
   escape: ['direction', 'format'], list: ['mode', 'ignoreCase'],
 }
 
