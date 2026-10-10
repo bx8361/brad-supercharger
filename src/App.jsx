@@ -49,12 +49,13 @@ function NavSection({ id, label, icon: Icon, count, saved, onToggle, children })
 function Sidebar({ active, saved, onSidebarWidth, search, setSearch, onNavigate, onNavigateLicenses, onFavorite, onReorderFavorite, onToggleSection, onClear, pwa, mobileOpen, closeMobile }) {
   const [dragged, setDragged] = useState(null)
   const [dropTarget, setDropTarget] = useState(null)
+  const favoriteIds = useMemo(() => new Set(saved.favorites), [saved.favorites])
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return q ? tools.filter(t => `${t.name} ${t.description} ${t.keywords}`.toLowerCase().includes(q)) : null
-  }, [search])
+    return q ? tools.filter(t => !favoriteIds.has(t.id) && `${t.name} ${t.description} ${t.keywords}`.toLowerCase().includes(q)) : null
+  }, [search, favoriteIds])
   const favorites = saved.favorites.map(id => tools.find(t => t.id === id)).filter(Boolean)
-  const recent = (saved.recent || []).map(id => tools.find(t => t.id === id)).filter(Boolean).slice(0, 4)
+  const recent = (saved.recent || []).map(id => tools.find(t => t.id === id)).filter(t => t && !favoriteIds.has(t.id)).slice(0, 4)
   const openTool = id => { onNavigate(id); closeMobile() }
   const sectionProps = { saved, onToggle: onToggleSection }
   const endDrag = () => { setDragged(null); setDropTarget(null) }
@@ -94,7 +95,8 @@ function Sidebar({ active, saved, onSidebarWidth, search, setSearch, onNavigate,
         {filtered ? <NavSection id="search" label="Search results" count={filtered.length} {...sectionProps}>{filtered.length ? filtered.map(t => <ToolNavItem key={t.id} tool={t} active={active === t.id} saved={saved} onFavorite={onFavorite} onClick={() => openTool(t.id)} />) : <p className="empty-search">No tools found.</p>}</NavSection> : <>
           {recent.length > 0 && <NavSection id="recent" label="Recent" count={recent.length} {...sectionProps}>{recent.map(t => <ToolNavItem key={t.id} tool={t} active={active === t.id} saved={saved} onFavorite={onFavorite} onClick={() => openTool(t.id)} />)}</NavSection>}
           {groups.map(group => {
-            const items = tools.filter(tool => tool.category === group.id)
+            const items = tools.filter(tool => tool.category === group.id && !favoriteIds.has(tool.id))
+            if (!items.length) return null
             return <NavSection key={group.id} id={group.id} label={group.label} icon={group.icon} count={items.length} {...sectionProps}>{items.map(t => <ToolNavItem key={t.id} tool={t} active={active === t.id} saved={saved} onFavorite={onFavorite} onClick={() => openTool(t.id)} />)}</NavSection>
           })}
         </>}
