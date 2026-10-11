@@ -1,7 +1,7 @@
 import {
   Archive, Braces, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
   Image, Images, KeyRound, Languages, LineChart, Link2, ListChecks, ListFilter, LockKeyhole, Network, PenLine, QrCode, Quote, Radio, Regex,
-  ScrollText, Shield, Sigma, Stamp, Table2, TextCursorInput, Type, WandSparkles, Workflow,
+  ScrollText, Shield, Sigma, Stamp, StickyNote, Table2, TextCursorInput, Type, WandSparkles, Workflow,
 } from 'lucide-react'
 
 // Group order and labels follow DevToys (https://devtoys.app/).
@@ -31,6 +31,7 @@ export const tools = [
   { id: 'list', name: 'List comparer', short: 'A∩B', description: 'See which lines are shared or unique.', category: 'text', icon: ListChecks, keywords: 'set intersection union difference lines' },
   { id: 'markdown', name: 'Markdown preview', short: 'MD', description: 'Write Markdown and preview the result.', category: 'text', icon: ScrollText, keywords: 'html render preview readme' },
   { id: 'analyzer', name: 'Text analyzer', short: 'Aa', description: 'Inspect and transform text.', category: 'text', icon: Type, keywords: 'word count lines uppercase lowercase sort deduplicate trim' },
+  { id: 'scratchpad', name: 'Scratchpad', short: 'Pad', description: 'Write notes and keep them in this browser.', category: 'text', icon: StickyNote, keywords: 'scratchpad notes notepad text save autosave wrap indent' },
   { id: 'compare', name: 'Text comparer', short: '±', description: 'Compare two text blocks at a glance.', category: 'text', icon: ListFilter, keywords: 'diff changes lines words inline side by side' },
   { id: 'base64', name: 'Base64 text', short: 'B64', description: 'Encode or decode text as Base64.', category: 'encode', icon: Code2, keywords: 'base 64 unicode decoder utf8 ascii' },
   { id: 'base64-image', name: 'Base64 image', short: 'Img', description: 'Encode images to Base64 or decode Base64 to a preview.', category: 'encode', icon: Image, keywords: 'picture data url png jpeg gif' },

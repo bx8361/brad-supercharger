@@ -395,4 +395,6 @@ html.hoppscotch-zen .hoppscotch-frame { position:absolute;left:0;right:0;top:45p
 
 html.drawio-zen .tool-workspace,html.hoppscotch-zen .tool-workspace { flex:1;height:auto;min-height:0; }
 html.drawio-zen .resize-handle,html.hoppscotch-zen .resize-handle { display:none; }
+.scratchpad-tool input:not([type="checkbox"]) { height:31px;min-width:140px;padding:0 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:12px; }
+.scratchpad-tool .code-editor { min-height:calc(100dvh - 280px); }
 .indent-guide.on { background:linear-gradient(var(--accent),var(--accent)) left/2px 100% no-repeat; }

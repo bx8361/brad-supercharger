@@ -890,6 +890,19 @@ function writeDrawioFiles(rows) {
 }
 
 const DRAWIO_AUTOSAVE_KEY = 'supercharger:drawio-autosave'
+const SCRATCH_FILES_KEY = 'supercharger:scratch-files'
+const SCRATCH_AUTOSAVE_KEY = 'supercharger:scratch-autosave'
+
+function readScratchFiles() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(SCRATCH_FILES_KEY) || '[]')
+    return Array.isArray(rows) ? rows.filter(row => row && row.id && row.name && typeof row.text === 'string') : []
+  } catch { return [] }
+}
+
+function writeScratchFiles(rows) {
+  localStorage.setItem(SCRATCH_FILES_KEY, JSON.stringify(rows))
+}
 
 function drawioXml(raw) {
   const text = String(raw || '')
@@ -1779,6 +1792,145 @@ function DrawioTool() {
       <button type="button" className="text-action" onClick={deleteFile} disabled={!selectedId}><Trash2 size={14} /> {t("Delete")}</button>
     </div>
     <iframe ref={frameRef} className="drawio-frame" title={t("draw.io diagram editor")} src={frameSrc.current} allow="clipboard-read; clipboard-write" />
+  </div>
+}
+
+function latestScratch() {
+  return readScratchFiles().reduce((best, row) => !best || (row.updated || 0) > (best.updated || 0) ? row : best, null)
+}
+
+function ScratchpadTool({ data, setData }) {
+  const opened = useRef(latestScratch())
+  const textRef = useRef(opened.current?.text || '')
+  const savedRef = useRef(opened.current?.text || '')
+  const dirtyRef = useRef(false)
+  const autoRef = useRef(localStorage.getItem(SCRATCH_AUTOSAVE_KEY) !== '0')
+  const nameRef = useRef(opened.current?.name || 'Untitled')
+  const selectedIdRef = useRef(opened.current?.id || '')
+  const [files, setFiles] = useState(readScratchFiles)
+  const [name, setName] = useState(opened.current?.name || 'Untitled')
+  const [selectedId, setSelectedId] = useState(opened.current?.id || '')
+  const [text, setText] = useState(opened.current?.text || '')
+  const [autoSave, setAutoSave] = useState(autoRef.current)
+  const view = textViewProps(data)
+  function remember(id, title) {
+    selectedIdRef.current = id
+    nameRef.current = title
+    setSelectedId(id)
+    setName(title)
+  }
+  function loadText(value) {
+    textRef.current = value
+    savedRef.current = value
+    dirtyRef.current = false
+    setText(value)
+  }
+  function persist(value) {
+    const title = nameRef.current.trim() || 'Untitled'
+    const current = readScratchFiles()
+    const id = selectedIdRef.current
+    let next
+    if (id && current.some(row => row.id === id)) next = current.map(row => row.id === id ? { ...row, name: title, text: value, updated: Date.now() } : row)
+    else {
+      const row = { id: crypto.randomUUID(), name: title, text: value, updated: Date.now() }
+      next = [row, ...current.filter(file => file.name !== title)]
+      selectedIdRef.current = row.id
+      setSelectedId(row.id)
+    }
+    writeScratchFiles(next)
+    setFiles(next)
+    savedRef.current = value
+    dirtyRef.current = false
+  }
+  function edit(value) {
+    textRef.current = value
+    setText(value)
+    if (value === savedRef.current) { dirtyRef.current = false; return }
+    if (autoRef.current) {
+      try { persist(value) } catch (e) { dirtyRef.current = true; toast(e.message || 'Could not auto-save.', 'error') }
+    } else dirtyRef.current = true
+  }
+  function discardChanges() {
+    if (autoRef.current || !dirtyRef.current) return true
+    return window.confirm(t('This note has unsaved changes. Discard them?'))
+  }
+  useEffect(() => {
+    function onLeave(event) {
+      if (autoRef.current || !dirtyRef.current) return
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    let reverting = false
+    function onHash() {
+      if (reverting) { reverting = false; return }
+      if (autoRef.current || !dirtyRef.current) return
+      if (/^#\/tools\/scratchpad(?:\?|$)/.test(location.hash)) return
+      if (window.confirm(t('This note has unsaved changes. Leave without saving?'))) { dirtyRef.current = false; return }
+      reverting = true
+      location.hash = '#/tools/scratchpad'
+    }
+    window.addEventListener('beforeunload', onLeave)
+    window.addEventListener('hashchange', onHash)
+    return () => {
+      window.removeEventListener('beforeunload', onLeave)
+      window.removeEventListener('hashchange', onHash)
+    }
+  }, [])
+  function saveFile() {
+    try { persist(textRef.current); toast(t('Saved')) }
+    catch (e) { toast(e.message || 'Could not auto-save.', 'error') }
+  }
+  function openFile(id) {
+    if (!id || id === selectedIdRef.current) return
+    if (!discardChanges()) return
+    const row = readScratchFiles().find(file => file.id === id)
+    if (!row) return
+    remember(row.id, row.name)
+    loadText(row.text)
+  }
+  function deleteFile() {
+    const next = readScratchFiles().filter(file => file.id !== selectedIdRef.current)
+    writeScratchFiles(next)
+    setFiles(next)
+    const row = next[0]
+    remember(row?.id || '', row?.name || 'Untitled')
+    loadText(row?.text || '')
+  }
+  function rename(value) {
+    nameRef.current = value
+    setName(value)
+    const id = selectedIdRef.current
+    if (!id) return
+    if (autoRef.current) {
+      const next = readScratchFiles().map(file => file.id === id ? { ...file, name: value.trim() || 'Untitled' } : file)
+      writeScratchFiles(next)
+      setFiles(next)
+    } else dirtyRef.current = true
+  }
+  function toggleAutoSave(on) {
+    autoRef.current = on
+    setAutoSave(on)
+    localStorage.setItem(SCRATCH_AUTOSAVE_KEY, on ? '1' : '0')
+    if (on && dirtyRef.current) persist(textRef.current)
+  }
+  return <div className="tool-content scratchpad-tool">
+    <div className="inline-controls">
+      <label>{t("Name")}<input value={name} onChange={e => rename(e.target.value)} aria-label={t("Note name")} /></label>
+      <button type="button" className="text-action" onClick={saveFile}><Save size={14} /> {t("Save")}</button>
+      <label className="check-pill"><input type="checkbox" checked={autoSave} onChange={e => toggleAutoSave(e.target.checked)} />{t("Auto-save")}</label>
+      <label>{t("Saved")}<select value={selectedId} onChange={e => openFile(e.target.value)} aria-label={t("Saved notes")}><option value="">{t(files.length ? 'Open a note…' : 'No saved notes')}</option>{files.map(file => <option key={file.id} value={file.id}>{file.name}</option>)}</select></label>
+      <button type="button" className="text-action" onClick={deleteFile} disabled={!selectedId}><Trash2 size={14} /> {t("Delete")}</button>
+      <TextViewToggles data={data} setData={setData} />
+    </div>
+    <Editor label="Note" value={text} onChange={edit} placeholder="Write something…" {...view} onKeyDown={e => {
+      if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey) return
+      e.preventDefault()
+      const el = e.currentTarget
+      const start = el.selectionStart
+      const end = el.selectionEnd
+      edit(`${text.slice(0, start)}\t${text.slice(end)}`)
+      requestAnimationFrame(() => el.setSelectionRange(start + 1, start + 1))
+    }} />
   </div>
 }
 
@@ -2706,7 +2858,7 @@ const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundToo
 
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
-  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, hoppscotch: HoppscotchTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
+  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, hoppscotch: HoppscotchTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }
