@@ -17,6 +17,7 @@ import {
 } from './encodeOps.js'
 import { formatJson, formatSql, formatXml, sqlLanguages } from './formatOps.js'
 import { findPattern, findRanges, paint, replaceRanges } from './highlight.js'
+import { activeFolds, applyDisplayEdit, applyViewEdit, displayToView, hideFolds, indentPieces, indentUnit, jsonFolds, mapRange, mapViewSpan, revealFold, viewToDisplay, visibleLines, wrapIndent } from './jsonFold.js'
 import { convertFromBase } from './numberBaseOps.js'
 import { compareDigests, generateLipsum, generateUuid } from './generateOps.js'
 import { decryptShareText, encryptShareText } from './cryptoShareOps.js'
@@ -45,6 +46,35 @@ function set(setData, key, value) { setData({ [key]: value }) }
 
 function editorClass(wrap, multiline) {
   return `code-editor${wrap ? ' wrap-lines' : ''}${multiline === false ? ' single-line' : ''}`
+}
+
+function tokenClass(part) {
+  return [part.kind && `tok-${part.kind}`, part.find && 'tok-find', part.current && 'current'].filter(Boolean).join(' ') || undefined
+}
+
+function renderParts(parts, unit, foldedAt) {
+  const lines = [[]]
+  let lineStart = true
+  let key = 0
+  const push = node => lines.at(-1).push(node)
+  for (const part of parts) {
+    part.text.split('\n').forEach((bit, index) => {
+      if (index) { lines.push([]); lineStart = true }
+      if (!bit) return
+      if (lineStart && unit) {
+        const lead = bit.match(/^[ \t]*/)[0]
+        const rest = bit.slice(lead.length)
+        const pieces = indentPieces(lead, unit)
+        if (pieces.some(piece => piece.level != null)) {
+          push(<span key={key++} className="indent-rail" aria-hidden="true">{pieces.map(piece => piece.level == null ? piece.text : <span key={key++} className={`indent-guide c${piece.level % 6}`}>{piece.text}</span>)}</span>)
+        }
+        if (lead) push(lead)
+        if (rest) push(<span key={key++} className={tokenClass(part)}>{rest}</span>)
+      } else push(<span key={key++} className={tokenClass(part)}>{bit}</span>)
+      lineStart = false
+    })
+  }
+  return lines.map((nodes, index) => <span key={index} className="code-line">{nodes}{foldedAt.get(index) ? <span className="fold-mark">…</span> : null}</span>)
 }
 
 function sameHeights(a, b) {
@@ -112,6 +142,9 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   const layerRef = useRef(null)
   const gutterRef = useRef(null)
   const [lineHeights, setLineHeights] = useState([])
+  const [contentWidth, setContentWidth] = useState(0)
+  const widthOfRef = useRef(() => 1)
+  const pendingCaret = useRef(null)
   const findRef = useRef(null)
   const replaceRef = useRef(null)
   const focusFind = useRef(true)
@@ -123,38 +156,128 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   const [wholeWord, setWholeWord] = useState(false)
   const [regex, setRegex] = useState(false)
   const [active, setActive] = useState(0)
+  const [collapsed, setCollapsed] = useState(() => new Set())
   const text = value ?? ''
+  const jsonMode = language === 'json' && !error && multiline !== false
   const findOpts = useMemo(() => ({ caseSensitive, wholeWord, regex }), [caseSensitive, wholeWord, regex])
   const ranges = useMemo(() => findRanges(text, findOpen ? query : '', findOpts), [text, query, findOpen, findOpts])
+  const regions = useMemo(() => jsonMode ? jsonFolds(text) : [], [jsonMode, text])
+  const current = ranges.length ? active % ranges.length : 0
+  const openPaths = useMemo(() => revealFold(collapsed, regions, findOpen ? ranges[current] : null), [collapsed, regions, findOpen, ranges, current])
+  const folds = useMemo(() => activeFolds(regions, openPaths), [regions, openPaths])
+  const view = folds.length ? hideFolds(text, folds) : text
+  const wrapped = useMemo(() => lineWrap && jsonMode && contentWidth > 1 ? wrapIndent(view, contentWidth, widthOfRef.current) : null, [lineWrap, jsonMode, contentWidth, view])
+  const display = wrapped?.text ?? view
+  const synthetics = wrapped?.synthetics ?? []
+  const lineMeta = useMemo(() => regions.length ? visibleLines(text, regions, folds) : null, [regions, text, folds])
+  const viewRanges = useMemo(() => {
+    const painted = []
+    let at = 0
+    ranges.forEach((range, index) => {
+      const mapped = mapRange(range, folds)
+      if (!mapped) return
+      if (index === current) at = painted.length
+      painted.push(mapped)
+    })
+    return { painted, at }
+  }, [ranges, folds, current])
   const findError = useMemo(() => {
     if (!regex || !query) return ''
     try { findPattern(query, findOpts); return '' } catch (error) { return error.message }
   }, [regex, query, findOpts])
-  const current = ranges.length ? active % ranges.length : 0
-  const parts = useMemo(() => paint(text, error ? '' : language, ranges, current), [text, error, language, ranges, current])
+  const displayRanges = useMemo(() => wrapped ? viewRanges.painted.map(range => ({ start: viewToDisplay(range.start, synthetics), end: viewToDisplay(range.end, synthetics) })) : viewRanges.painted, [wrapped, viewRanges, synthetics])
+  const parts = useMemo(() => paint(display, error ? '' : language, displayRanges, viewRanges.at), [display, error, language, displayRanges, viewRanges.at])
+  const unit = useMemo(() => jsonMode ? indentUnit(view) : '', [jsonMode, view])
+  const foldedAt = useMemo(() => {
+    const marks = new Map()
+    let at = 0
+    lineMeta?.forEach((row, index) => {
+      const displayLine = wrapped ? at : index
+      if (wrapped) at += wrapped.rows[index] || 1
+      if (row.folded) marks.set(displayLine, row.path)
+    })
+    return marks
+  }, [lineMeta, wrapped])
   useEffect(() => {
     if (!findOpen) return
     const field = focusFind.current ? findRef.current : replaceRef.current
     field?.focus()
   }, [findOpen, replaceOpen])
+  useEffect(() => {
+    if (!findOpen) return
+    const range = ranges[current]
+    if (!range) return
+    setCollapsed(prev => {
+      const next = revealFold(prev, regions, range)
+      return next === prev ? prev : next
+    })
+  }, [findOpen, current, ranges, regions])
+  function syncScroll(area) {
+    const y = area.scrollTop
+    const x = area.scrollLeft
+    const layer = layerRef.current?.firstElementChild
+    if (layer) layer.style.transform = `translate(${-x}px,${-y}px)`
+    const gutter = gutterRef.current?.firstElementChild
+    if (gutter) gutter.style.transform = `translateY(${-y}px)`
+  }
   useLayoutEffect(() => {
     const area = areaRef.current
     const layer = layerRef.current
-    if (!area || !layer) return
-    layer.style.paddingRight = `${14 + area.offsetWidth - area.clientWidth}px`
-    layer.scrollTop = area.scrollTop
-    layer.scrollLeft = area.scrollLeft
-    if (gutterRef.current) gutterRef.current.scrollTop = area.scrollTop
+    if (!area) return
+    if (layer) layer.style.paddingRight = `${14 + area.offsetWidth - area.clientWidth}px`
+    syncScroll(area)
   })
   useLayoutEffect(() => {
-    if (!lineWrap) return undefined
+    if (!lineWrap || !jsonMode) {
+      setContentWidth(0)
+      return undefined
+    }
+    const area = areaRef.current
+    if (!area) return undefined
+    let probe = null
+    const measure = () => {
+      const style = getComputedStyle(area)
+      const width = area.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+      if (width <= 0) return
+      probe?.remove()
+      probe = document.createElement('span')
+      probe.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font:${style.font};letter-spacing:${style.letterSpacing};`
+      area.parentElement.appendChild(probe)
+      const cache = new Map()
+      const widthOf = ch => {
+        const hit = cache.get(ch)
+        if (hit != null) return hit
+        probe.textContent = ch
+        const next = probe.getBoundingClientRect().width
+        cache.set(ch, next)
+        return next
+      }
+      widthOfRef.current = widthOf
+      const next = Math.max(1, Math.floor(width) - 1)
+      setContentWidth(prev => prev === next ? prev : next)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(area)
+    return () => { observer.disconnect(); probe?.remove() }
+  }, [lineWrap, jsonMode])
+  useLayoutEffect(() => {
+    const area = areaRef.current
+    const pos = pendingCaret.current
+    if (pos == null || !area || document.activeElement !== area) return
+    const at = viewToDisplay(pos, synthetics)
+    pendingCaret.current = null
+    if (area.selectionStart !== at || area.selectionEnd !== at) area.setSelectionRange(at, at)
+  })
+  useLayoutEffect(() => {
+    if (!lineWrap || jsonMode) return undefined
     const area = areaRef.current
     if (!area) return undefined
     let frame = 0
     const measure = () => {
-      const heights = wrappedLineHeights(area, text)
+      const heights = wrappedLineHeights(area, view)
       if (heights) setLineHeights(prev => sameHeights(prev, heights) ? prev : heights)
-      if (gutterRef.current) gutterRef.current.scrollTop = area.scrollTop
+      syncScroll(area)
     }
     measure()
     const observer = new ResizeObserver(() => {
@@ -163,18 +286,18 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     })
     observer.observe(area)
     return () => { observer.disconnect(); cancelAnimationFrame(frame) }
-  }, [lineWrap, text])
+  }, [lineWrap, view])
   useLayoutEffect(() => {
     const area = areaRef.current
-    const range = ranges[current]
+    const range = viewRanges.painted[viewRanges.at]
     if (!findOpen || !query || !area || !range) return
     // ponytail: scroll by newline count; wrapped lines can stop short of the match
-    const line = text.slice(0, range.start).split('\n').length - 1
+    const line = display.slice(0, viewToDisplay(range.start, synthetics)).split('\n').length - 1
     const lineHeight = parseFloat(getComputedStyle(area).lineHeight) || 24
     const top = line * lineHeight
     if (top < area.scrollTop || top > area.scrollTop + area.clientHeight - lineHeight * 2) area.scrollTop = Math.max(0, top - area.clientHeight / 3)
-    if (layerRef.current) layerRef.current.scrollTop = area.scrollTop
-  }, [findOpen, query, current, ranges, text])
+    syncScroll(area)
+  }, [findOpen, query, display, viewRanges, synthetics])
   function cycle(step) {
     if (!ranges.length) return
     setActive(index => (index + step + ranges.length) % ranges.length)
@@ -217,6 +340,54 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     const at = nextRanges.findIndex(item => item.start >= cursor)
     setActive(at < 0 ? 0 : at)
   }
+  function toggleFold(path) {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  }
+  function onClipboard(e) {
+    if (!folds.length && !synthetics.length) return
+    const area = areaRef.current
+    if (!area) return
+    const start = area.selectionStart
+    const end = area.selectionEnd
+    if (e.type === 'copy' && start === end) return
+    const viewStart = displayToView(start, synthetics)
+    const viewEnd = displayToView(end, synthetics)
+    const whole = viewStart === 0 && viewEnd === view.length
+    let slice = view.slice(viewStart, viewEnd)
+    if (folds.length) {
+      const span = mapViewSpan(viewStart, viewEnd, folds)
+      slice = whole ? text : text.slice(span.srcStart, span.srcEnd)
+    }
+    e.preventDefault()
+    e.clipboardData?.setData('text/plain', slice)
+    if (e.type === 'cut' && onChange && start !== end) {
+      const nextView = view.slice(0, viewStart) + view.slice(viewEnd)
+      onChange(folds.length ? applyViewEdit(text, folds, view, nextView) : nextView)
+    }
+  }
+  function onAreaChange(e) {
+    if (!onChange) return
+    const nextDisplay = e.target.value
+    const nextView = applyDisplayEdit(view, synthetics, display, nextDisplay)
+    let start = 0
+    let prevEnd = display.length
+    let nextEnd = nextDisplay.length
+    while (start < prevEnd && start < nextEnd && display[start] === nextDisplay[start]) start++
+    while (prevEnd > start && nextEnd > start && display[prevEnd - 1] === nextDisplay[nextEnd - 1]) { prevEnd--; nextEnd-- }
+    const shifted = synthetics.flatMap(span => {
+      if (span.end <= start) return [span]
+      const delta = (nextEnd - start) - (prevEnd - start)
+      if (span.start >= prevEnd) return [{ start: span.start + delta, end: span.end + delta }]
+      return []
+    })
+    pendingCaret.current = displayToView(e.target.selectionStart, shifted)
+    onChange(folds.length ? applyViewEdit(text, folds, view, nextView) : nextView)
+  }
   const labelText = t(label)
   const placeholderText = t(placeholder)
   return <section className={`editor-card${output ? ' output-card' : ''}${error ? ' has-error' : ''}`}>
@@ -250,11 +421,11 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
         <button type="button" className="icon-action" title={t("Replace all (Ctrl+Enter)")} disabled={!ranges.length || !!findError} onClick={() => applyReplace(true)}>{t("All")}</button>
       </div>}
     </div>}
-    <div className={`code-shell${lineWrap ? ' wrap-lines' : ''}${multiline === false ? ' single-line' : ''}`}>
-      <div ref={gutterRef} className="line-gutter" aria-hidden="true">{text.split('\n').map((_, index) => <span key={index} style={lineWrap && lineHeights[index] ? { height: lineHeights[index] } : undefined}>{index + 1}</span>)}</div>
+    <div className={`code-shell${lineWrap ? ' wrap-lines' : ''}${wrapped ? ' soft-wrap' : ''}${multiline === false ? ' single-line' : ''}`}>
+      <div ref={gutterRef} className="line-gutter" aria-hidden={lineMeta ? undefined : true}><div className="code-shift">{(lineMeta || view.split('\n').map((_, line) => ({ line }))).map((row, index) => <span key={row.line} className={lineMeta ? 'gutter-line' : undefined} style={wrapped && wrapped.rows[index] > 1 ? { height: `${wrapped.rows[index] * 26}px` } : lineWrap && lineHeights[index] ? { height: lineHeights[index] } : undefined}>{lineMeta && (row.path ? <button type="button" className="fold-toggle" aria-expanded={!row.folded} aria-label={t(row.folded ? 'Expand fold' : 'Collapse fold')} onMouseDown={e => e.preventDefault()} onClick={() => toggleFold(row.path)}>{row.folded ? '+' : '−'}</button> : <span className="fold-pad" />)}{lineMeta ? <span className="gutter-num" aria-hidden="true">{row.line + 1}</span> : row.line + 1}</span>)}</div></div>
       <div className="code-body">
-      {parts && <pre ref={layerRef} className="code-highlight" aria-hidden="true">{parts.map((part, index) => <span key={index} className={[part.kind && `tok-${part.kind}`, part.find && 'tok-find', part.current && 'current'].filter(Boolean).join(' ') || undefined}>{part.text}</span>)}</pre>}
-      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${parts ? ' syntax' : ''}`} value={text} readOnly={readOnly} onChange={onChange ? e => onChange(e.target.value) : undefined} onSelect={onSelect} onScroll={e => { if (layerRef.current) { layerRef.current.scrollTop = e.target.scrollTop; layerRef.current.scrollLeft = e.target.scrollLeft }; if (gutterRef.current) gutterRef.current.scrollTop = e.target.scrollTop }} onKeyDown={e => {
+      {parts && <pre ref={layerRef} className="code-highlight" aria-hidden="true"><div className="code-shift">{unit || foldedAt.size ? renderParts(parts, unit, foldedAt) : parts.map((part, index) => <span key={index} className={tokenClass(part)}>{part.text}</span>)}</div></pre>}
+      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${parts ? ' syntax' : ''}`} value={display} readOnly={readOnly} onChange={onChange ? onAreaChange : undefined} onCopy={onClipboard} onCut={onClipboard} onSelect={onSelect} onScroll={e => syncScroll(e.target)} onKeyDown={e => {
         const mod = (e.metaKey || e.ctrlKey) && !e.altKey
         if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); showFind() }
         else if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); showReplace() }
