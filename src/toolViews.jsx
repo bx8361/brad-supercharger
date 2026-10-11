@@ -52,7 +52,7 @@ function tokenClass(part) {
   return [part.kind && `tok-${part.kind}`, part.find && 'tok-find', part.current && 'current'].filter(Boolean).join(' ') || undefined
 }
 
-function renderParts(parts, unit, foldedAt) {
+function renderParts(parts, unit, foldedAt, activeLevel) {
   const lines = [[]]
   let lineStart = true
   let key = 0
@@ -66,7 +66,7 @@ function renderParts(parts, unit, foldedAt) {
         const rest = bit.slice(lead.length)
         const pieces = indentPieces(lead, unit)
         if (pieces.some(piece => piece.level != null)) {
-          push(<span key={key++} className="indent-rail" aria-hidden="true">{pieces.map(piece => piece.level == null ? piece.text : <span key={key++} className={`indent-guide c${piece.level % 6}`}>{piece.text}</span>)}</span>)
+          push(<span key={key++} className="indent-rail" aria-hidden="true">{pieces.map(piece => piece.level == null ? piece.text : <span key={key++} className={`indent-guide c${piece.level % 6}${activeLevel != null && piece.level === activeLevel ? ' on' : ''}`}>{piece.text}</span>)}</span>)
         }
         if (lead) push(lead)
         if (rest) push(<span key={key++} className={tokenClass(part)}>{rest}</span>)
@@ -135,7 +135,15 @@ function WrapScope({ data, setData, children }) {
   </WrapContext.Provider>
 }
 
-function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false }) {
+function indentDepth(lead, unit) {
+  if (!unit) return 0
+  if (unit === '\t') return [...lead].filter(ch => ch === '\t').length
+  let depth = 0
+  while (lead.startsWith(unit.repeat(depth + 1))) depth++
+  return depth
+}
+
+function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false, indentGuides = null, matchMargin = false, emphasizeIndent = false }) {
   const lineWrap = useLineWrap(wrap)
   const lineRows = multiline ? rows : 1
   const areaRef = useRef(null)
@@ -157,6 +165,8 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   const [regex, setRegex] = useState(false)
   const [active, setActive] = useState(0)
   const [collapsed, setCollapsed] = useState(() => new Set())
+  const [caret, setCaret] = useState(0)
+  const [selection, setSelection] = useState([0, 0])
   const text = value ?? ''
   const jsonMode = language === 'json' && !error && multiline !== false
   const findOpts = useMemo(() => ({ caseSensitive, wholeWord, regex }), [caseSensitive, wholeWord, regex])
@@ -186,8 +196,35 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     try { findPattern(query, findOpts); return '' } catch (error) { return error.message }
   }, [regex, query, findOpts])
   const displayRanges = useMemo(() => wrapped ? viewRanges.painted.map(range => ({ start: viewToDisplay(range.start, synthetics), end: viewToDisplay(range.end, synthetics) })) : viewRanges.painted, [wrapped, viewRanges, synthetics])
-  const parts = useMemo(() => paint(display, error ? '' : language, displayRanges, viewRanges.at), [display, error, language, displayRanges, viewRanges.at])
-  const unit = useMemo(() => jsonMode ? indentUnit(view) : '', [jsonMode, view])
+  const marginRanges = useMemo(() => {
+    if (!matchMargin || findOpen) return []
+    const [a, b] = selection
+    if (a === b) return []
+    const needle = display.slice(Math.min(a, b), Math.max(a, b))
+    if (!needle) return []
+    const out = []
+    let from = 0
+    while (from < display.length) {
+      const at = display.indexOf(needle, from)
+      if (at < 0) break
+      out.push({ start: at, end: at + needle.length })
+      from = at + needle.length
+    }
+    return out
+  }, [matchMargin, findOpen, selection, display])
+  const markRanges = findOpen ? displayRanges : marginRanges
+  const parts = useMemo(() => paint(display, error ? '' : language, markRanges, findOpen ? viewRanges.at : -1), [display, error, language, markRanges, findOpen, viewRanges.at])
+  const showGuides = indentGuides == null ? jsonMode : indentGuides
+  const unit = useMemo(() => showGuides ? indentUnit(view) : '', [showGuides, view])
+  const activeLevel = useMemo(() => {
+    if (!emphasizeIndent || !unit) return null
+    const lineStart = display.lastIndexOf('\n', Math.max(0, caret - 1)) + 1
+    const end = display.indexOf('\n', lineStart)
+    const line = display.slice(lineStart, end < 0 ? display.length : end)
+    const depth = indentDepth(line.match(/^[ \t]*/)[0], unit)
+    return depth > 0 ? depth - 1 : null
+  }, [emphasizeIndent, unit, display, caret])
+  const painted = parts || (unit ? [{ text: display }] : null)
   const foldedAt = useMemo(() => {
     const marks = new Map()
     let at = 0
@@ -203,6 +240,18 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     const field = focusFind.current ? findRef.current : replaceRef.current
     field?.focus()
   }, [findOpen, replaceOpen])
+  useEffect(() => {
+    if (!matchMargin && !emphasizeIndent) return undefined
+    const area = areaRef.current
+    if (!area) return undefined
+    const sync = () => {
+      if (document.activeElement !== area) return
+      setCaret(area.selectionStart)
+      setSelection([area.selectionStart, area.selectionEnd])
+    }
+    document.addEventListener('selectionchange', sync)
+    return () => document.removeEventListener('selectionchange', sync)
+  }, [matchMargin, emphasizeIndent])
   useEffect(() => {
     if (!findOpen) return
     const range = ranges[current]
@@ -424,8 +473,8 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     <div className={`code-shell${lineWrap ? ' wrap-lines' : ''}${wrapped ? ' soft-wrap' : ''}${multiline === false ? ' single-line' : ''}`}>
       <div ref={gutterRef} className="line-gutter" aria-hidden={lineMeta ? undefined : true}><div className="code-shift">{(lineMeta || view.split('\n').map((_, line) => ({ line }))).map((row, index) => <span key={row.line} className={lineMeta ? 'gutter-line' : undefined} style={wrapped && wrapped.rows[index] > 1 ? { height: `${wrapped.rows[index] * 26}px` } : lineWrap && lineHeights[index] ? { height: lineHeights[index] } : undefined}>{lineMeta && (row.path ? <button type="button" className="fold-toggle" aria-expanded={!row.folded} aria-label={t(row.folded ? 'Expand fold' : 'Collapse fold')} onMouseDown={e => e.preventDefault()} onClick={() => toggleFold(row.path)}>{row.folded ? '+' : '−'}</button> : <span className="fold-pad" />)}{lineMeta ? <span className="gutter-num" aria-hidden="true">{row.line + 1}</span> : row.line + 1}</span>)}</div></div>
       <div className="code-body">
-      {parts && <pre ref={layerRef} className="code-highlight" aria-hidden="true"><div className="code-shift">{unit || foldedAt.size ? renderParts(parts, unit, foldedAt) : parts.map((part, index) => <span key={index} className={tokenClass(part)}>{part.text}</span>)}</div></pre>}
-      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${parts ? ' syntax' : ''}`} value={display} readOnly={readOnly} onChange={onChange ? onAreaChange : undefined} onCopy={onClipboard} onCut={onClipboard} onSelect={onSelect} onScroll={e => syncScroll(e.target)} onKeyDown={e => {
+      {painted && <pre ref={layerRef} className="code-highlight" aria-hidden="true"><div className="code-shift">{unit || foldedAt.size ? renderParts(painted, unit, foldedAt, activeLevel) : painted.map((part, index) => <span key={index} className={tokenClass(part)}>{part.text}</span>)}</div></pre>}
+      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${painted ? ' syntax' : ''}`} value={display} readOnly={readOnly} onChange={onChange ? onAreaChange : undefined} onCopy={onClipboard} onCut={onClipboard} onSelect={onSelect} onScroll={e => syncScroll(e.target)} onKeyDown={e => {
         const mod = (e.metaKey || e.ctrlKey) && !e.altKey
         if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); showFind() }
         else if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); showReplace() }
@@ -860,9 +909,28 @@ function contentIndent(indent) {
   return indent === 'tab' ? '\t' : Number(indent)
 }
 
-function checked(data, key) {
-  const value = textValue(data, key, false)
+function checked(data, key, fallback = false) {
+  const value = textValue(data, key, fallback)
   return value === true || value === 'true'
+}
+
+function textViewProps(data, indentDefault = false) {
+  return {
+    indentGuides: checked(data, 'guides', indentDefault),
+    matchMargin: checked(data, 'margin'),
+    emphasizeIndent: checked(data, 'emphasize'),
+  }
+}
+
+function TextViewToggles({ data, setData, indentDefault = false }) {
+  const guides = checked(data, 'guides', indentDefault)
+  const margin = checked(data, 'margin')
+  const emphasize = checked(data, 'emphasize')
+  return <>
+    <label className="check-pill"><input type="checkbox" checked={guides} onChange={e => set(setData, 'guides', e.target.checked)} />{t("Indent lines")}</label>
+    <label className="check-pill"><input type="checkbox" checked={margin} onChange={e => set(setData, 'margin', e.target.checked)} />{t("Match margin")}</label>
+    <label className="check-pill"><input type="checkbox" checked={emphasize} onChange={e => set(setData, 'emphasize', e.target.checked)} />{t("Emphasize indent lines")}</label>
+  </>
 }
 
 function JSONTool({ data, setData }) {
@@ -875,8 +943,8 @@ function JSONTool({ data, setData }) {
   try { output = formatJson(input, { mode, indent, sort, repair }) }
   catch (e) { error = input ? e.message : ''; }
   return <div className="tool-content">
-    <div className="inline-controls"><label>{t("Action")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="format">{t("Format JSON")}</option><option value="minify">{t("Minify JSON")}</option></select></label><label>{t("Indentation")}<select value={indent} onChange={e => set(setData, 'indent', e.target.value)}><option value="2">{t("2 spaces")}</option><option value="4">{t("4 spaces")}</option><option value="tab">{t("Tab")}</option></select></label><label className="check-pill"><input type="checkbox" checked={sort} onChange={e => set(setData, 'sort', e.target.checked)} />{t("Sort properties")}</label><label className="check-pill" title={t("Single quotes, trailing commas, comments, and unquoted keys. The input is left unchanged.")}><input type="checkbox" checked={repair} onChange={e => set(setData, 'repair', e.target.checked)} />{t("Fix common issues")}</label><Sample onClick={() => set(setData, 'input', initialSamples.json)} /></div>
-    <Split><Editor value={input} onChange={v => set(setData, 'input', v)} label="JSON input" language="json" /><Output value={output} label="Formatted JSON" error={!!error} language="json" placeholder={error || 'Enter valid JSON to see the result.'} /></Split>
+    <div className="inline-controls"><label>{t("Action")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="format">{t("Format JSON")}</option><option value="minify">{t("Minify JSON")}</option></select></label><label>{t("Indentation")}<select value={indent} onChange={e => set(setData, 'indent', e.target.value)}><option value="2">{t("2 spaces")}</option><option value="4">{t("4 spaces")}</option><option value="tab">{t("Tab")}</option></select></label><label className="check-pill"><input type="checkbox" checked={sort} onChange={e => set(setData, 'sort', e.target.checked)} />{t("Sort properties")}</label><label className="check-pill" title={t("Single quotes, trailing commas, comments, and unquoted keys. The input is left unchanged.")}><input type="checkbox" checked={repair} onChange={e => set(setData, 'repair', e.target.checked)} />{t("Fix common issues")}</label><TextViewToggles data={data} setData={setData} indentDefault /><Sample onClick={() => set(setData, 'input', initialSamples.json)} /></div>
+    <Split><Editor value={input} onChange={v => set(setData, 'input', v)} label="JSON input" language="json" {...textViewProps(data, true)} /><Output value={output} label="Formatted JSON" error={!!error} language="json" placeholder={error || 'Enter valid JSON to see the result.'} {...textViewProps(data, true)} /></Split>
     {error && <p className="error-note">{t(error)}</p>}
   </div>
 }
@@ -1186,9 +1254,9 @@ function JsonTableTool({ data, setData }) {
   } catch (e) { error = input.trim() ? e.message : '' }
   const tableView = !error && format === 'table' && table.rows.length > 0
   return <div className="tool-content">
-    <div className="inline-controls"><label>{t("Output")}<select value={format} onChange={e => set(setData, 'format', e.target.value)}><option value="table">{t("Table")}</option><option value="csv">{t("CSV")}</option><option value="tsv">{t("TSV")}</option></select></label><Sample onClick={() => set(setData, 'input', initialSamples['json-table'])} /></div>
+    <div className="inline-controls"><label>{t("Output")}<select value={format} onChange={e => set(setData, 'format', e.target.value)}><option value="table">{t("Table")}</option><option value="csv">{t("CSV")}</option><option value="tsv">{t("TSV")}</option></select></label><TextViewToggles data={data} setData={setData} indentDefault /><Sample onClick={() => set(setData, 'input', initialSamples['json-table'])} /></div>
     <Split>
-      <Editor label="JSON input" value={input} onChange={v => set(setData, 'input', v)} language="json" />
+      <Editor label="JSON input" value={input} onChange={v => set(setData, 'input', v)} language="json" {...textViewProps(data, true)} />
       {tableView ? <section className="editor-card json-table-card"><div className="panel-top"><span>{t("Table preview")}</span><span>{table.rows.length} row{table.rows.length === 1 ? '' : 's'}</span></div><table className="json-table"><thead><tr>{table.columns.map(col => <th key={col}>{col}</th>)}</tr></thead><tbody>{table.rows.map((row, index) => <tr key={index}>{table.columns.map(col => <td key={col}>{row[col]}</td>)}</tr>)}</tbody></table></section>
         : <Output label={format === 'csv' ? 'CSV output' : format === 'tsv' ? 'TSV output' : 'Table preview'} value={output} error={!!error} placeholder={error || 'Enter valid JSON to build a table.'} />}
     </Split>
@@ -2281,9 +2349,9 @@ function JsonPathTool({ data, setData }) {
   const query = textValue(data, 'query', initialSamples['jsonpath-query'])
   const result = useMemo(() => queryJsonPath(input, query), [input, query])
   return <div className="tool-content jsonpath-tool">
-    <div className="inline-controls"><Sample onClick={() => setData({ input: initialSamples.jsonpath, query: initialSamples['jsonpath-query'] })} /></div>
+    <div className="inline-controls"><TextViewToggles data={data} setData={setData} indentDefault /><Sample onClick={() => setData({ input: initialSamples.jsonpath, query: initialSamples['jsonpath-query'] })} /></div>
     <Split axis="y" storageKey="jsonpath-height" className="compare-stack">
-      <Split><Editor label="JSON input" value={input} onChange={v => set(setData, 'input', v)} language="json" /><div className="jsonpath-side"><label className="regex-controls">{t("JSONPath")}<input value={query} onChange={e => set(setData, 'query', e.target.value)} spellCheck="false" placeholder="$.store.book[0].title" /></label><Output label="JSONPath result" value={result.output} error={!!result.error} language="json" placeholder={result.error ? t(result.error) : t('Enter JSON and a JSONPath query.')} /></div></Split>
+      <Split><Editor label="JSON input" value={input} onChange={v => set(setData, 'input', v)} language="json" {...textViewProps(data, true)} /><div className="jsonpath-side"><label className="regex-controls">{t("JSONPath")}<input value={query} onChange={e => set(setData, 'query', e.target.value)} spellCheck="false" placeholder="$.store.book[0].title" /></label><Output label="JSONPath result" value={result.output} error={!!result.error} language="json" placeholder={result.error ? t(result.error) : t('Enter JSON and a JSONPath query.')} {...textViewProps(data, true)} /></div></Split>
       <section className="editor-card cheat-sheet-card"><div className="panel-top"><span>{t("JSONPath cheat sheet")}</span></div><div className="cheat-sheet-scroll"><table className="json-table cheat-sheet-table"><thead><tr><th>{t("Syntax")}</th><th>{t("Description")}</th></tr></thead><tbody>{jsonPathCheatSheet.map(([syntax, description]) => <tr key={syntax}><td><code>{syntax}</code></td><td>{t(description)}</td></tr>)}</tbody></table></div></section>
     </Split>
   </div>

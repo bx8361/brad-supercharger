@@ -395,3 +395,4 @@ html.hoppscotch-zen .hoppscotch-frame { position:absolute;left:0;right:0;top:45p
 
 html.drawio-zen .tool-workspace,html.hoppscotch-zen .tool-workspace { flex:1;height:auto;min-height:0; }
 html.drawio-zen .resize-handle,html.hoppscotch-zen .resize-handle { display:none; }
+.indent-guide.on { background:linear-gradient(var(--accent),var(--accent)) left/2px 100% no-repeat; }
