@@ -47,6 +47,31 @@ function editorClass(wrap, multiline) {
   return `code-editor${wrap ? ' wrap-lines' : ''}${multiline === false ? ' single-line' : ''}`
 }
 
+function sameHeights(a, b) {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+  return true
+}
+
+// ponytail: one offscreen div per logical line; switch to a canvas measure if huge inputs get slow
+function wrappedLineHeights(area, text) {
+  const style = getComputedStyle(area)
+  const width = area.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+  if (width <= 0) return null
+  const probe = document.createElement('div')
+  probe.setAttribute('aria-hidden', 'true')
+  probe.style.cssText = `position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;width:${width}px;font-family:${style.fontFamily};font-size:${style.fontSize};font-weight:${style.fontWeight};line-height:${style.lineHeight};letter-spacing:${style.letterSpacing};tab-size:${style.tabSize};white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-all;`
+  for (const line of text.split('\n')) {
+    const row = document.createElement('div')
+    row.textContent = line || ' '
+    probe.appendChild(row)
+  }
+  area.parentElement.appendChild(probe)
+  const heights = [...probe.children].map(row => Math.round(row.getBoundingClientRect().height * 100) / 100)
+  probe.remove()
+  return heights
+}
+
 const WrapContext = createContext(null)
 
 function wrapOn(data) {
@@ -85,6 +110,8 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   const lineRows = multiline ? rows : 1
   const areaRef = useRef(null)
   const layerRef = useRef(null)
+  const gutterRef = useRef(null)
+  const [lineHeights, setLineHeights] = useState([])
   const findRef = useRef(null)
   const replaceRef = useRef(null)
   const focusFind = useRef(true)
@@ -117,7 +144,26 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     layer.style.paddingRight = `${14 + area.offsetWidth - area.clientWidth}px`
     layer.scrollTop = area.scrollTop
     layer.scrollLeft = area.scrollLeft
+    if (gutterRef.current) gutterRef.current.scrollTop = area.scrollTop
   })
+  useLayoutEffect(() => {
+    if (!lineWrap) return undefined
+    const area = areaRef.current
+    if (!area) return undefined
+    let frame = 0
+    const measure = () => {
+      const heights = wrappedLineHeights(area, text)
+      if (heights) setLineHeights(prev => sameHeights(prev, heights) ? prev : heights)
+      if (gutterRef.current) gutterRef.current.scrollTop = area.scrollTop
+    }
+    measure()
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(measure)
+    })
+    observer.observe(area)
+    return () => { observer.disconnect(); cancelAnimationFrame(frame) }
+  }, [lineWrap, text])
   useLayoutEffect(() => {
     const area = areaRef.current
     const range = ranges[current]
@@ -205,13 +251,16 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
       </div>}
     </div>}
     <div className={`code-shell${lineWrap ? ' wrap-lines' : ''}${multiline === false ? ' single-line' : ''}`}>
+      <div ref={gutterRef} className="line-gutter" aria-hidden="true">{text.split('\n').map((_, index) => <span key={index} style={lineWrap && lineHeights[index] ? { height: lineHeights[index] } : undefined}>{index + 1}</span>)}</div>
+      <div className="code-body">
       {parts && <pre ref={layerRef} className="code-highlight" aria-hidden="true">{parts.map((part, index) => <span key={index} className={[part.kind && `tok-${part.kind}`, part.find && 'tok-find', part.current && 'current'].filter(Boolean).join(' ') || undefined}>{part.text}</span>)}</pre>}
-      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${parts ? ' syntax' : ''}`} value={text} readOnly={readOnly} onChange={onChange ? e => onChange(e.target.value) : undefined} onSelect={onSelect} onScroll={e => { if (layerRef.current) { layerRef.current.scrollTop = e.target.scrollTop; layerRef.current.scrollLeft = e.target.scrollLeft } }} onKeyDown={e => {
+      <textarea ref={areaRef} className={`${editorClass(lineWrap, multiline)}${output ? ' output-editor' : ''}${parts ? ' syntax' : ''}`} value={text} readOnly={readOnly} onChange={onChange ? e => onChange(e.target.value) : undefined} onSelect={onSelect} onScroll={e => { if (layerRef.current) { layerRef.current.scrollTop = e.target.scrollTop; layerRef.current.scrollLeft = e.target.scrollLeft }; if (gutterRef.current) gutterRef.current.scrollTop = e.target.scrollTop }} onKeyDown={e => {
         const mod = (e.metaKey || e.ctrlKey) && !e.altKey
         if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); showFind() }
         else if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); showReplace() }
         else onKeyDown?.(e)
       }} placeholder={placeholderText} rows={lineRows} spellCheck="false" />
+      </div>
     </div>
     {footer && <div className="panel-footer">{footer}</div>}
   </section>
