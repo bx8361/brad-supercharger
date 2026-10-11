@@ -1,4 +1,4 @@
-const jsonRe = /"(?:\\u[0-9a-fA-F]{4}|\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b/g
+const jsonRe = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b/g
 const yamlRe = /"(?:\\.|[^"\\\n])*"|'(?:[^'\n]|'')*'|#[^\n]*|^[ \t]*(?:-[ \t]+)?[^:#\n][^:\n]*:|\b(?:true|false|null|yes|no|on|off)\b|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/gm
 const xmlRe = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?[\w:.-]+|\/?>|"[^"]*"|'[^']*'/g
 const sqlRe = /--[^\n]*|\/\*[\s\S]*?\*\/|'(?:''|[^'])*'|"(?:[^"])*"|`(?:``|[^`])*`|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][\w$]*\b/g
@@ -23,7 +23,7 @@ function scan(text, re, kindOf) {
 
 function tokenizeJson(text) {
   const keys = new Set()
-  const keyRe = /"(?:\\u[0-9a-fA-F]{4}|\\.|[^"\\])*"(?=\s*:)/g
+  const keyRe = /"(?:\\.|[^"\\])*"(?=\s*:)/g
   let match
   while ((match = keyRe.exec(text))) keys.add(match.index)
   return scan(text, jsonRe, (token, index) => {
