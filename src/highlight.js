@@ -102,7 +102,7 @@ export function flattenHighlight(node, parentKind = '', parts = []) {
 }
 
 function refractorApi(mod) {
-  return mod?.highlight ? mod : mod?.default
+  return mod?.highlight ? mod : mod?.refractor || mod?.default
 }
 
 // ponytail: one refractor chunk for every grammar. Split per language if that chunk gets slow.

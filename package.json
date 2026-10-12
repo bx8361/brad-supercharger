@@ -35,18 +35,23 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "reflect-metadata": "^0.2.2",
-    "refractor": "^3.6.0",
+    "refractor": "^5.0.0",
     "sql-formatter": "^15.9.0",
     "xmllint-wasm": "^5.3.0",
     "yaml": "^2.8.0"
   },
+  "overrides": {
+    "glob": "11.1.0",
+    "katex": "0.19.0",
+    "serialize-javascript": "7.1.2"
+  },
   "devDependencies": {
-    "@import-meta-env/cli": "0.6.3",
+    "@import-meta-env/cli": "0.6.9",
     "@types/papaparse": "^5.3.16",
     "@types/plotly.js": "^3.0.8",
     "@vitejs/plugin-react": "^4.7.0",
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.11"
   }
 }

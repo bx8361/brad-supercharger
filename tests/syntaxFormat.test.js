@@ -1,6 +1,5 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createRequire } from 'node:module'
 import { flattenHighlight } from '../src/highlight.js'
 import { formatSyntax } from '../src/syntaxFormat.js'
 import { syntaxLanguage } from '../src/syntaxLanguages.js'
@@ -16,8 +15,8 @@ test('flatten highlight keeps parent token kind around nested text', () => {
   assert.deepEqual(parts, [{ text: 'const ' }, { kind: 'keyword', text: 'let' }])
 })
 
-test('refractor javascript tokens cover the source', () => {
-  const refractor = createRequire(import.meta.url)('refractor')
+test('refractor javascript tokens cover the source', async () => {
+  const { refractor } = await import('refractor')
   const parts = flattenHighlight(refractor.highlight('const n = 1', 'javascript'))
   assert.equal(parts.map(part => part.text).join(''), 'const n = 1')
   assert.ok(parts.some(part => part.kind === 'keyword'))
