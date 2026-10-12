@@ -547,6 +547,7 @@ export const zhHans = {
   'Delete all': '全部删除',
   'Convert': '转换',
   'Save': '保存',
+  'Delete': '删除',
   'Converting…': '转换中…',
   'Ready': '就绪',
   'Failed': '失败',

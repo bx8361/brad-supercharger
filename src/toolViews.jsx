@@ -1924,10 +1924,10 @@ function ScratchpadTool({ data, setData }) {
   }
   return <div className="tool-content scratchpad-tool">
     <div className="inline-controls">
-      <label>{t("Name")}<input value={name} onChange={e => rename(e.target.value)} aria-label={t("Note name")} /></label>
+      <label>{t("Name")}<input value={name === 'Untitled' ? '' : name} placeholder={t('Untitled')} onChange={e => rename(e.target.value)} aria-label={t("Note name")} /></label>
       <button type="button" className="text-action" onClick={saveFile}><Save size={14} /> {t("Save")}</button>
       <label className="check-pill"><input type="checkbox" checked={autoSave} onChange={e => toggleAutoSave(e.target.checked)} />{t("Auto-save")}</label>
-      <label>{t("Saved")}<select value={selectedId} onChange={e => openFile(e.target.value)} aria-label={t("Saved notes")}><option value="">{t(files.length ? 'Open a note…' : 'No saved notes')}</option>{files.map(file => <option key={file.id} value={file.id}>{file.name}</option>)}</select></label>
+      <label>{t("Saved")}<select value={selectedId} onChange={e => openFile(e.target.value)} aria-label={t("Saved notes")}><option value="">{t(files.length ? 'Open a note…' : 'No saved notes')}</option>{files.map(file => <option key={file.id} value={file.id}>{file.name === 'Untitled' ? t('Untitled') : file.name}</option>)}</select></label>
       <button type="button" className="text-action" onClick={deleteFile} disabled={!selectedId}><Trash2 size={14} /> {t("Delete")}</button>
       <TextViewToggles data={data} setData={setData} />
     </div>

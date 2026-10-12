@@ -547,6 +547,7 @@ export const zhHant = {
   'Delete all': '全部刪除',
   'Convert': '轉換',
   'Save': '儲存',
+  'Delete': '刪除',
   'Converting…': '轉換中…',
   'Ready': '就緒',
   'Failed': '失敗',

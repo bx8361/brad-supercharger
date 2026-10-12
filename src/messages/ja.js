@@ -547,6 +547,7 @@ export const ja = {
   'Delete all': 'すべて削除',
   'Convert': '変換',
   'Save': '保存',
+  'Delete': '削除',
   'Converting…': '変換中…',
   'Ready': '完了',
   'Failed': '失敗',
