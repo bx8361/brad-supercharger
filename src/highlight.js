@@ -67,6 +67,55 @@ const scanners = {
   sql: text => scan(text, sqlRe, classifySql),
 }
 
+const refractorScanners = new Map()
+let refractorPromise
+
+const tokenKind = {
+  comment: 'comment', prolog: 'comment', doctype: 'comment', cdata: 'comment',
+  string: 'string', char: 'string', builtin: 'string', regex: 'string', 'attr-value': 'string',
+  number: 'number', boolean: 'bool', constant: 'number',
+  keyword: 'keyword', atrule: 'keyword', selector: 'keyword', unit: 'keyword', directive: 'keyword',
+  tag: 'tag',
+  function: 'key', 'class-name': 'key', property: 'key', 'attr-name': 'key',
+  inserted: 'string', deleted: 'keyword',
+}
+
+function classKind(className) {
+  const names = Array.isArray(className) ? className : [className]
+  for (const name of names) if (tokenKind[name]) return tokenKind[name]
+  return ''
+}
+
+export function flattenHighlight(node, parentKind = '', parts = []) {
+  if (!node) return parts
+  if (Array.isArray(node)) {
+    for (const child of node) flattenHighlight(child, parentKind, parts)
+    return parts
+  }
+  if (node.type === 'text') {
+    if (node.value) parts.push(parentKind ? { kind: parentKind, text: node.value } : { text: node.value })
+    return parts
+  }
+  const kind = classKind(node.properties?.className) || parentKind
+  for (const child of node.children || []) flattenHighlight(child, kind, parts)
+  return parts
+}
+
+function refractorApi(mod) {
+  return mod?.highlight ? mod : mod?.default
+}
+
+// ponytail: one refractor chunk for every grammar. Split per language if that chunk gets slow.
+export function ensureHighlight(language) {
+  if (!language || scanners[language] || refractorScanners.has(language)) return Promise.resolve(false)
+  refractorPromise ??= import('refractor').then(refractorApi)
+  return refractorPromise.then(refractor => {
+    if (!refractor?.registered(language) || refractorScanners.has(language)) return false
+    refractorScanners.set(language, text => flattenHighlight(refractor.highlight(text, language)))
+    return true
+  }).catch(() => false)
+}
+
 export function findPattern(query, { caseSensitive = false, wholeWord = false, regex = false } = {}) {
   if (!query) return null
   let source = regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -160,7 +209,8 @@ function splitMarks(parts, ranges, active) {
 
 export function paint(text, language, ranges = [], active = 0) {
   if (!language && !ranges.length) return null
-  const base = scanners[language] ? scanners[language](text) : [{ text }]
+  const scan = scanners[language] || refractorScanners.get(language)
+  const base = scan ? scan(text) : [{ text }]
   if (!ranges.length) return base
   return splitMarks(base.length ? base : [{ text }], ranges, Math.min(active, ranges.length - 1))
 }

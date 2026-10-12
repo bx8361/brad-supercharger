@@ -16,7 +16,9 @@ import {
   parseDataUrl, toDataUrl,
 } from './encodeOps.js'
 import { formatJson, formatSql, formatXml, sqlLanguages } from './formatOps.js'
-import { findPattern, findRanges, paint, replaceRanges } from './highlight.js'
+import { formatSyntax } from './syntaxFormat.js'
+import { editorLanguage, syntaxLanguage, syntaxLanguages } from './syntaxLanguages.js'
+import { ensureHighlight, findPattern, findRanges, paint, replaceRanges } from './highlight.js'
 import { activeFolds, applyDisplayEdit, applyViewEdit, displayToView, hideFolds, indentPieces, indentUnit, jsonFolds, mapRange, mapViewSpan, revealFold, viewToDisplay, visibleLines, wrapIndent } from './jsonFold.js'
 import { convertFromBase } from './numberBaseOps.js'
 import { compareDigests, generateLipsum, generateUuid } from './generateOps.js'
@@ -143,7 +145,7 @@ function indentDepth(lead, unit) {
   return depth
 }
 
-function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false, indentGuides = null, matchMargin = false, emphasizeIndent = false }) {
+function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false, indentGuides = null, matchMargin = false, emphasizeIndent = false, fold = null, tabSize }) {
   const lineWrap = useLineWrap(wrap)
   const lineRows = multiline ? rows : 1
   const areaRef = useRef(null)
@@ -168,7 +170,14 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   const [caret, setCaret] = useState(0)
   const [selection, setSelection] = useState([0, 0])
   const text = value ?? ''
-  const jsonMode = language === 'json' && !error && multiline !== false
+  const jsonMode = (fold ?? language === 'json') && !error && multiline !== false
+  const [hlTick, setHlTick] = useState(0)
+  useEffect(() => {
+    if (!language) return undefined
+    let alive = true
+    ensureHighlight(language).then(loaded => { if (alive && loaded) setHlTick(tick => tick + 1) })
+    return () => { alive = false }
+  }, [language])
   const findOpts = useMemo(() => ({ caseSensitive, wholeWord, regex }), [caseSensitive, wholeWord, regex])
   const ranges = useMemo(() => findRanges(text, findOpen ? query : '', findOpts), [text, query, findOpen, findOpts])
   const regions = useMemo(() => jsonMode ? jsonFolds(text) : [], [jsonMode, text])
@@ -213,7 +222,7 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
     return out
   }, [matchMargin, findOpen, selection, display])
   const markRanges = findOpen ? displayRanges : marginRanges
-  const parts = useMemo(() => paint(display, error ? '' : language, markRanges, findOpen ? viewRanges.at : -1), [display, error, language, markRanges, findOpen, viewRanges.at])
+  const parts = useMemo(() => paint(display, error ? '' : language, markRanges, findOpen ? viewRanges.at : -1), [display, error, language, markRanges, findOpen, viewRanges.at, hlTick])
   const showGuides = indentGuides == null ? jsonMode : indentGuides
   const unit = useMemo(() => showGuides ? indentUnit(view) : '', [showGuides, view])
   const activeLevel = useMemo(() => {
@@ -470,7 +479,7 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
         <button type="button" className="icon-action" title={t("Replace all (Ctrl+Enter)")} disabled={!ranges.length || !!findError} onClick={() => applyReplace(true)}>{t("All")}</button>
       </div>}
     </div>}
-    <div className={`code-shell${lineWrap ? ' wrap-lines' : ''}${wrapped ? ' soft-wrap' : ''}${multiline === false ? ' single-line' : ''}`}>
+    <div className={`code-shell${lineWrap ? ' wrap-lines' : ''}${wrapped ? ' soft-wrap' : ''}${multiline === false ? ' single-line' : ''}`} style={tabSize ? { '--code-tab': tabSize } : undefined}>
       <div ref={gutterRef} className="line-gutter" aria-hidden={lineMeta ? undefined : true}><div className="code-shift">{(lineMeta || view.split('\n').map((_, line) => ({ line }))).map((row, index) => <span key={row.line} className={lineMeta ? 'gutter-line' : undefined} style={wrapped && wrapped.rows[index] > 1 ? { height: `${wrapped.rows[index] * 26}px` } : lineWrap && lineHeights[index] ? { height: lineHeights[index] } : undefined}>{lineMeta && (row.path ? <button type="button" className="fold-toggle" aria-expanded={!row.folded} aria-label={t(row.folded ? 'Expand fold' : 'Collapse fold')} onMouseDown={e => e.preventDefault()} onClick={() => toggleFold(row.path)}>{row.folded ? '+' : '−'}</button> : <span className="fold-pad" />)}{lineMeta ? <span className="gutter-num" aria-hidden="true">{row.line + 1}</span> : row.line + 1}</span>)}</div></div>
       <div className="code-body">
       {painted && <pre ref={layerRef} className="code-highlight" aria-hidden="true"><div className="code-shift">{unit || foldedAt.size ? renderParts(painted, unit, foldedAt, activeLevel) : painted.map((part, index) => <span key={index} className={tokenClass(part)}>{part.text}</span>)}</div></pre>}
@@ -2854,11 +2863,42 @@ function ListCompareTool({ data, setData }) {
     <Split axis="y" storageKey="list-height" className="compare-stack"><Split className="compare-editors"><Editor label={t("List A")} value={left} onChange={v => set(setData, 'left', v)} /><Editor label={t("List B")} value={right} onChange={v => set(setData, 'right', v)} /></Split><Output label={outputLabels[mode] || t('Result')} value={rows.join('\n')} placeholder={t("No matching lines.")} /></Split></div>
 }
 
+function SyntaxTool({ data, setData }) {
+  const language = syntaxLanguage(textValue(data, 'language', 'javascript'))
+  const indent = textValue(data, 'indent', '2')
+  const fold = checked(data, 'fold', true)
+  const input = textValue(data, 'input', initialSamples.syntax)
+  const [error, setError] = useState('')
+  const view = textViewProps(data)
+  // ponytail: fold reuses the JSON brace scanner. Template strings and regexes can fold wrong.
+  async function format() {
+    setError('')
+    try { set(setData, 'input', await formatSyntax(input, language, indent)) }
+    catch (e) { setError(e.message || 'Could not format.') }
+  }
+  return <div className="tool-content syntax-tool">
+    <div className="inline-controls">
+      <label>{t("Language")}<select value={language.id} aria-label={t("Language")} onChange={e => { setError(''); set(setData, 'language', e.target.value) }}>{syntaxLanguages.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+      <label>{t("Indentation")}<select value={indent} onChange={e => set(setData, 'indent', e.target.value)}><option value="2">{t("2 spaces")}</option><option value="4">{t("4 spaces")}</option><option value="tab">{t("Tab")}</option></select></label>
+      <label className="check-pill"><input type="checkbox" checked={fold} onChange={e => set(setData, 'fold', e.target.checked)} />{t("Foldable")}</label>
+      <TextViewToggles data={data} setData={setData} />
+      <button type="button" className="text-action" disabled={!language.format} title={language.format ? t("Format code") : t("Formatting is not available for this language.")} onClick={format}><Sparkles size={14} /> {t("Format code")}</button>
+      <Sample onClick={() => { setError(''); setData({ language: 'javascript', input: initialSamples.syntax }) }} />
+    </div>
+    <Editor label="Source" value={input} onChange={value => { setError(''); set(setData, 'input', value) }} placeholder="Paste code to format." language={editorLanguage(language)} fold={fold} tabSize={indent === '4' ? 4 : indent === 'tab' ? 8 : 2} {...view} onKeyDown={e => {
+      if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey) return
+      e.preventDefault()
+      document.execCommand('insertText', false, '\t')
+    }} />
+    {error && <p className="error-note">{error}</p>}
+  </div>
+}
+
 const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundTool.jsx'))
 
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
-  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, hoppscotch: HoppscotchTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
+  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }

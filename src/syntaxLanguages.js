@@ -1,0 +1,76 @@
+// Language ids follow Outline's refractor list. The second "markup" is XML.
+// format is a prettier parser, or json/sql/xml for the formatters already in this app.
+// ponytail: languages without a formatter still highlight. Add a parser when one exists.
+
+export const syntaxLanguages = [
+  ['abap', 'ABAP'],
+  ['bash', 'Bash'],
+  ['clike', 'C'],
+  ['cpp', 'C++'],
+  ['csharp', 'C#'],
+  ['css', 'CSS', 'css'],
+  ['csv', 'CSV'],
+  ['dart', 'Dart'],
+  ['diff', 'Diff'],
+  ['docker', 'Docker'],
+  ['elixir', 'Elixir'],
+  ['erb', 'ERB'],
+  ['erlang', 'Erlang'],
+  ['fortran', 'Fortran'],
+  ['go', 'Go'],
+  ['graphql', 'GraphQL', 'graphql'],
+  ['groovy', 'Groovy'],
+  ['haskell', 'Haskell'],
+  ['hcl', 'HCL'],
+  ['markup', 'HTML', 'html'],
+  ['ini', 'INI'],
+  ['java', 'Java'],
+  ['javascript', 'JavaScript', 'babel'],
+  ['json', 'JSON', 'json'],
+  ['jsx', 'JSX', 'babel'],
+  ['kotlin', 'Kotlin'],
+  ['kusto', 'Kusto'],
+  ['lisp', 'Lisp'],
+  ['lua', 'Lua'],
+  ['makefile', 'Makefile'],
+  ['markdown', 'Markdown', 'markdown'],
+  ['mermaid', 'Mermaid'],
+  ['nginx', 'Nginx'],
+  ['nix', 'Nix'],
+  ['objectivec', 'Objective-C'],
+  ['ocaml', 'OCaml'],
+  ['perl', 'Perl'],
+  ['php', 'PHP'],
+  ['powershell', 'PowerShell'],
+  ['promql', 'PromQL'],
+  ['protobuf', 'Protobuf'],
+  ['python', 'Python'],
+  ['r', 'R'],
+  ['regex', 'Regex'],
+  ['ruby', 'Ruby'],
+  ['rust', 'Rust'],
+  ['scala', 'Scala'],
+  ['sass', 'Sass'],
+  ['scss', 'SCSS', 'scss'],
+  ['splunk-spl', 'Splunk SPL'],
+  ['sql', 'SQL', 'sql'],
+  ['solidity', 'Solidity'],
+  ['swift', 'Swift'],
+  ['toml', 'TOML'],
+  ['tsx', 'TSX', 'typescript'],
+  ['typescript', 'TypeScript', 'typescript'],
+  ['vbnet', 'Visual Basic'],
+  ['verilog', 'Verilog'],
+  ['vhdl', 'VHDL'],
+  ['yaml', 'YAML', 'yaml'],
+  ['xml', 'XML', 'xml'],
+  ['zig', 'Zig'],
+].map(([id, label, format = '']) => ({ id, label, format }))
+
+export function syntaxLanguage(id) {
+  return syntaxLanguages.find(lang => lang.id === id) || syntaxLanguages.find(lang => lang.id === 'javascript')
+}
+
+export function editorLanguage(lang) {
+  return lang.id === 'markup' ? 'html' : lang.id
+}
