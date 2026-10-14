@@ -35,6 +35,7 @@ import {
   cloneCalculatorSession, createCalculatorSession, evaluateCalculatorExpression, formatCalculatorExpression, formatCalculatorResult, resultFormats, searchCalculatorSymbols,
 } from './calculatorOps.js'
 import { queryJsonPath, regexControls, regexFlavors, regexHelp, validateXmlAgainstXsd } from './testerOps.js'
+import { exportSqlite, openSqliteBytes, resetSqlite, runSqlite } from './sqliteOps.js'
 import { analyze, caretInfo, compareChangeParts, compareLists, escapeString, reverseLines, shuffleLines, sideBySideRows, sortByLast, sortLines, toAlternating, toCamel, toCobol, toConstant, toCRLF, toInverse, toKebab, toLF, toPascal, toRandomCase, toSentence, toSnake, toTitle, toTrain, trimLines, unescapeString, uniqueLines } from './textOps.js'
 import { JSXGraph } from 'jsxgraph'
 import '../node_modules/jsxgraph/distrib/jsxgraph.css'
@@ -2912,12 +2913,101 @@ function SyntaxTool({ data, setData }) {
   </div>
 }
 
+function SqliteTool({ data, setData }) {
+  const sql = textValue(data, 'input', initialSamples.sqlite)
+  const [columns, setColumns] = useState([])
+  const [rows, setRows] = useState([])
+  const [note, setNote] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  function summary(result) {
+    const parts = []
+    if (result.columns.length) parts.push(t('{count} rows', { count: result.rows.length }))
+    if (result.changes) parts.push(t('{count} changes', { count: result.changes }))
+    if (result.truncated) parts.push(t('Showing the first {count} rows.', { count: result.rows.length }))
+    return parts.join(' · ')
+  }
+
+  async function run(text = sql) {
+    setBusy(true)
+    setError('')
+    try {
+      const result = await runSqlite(text)
+      setColumns(result.columns)
+      setRows(result.rows)
+      setNote(text.trim() ? summary(result) : '')
+    } catch (e) {
+      setColumns([])
+      setRows([])
+      setNote('')
+      setError(e.message || 'SQLite failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function openFile(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!window.confirm(t('Replace the database in this tab?'))) return
+    setBusy(true)
+    setError('')
+    try {
+      await openSqliteBytes(await file.arrayBuffer())
+      setColumns([])
+      setRows([])
+      setNote(file.name)
+    } catch (e) {
+      setError(e.message || 'Could not open that database.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function reset() {
+    if (!window.confirm(t('Replace the database in this tab?'))) return
+    setBusy(true)
+    setError('')
+    try {
+      await resetSqlite()
+      setColumns([])
+      setRows([])
+      setNote('')
+    } catch (e) {
+      setError(e.message || 'Could not reset the database.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return <div className="tool-content">
+    <div className="inline-controls">
+      <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
+      <label className="file-button"><FileUp size={14} /> {t('Open database')}<input type="file" accept=".sqlite,.sqlite3,.db,application/x-sqlite3,application/vnd.sqlite3" onChange={openFile} /></label>
+      <button type="button" className="text-action" disabled={busy} onClick={async () => { setError(''); try { downloadBlob(await exportSqlite(), 'database.sqlite') } catch (e) { setError(e.message || 'Could not export the database.') } }}><Download size={14} /> {t('Download database')}</button>
+      <button type="button" className="text-action" disabled={busy} onClick={reset}><Trash2 size={14} /> {t('New database')}</button>
+      <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.sqlite) }} />
+    </div>
+    <Split>
+      <Editor label="SQL" language="sql" value={sql} onChange={value => set(setData, 'input', value)} placeholder="Enter SQL to run." onKeyDown={e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run() }
+      }} />
+      {columns.length ? <section className="editor-card json-table-card"><div className="panel-top"><span>{t('Result')}</span><span>{note}</span></div><table className="json-table"><thead><tr>{columns.map((column, index) => <th key={index}>{column}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, index) => <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>) : <tr><td colSpan={columns.length}>{t('No rows.')}</td></tr>}</tbody></table></section>
+        : <Output label="Result" value="" placeholder={error || note || (busy ? 'Loading SQLite…' : 'Enter SQL to run.')} />}
+    </Split>
+    <p className="subtle">{t('Rows come from the first query in the script. The database stays in this tab.')}</p>
+    {error && <p className="error-note">{error}</p>}
+  </div>
+}
+
 const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundTool.jsx'))
 
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
   if (craftTitles[id]) return <CraftTool id={id} />
-  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
+  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, sqlite: SqliteTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }

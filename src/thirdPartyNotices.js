@@ -32,6 +32,12 @@ export const referencedProjects = [
     note: 'Web builds unpacked from sources/ into public/crafts/ by scripts/vendor-crafts.js.',
   },
   {
+    name: 'SQLite',
+    license: 'Public domain',
+    url: 'https://sqlite.org/copyright.html',
+    note: 'SQLite 3.54.0 WASM/JS build unpacked into public/sqlite/ by scripts/vendor-sqlite.js.',
+  },
+  {
     name: 'Hoppscotch',
     license: 'MIT',
     url: 'https://github.com/hoppscotch/hoppscotch',

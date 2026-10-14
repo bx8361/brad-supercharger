@@ -34,6 +34,10 @@ The **draw.io editor** tool vendors the [jgraph/drawio](https://github.com/jgrap
 
 The **Hoppscotch** tool vendors the Hoppscotch web client from the official [hoppscotch/hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) container image (MIT, release pinned in `scripts/vendor-hoppscotch.js`) into `public/hoppscotch/`. Hoppscotch was formerly known as Postwoman. Collections and workspaces are stored in your browser unless you connect a self-hosted backend.
 
+## SQLite
+
+The **SQLite** tool vendors the official [SQLite WASM/JS](https://sqlite.org/wasm) build `3.54.0` (public domain) into `public/sqlite/` via `scripts/vendor-sqlite.js`. The archive is `sqlite-wasm-3540000.zip` in the project root, or a download from sqlite.org when that file is absent.
+
 ## Data Playground
 
 Data Playground uses Papa Parse, Plotly, ml-pca, ml-distance, and ml-kmeans (MIT). These dependencies ship with Supercharger; their installed package metadata includes the license notices.

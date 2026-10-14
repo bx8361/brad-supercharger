@@ -65,6 +65,7 @@ export const tools = [
   { id: 'm3u8', name: 'M3U8 downloader', short: 'HLS', description: 'Download HLS streams with AES-128 support; memory or streaming save.', category: 'media', icon: CloudDownload, keywords: 'hls video ts segment playlist stream' },
   { id: 'jsonpath', name: 'JSONPath tester', short: 'JP', description: 'Query JSON with JSONPath expressions.', category: 'test', icon: Braces, keywords: 'json path query filter selector' },
   { id: 'xml-tester', name: 'XML tester', short: 'XSD', description: 'Validate XML documents against an XSD schema.', category: 'test', icon: FileSearch, keywords: 'xsd schema validate xml' },
+  { id: 'sqlite', name: 'SQLite', short: 'DB', description: 'Run SQL in the browser with SQLite WASM. The database stays in this tab.', category: 'test', icon: Database, keywords: 'sqlite wasm sql query database playground' },
   { id: 'regex', name: 'Regex tester', short: '.*', description: 'Test, replace, and extract with JavaScript, Python, Go, Java, .NET, and Rust patterns.', category: 'test', icon: Regex, keywords: 'pattern match capture groups tester flags multiline python golang java rust csharp substitution extraction replace' },
   { id: 'hoppscotch', name: 'Hoppscotch', short: 'API', description: 'Send REST, GraphQL, and WebSocket requests (Postwoman). Works with the Hoppscotch browser extension for CORS.', category: 'test', icon: Radio, keywords: 'hoppscotch postwoman api rest graphql websocket http client request interceptor cors extension' },
 ]
@@ -101,6 +102,7 @@ export const initialSamples = {
   cipher: 'Share this note securely with a friend.',
   'cipher-key': 'supercharger-shared-key',
   m3u8: 'https://example.com/stream/index.m3u8',
+  sqlite: "DROP TABLE IF EXISTS people;\nCREATE TABLE people (name TEXT, role TEXT);\nINSERT INTO people VALUES ('Ada', 'engineer'), ('Lin', 'designer');\nSELECT * FROM people;",
   jsxgraph: 'sin(x)\ncos(x)',
   mermaid: 'flowchart TD\n  A[Start] --> B{Ready?}\n  B -->|Yes| C[Ship it]\n  B -->|No| D[Fix bugs]\n  D --> B',
 }
