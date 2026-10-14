@@ -353,6 +353,16 @@ html.hoppscotch-zen .hoppscotch-tool { position:relative;flex:1;min-height:0;hei
 html.hoppscotch-zen .hoppscotch-toolbar { position:relative;z-index:2;margin:0;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface); }
 html.hoppscotch-zen .hoppscotch-extension-note { display:none; }
 html.hoppscotch-zen .hoppscotch-frame { position:absolute;left:0;right:0;top:45px;width:100%;height:calc(100dvh - 45px);min-height:0;border:0;border-radius:0; }
+.craft-tool { min-height:calc(100dvh - 210px); }
+.craft-toolbar { align-items:center; }
+.craft-frame { display:block;width:100%;flex:1;height:calc(100dvh - 220px);min-height:560px;border:1px solid var(--border);border-radius:7px;background:#1b1c1f; }
+html.craft-zen .sidebar, html.craft-zen .topbar, html.craft-zen .tool-heading, html.craft-zen .tool-bottom-note, html.craft-zen .mobile-scrim { display:none !important; }
+html.craft-zen .main-column { margin-left:0 !important; }
+html.craft-zen .main-content { padding:0;height:100dvh;overflow:hidden; }
+html.craft-zen .tool-page { height:100dvh;padding:0;display:flex;flex-direction:column; }
+html.craft-zen .craft-tool { position:relative;flex:1;min-height:0;height:100%;gap:0; }
+html.craft-zen .craft-toolbar { position:relative;z-index:2;margin:0;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface); }
+html.craft-zen .tool-workspace > .craft-tool > .craft-frame { position:absolute;left:0;right:0;top:45px;width:100%;height:calc(100dvh - 45px);min-height:0;border:0;border-radius:0; }
 
 /* Shared workspace sizing: grow the working panels, keep controls compact. */
 .resize-handle { display:grid;place-items:center;padding:0;border:0;background:transparent;color:var(--muted-2);touch-action:none;user-select:none; }
@@ -379,8 +389,10 @@ html.hoppscotch-zen .hoppscotch-frame { position:absolute;left:0;right:0;top:45p
 .tool-workspace .jsonpath-tool .code-editor { min-height:0; }
 .tool-workspace .calculator-tool { display:flex; }
 .tool-workspace .calculator-workspace { flex:1;min-height:360px; }
-.tool-workspace .drawio-tool,.tool-workspace .hoppscotch-tool { min-height:420px; }
-.tool-workspace .drawio-frame,.tool-workspace .hoppscotch-frame { height:auto;min-height:360px; }
+.tool-workspace .drawio-tool,.tool-workspace .hoppscotch-tool,.tool-workspace .craft-tool { min-height:420px; }
+.tool-workspace .drawio-frame,.tool-workspace .hoppscotch-frame,.tool-workspace .craft-frame { height:auto;min-height:360px; }
+.tool-workspace > .craft-tool { flex:1;min-height:0; }
+.tool-workspace > .craft-tool > .craft-frame { flex:1;height:auto;min-height:0; }
 @media(max-width:760px) {
   .sidebar { width:min(270px,100vw);grid-template-columns:minmax(0,1fr); }
   .sidebar-content { padding-right:13px; }
@@ -393,8 +405,8 @@ html.hoppscotch-zen .hoppscotch-frame { position:absolute;left:0;right:0;top:45p
   .tool-workspace .calculator-workspace { flex:none;min-height:0; }
 }
 
-html.drawio-zen .tool-workspace,html.hoppscotch-zen .tool-workspace { flex:1;height:auto;min-height:0; }
-html.drawio-zen .resize-handle,html.hoppscotch-zen .resize-handle { display:none; }
+html.drawio-zen .tool-workspace,html.hoppscotch-zen .tool-workspace,html.craft-zen .tool-workspace { flex:1;height:auto;min-height:0; }
+html.drawio-zen .resize-handle,html.hoppscotch-zen .resize-handle,html.craft-zen .resize-handle { display:none; }
 .scratchpad-tool input:not([type="checkbox"]) { height:31px;min-width:140px;padding:0 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:12px; }
 .scratchpad-tool .code-editor, .syntax-tool .code-editor { min-height:calc(100dvh - 280px); }
 .indent-guide.on { background:linear-gradient(var(--accent),var(--accent)) left/2px 100% no-repeat; }

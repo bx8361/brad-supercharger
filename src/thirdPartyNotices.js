@@ -26,6 +26,12 @@ export const referencedProjects = [
     note: 'Lorem Ipsum generator corpora bundled as XML under src/assets/lipsums/.',
   },
   {
+    name: 'ArtCraft (WordCraft, GridCraft, PhotoCraft, FilmCraft, DeckCraft)',
+    license: 'MIT OR Apache-2.0',
+    url: 'https://getartcraft.com/apps',
+    note: 'Web builds unpacked from sources/ into public/crafts/ by scripts/vendor-crafts.js.',
+  },
+  {
     name: 'Hoppscotch',
     license: 'MIT',
     url: 'https://github.com/hoppscotch/hoppscotch',

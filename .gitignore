@@ -29,6 +29,9 @@ public/drawio/
 # Hoppscotch API client (fetched by scripts/vendor-hoppscotch.js on npm install)
 public/hoppscotch/
 
+# ArtCraft web apps (unpacked from sources/ by scripts/vendor-crafts.js)
+public/crafts/
+
 # OS
 .DS_Store
 Thumbs.db

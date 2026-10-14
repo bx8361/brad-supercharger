@@ -1,6 +1,6 @@
 import {
   Archive, Braces, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
-  Image, Images, KeyRound, Languages, LineChart, Link2, ListChecks, ListFilter, LockKeyhole, Network, PenLine, QrCode, Quote, Radio, Regex,
+  Clapperboard, FileText, Image, Images, KeyRound, Languages, LineChart, Link2, ListChecks, ListFilter, LockKeyhole, Network, Palette, PenLine, Presentation, QrCode, Quote, Radio, Regex, Sheet,
   ScrollText, Shield, Sigma, Stamp, StickyNote, Table2, TextCursorInput, Type, WandSparkles, Workflow,
 } from 'lucide-react'
 
@@ -12,6 +12,7 @@ export const groups = [
   { id: 'format', label: 'Formatters', icon: Braces },
   { id: 'generate', label: 'Generators', icon: WandSparkles },
   { id: 'graphic', label: 'Graphic', icon: Images },
+  { id: 'crafts', label: 'Crafts', icon: Palette },
   { id: 'media', label: 'Media', icon: CloudDownload },
   { id: 'data-playground', label: 'Data Playground', icon: Table2 },
   { id: 'test', label: 'Testers', icon: FlaskConical },
@@ -55,6 +56,11 @@ export const tools = [
   { id: 'jsxgraph', name: 'Function graph', short: 'ƒ', description: 'Plot math expressions on an interactive board (pan and zoom).', category: 'graphic', icon: LineChart, keywords: 'jsxgraph graph plot function desmos math curve formula' },
   { id: 'mermaid', name: 'Mermaid diagrams', short: 'MM', description: 'Write Mermaid markup and preview the diagram.', category: 'graphic', icon: Network, keywords: 'mermaid flowchart sequence diagram chart graphviz' },
   { id: 'drawio', name: 'draw.io editor', short: 'IO', description: 'Create and edit diagrams with a self-hosted draw.io editor.', category: 'graphic', icon: PenLine, keywords: 'drawio diagrams.net flowchart wireframe whiteboard' },
+  { id: 'wordcraft', name: 'WordCraft', short: 'W', description: 'Write and design documents in the browser.', category: 'crafts', icon: FileText, keywords: 'wordcraft word document writer docx artcraft' },
+  { id: 'gridcraft', name: 'GridCraft', short: 'G', description: 'Edit spreadsheets in the browser.', category: 'crafts', icon: Sheet, keywords: 'gridcraft excel spreadsheet sheet csv artcraft' },
+  { id: 'photocraft', name: 'PhotoCraft', short: 'P', description: 'Edit images in the browser.', category: 'crafts', icon: Image, keywords: 'photocraft photoshop photo image editor artcraft' },
+  { id: 'filmcraft', name: 'FilmCraft', short: 'F', description: 'Edit video, color, and sound in the browser.', category: 'crafts', icon: Clapperboard, keywords: 'filmcraft premiere video editor timeline color artcraft' },
+  { id: 'deckcraft', name: 'DeckCraft', short: 'D', description: 'Build and present slide decks in the browser.', category: 'crafts', icon: Presentation, keywords: 'deckcraft powerpoint slides presentation pptx artcraft' },
   { id: 'cipher', name: 'AES encrypt / decrypt', short: 'AES', description: 'Encrypt or decrypt text with a shared password (AES).', category: 'encode', icon: LockKeyhole, keywords: 'aes password secret share private crypto' },
   { id: 'm3u8', name: 'M3U8 downloader', short: 'HLS', description: 'Download HLS streams with AES-128 support; memory or streaming save.', category: 'media', icon: CloudDownload, keywords: 'hls video ts segment playlist stream' },
   { id: 'jsonpath', name: 'JSONPath tester', short: 'JP', description: 'Query JSON with JSONPath expressions.', category: 'test', icon: Braces, keywords: 'json path query filter selector' },
