@@ -36,6 +36,7 @@ import {
 } from './calculatorOps.js'
 import { queryJsonPath, regexControls, regexFlavors, regexHelp, validateXmlAgainstXsd } from './testerOps.js'
 import { exportSqlite, openSqliteBytes, resetSqlite, runSqlite } from './sqliteOps.js'
+import { resetPython, runPython } from './pythonOps.js'
 import { analyze, caretInfo, compareChangeParts, compareLists, escapeString, reverseLines, shuffleLines, sideBySideRows, sortByLast, sortLines, toAlternating, toCamel, toCobol, toConstant, toCRLF, toInverse, toKebab, toLF, toPascal, toRandomCase, toSentence, toSnake, toTitle, toTrain, trimLines, unescapeString, uniqueLines } from './textOps.js'
 import { JSXGraph } from 'jsxgraph'
 import '../node_modules/jsxgraph/distrib/jsxgraph.css'
@@ -3002,12 +3003,62 @@ function SqliteTool({ data, setData }) {
   </div>
 }
 
+function PythonTool({ data, setData }) {
+  const code = textValue(data, 'input', initialSamples.python)
+  const [output, setOutput] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function run(text = code) {
+    setBusy(true)
+    setError('')
+    try {
+      setOutput(await runPython(text))
+    } catch (e) {
+      setOutput('')
+      setError(e.message || 'Python failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function reset() {
+    if (!window.confirm(t('Replace the Python session in this tab?'))) return
+    setBusy(true)
+    setError('')
+    try {
+      await resetPython()
+      setOutput('')
+    } catch (e) {
+      setError(e.message || 'Could not restart Python.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return <div className="tool-content">
+    <div className="inline-controls">
+      <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
+      <button type="button" className="text-action" disabled={busy} onClick={reset}><RefreshCw size={14} /> {t('Restart Python')}</button>
+      <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.python) }} />
+    </div>
+    <Split>
+      <Editor label="Python" language="python" tabSize={4} value={code} onChange={value => set(setData, 'input', value)} placeholder="Enter Python to run." onKeyDown={e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run() }
+      }} />
+      <Output label="Result" value={error || output} language={error ? 'python' : undefined} error={false} placeholder={busy ? 'Loading Python…' : 'Enter Python to run.'} />
+    </Split>
+    <p className="subtle">{t('Names you define stay in this tab until you restart.')}</p>
+    {error && <p className="error-note">{error}</p>}
+  </div>
+}
+
 const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundTool.jsx'))
 
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
   if (craftTitles[id]) return <CraftTool id={id} />
-  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, sqlite: SqliteTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
+  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }

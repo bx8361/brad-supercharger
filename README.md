@@ -11,13 +11,14 @@ npm install
 npm run dev
 ```
 
-`npm install` downloads two self-hosted apps that are too large to commit:
+`npm install` unpacks self-hosted apps that are too large to commit:
 
 - **draw.io** `31.6.1` ([Apache-2.0](https://github.com/jgraph/drawio)) into `public/drawio/`
 - **Hoppscotch** `2026.6.1` ([MIT](https://github.com/hoppscotch/hoppscotch)) into `public/hoppscotch/`
 - **SQLite WASM** `3.54.0` ([public domain](https://sqlite.org/copyright.html)) into `public/sqlite/`, from `sqlite-wasm-3540000.zip` when that file is in the project root
+- **Pyodide** `314.0.7` ([MPL-2.0](https://github.com/pyodide/pyodide)) into `public/pyodide/`, from `pyodide-314.0.7.tar.bz2` in the project root
 
-Rebuild with `node scripts/vendor-drawio.js`, `node scripts/vendor-hoppscotch.js`, or `node scripts/vendor-sqlite.js`.
+Rebuild with `node scripts/vendor-drawio.js`, `node scripts/vendor-hoppscotch.js`, `node scripts/vendor-sqlite.js`, or `node scripts/vendor-pyodide.js`.
 
 ```sh
 npm run build
@@ -92,6 +93,7 @@ Publishing the production build is documented in [publish.md](publish.md).
 - **JSONPath tester** — query JSON with JSONPath
 - **XML tester** — validate XML against an XSD
 - **SQLite** — run SQL in the browser with SQLite WASM. The database stays in this tab
+- **Python** — run Python in the browser with Pyodide. Values stay in this tab
 - **Regex tester** — test, replace, and extract with JavaScript, Python, Go, Java, .NET, and Rust patterns
 - **Hoppscotch** — REST, GraphQL, and WebSocket client (formerly Postwoman). Collections stay in the browser unless you connect a backend. The Hoppscotch browser extension can help with CORS.
 
@@ -118,5 +120,6 @@ The interface and the JavaScript in this repository are original, except for the
 | [draw.io](https://github.com/jgraph/drawio) `31.6.1`                 | Apache-2.0              | Vendored web app in `public/drawio/` via `scripts/vendor-drawio.js`.                                                                                                           |
 | [Hoppscotch](https://github.com/hoppscotch/hoppscotch) `2026.6.1`    | MIT                     | Vendored web client in `public/hoppscotch/` via `scripts/vendor-hoppscotch.js`, from the [hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) image. |
 | [SQLite](https://sqlite.org/wasm) `3.54.0`                            | Public domain           | WASM/JS build unpacked from `sqlite-wasm-3540000.zip` into `public/sqlite/` via `scripts/vendor-sqlite.js`.                                                                    |
+| [Pyodide](https://github.com/pyodide/pyodide) `314.0.7`               | MPL-2.0                 | Python 3.14 runtime unpacked from `pyodide-314.0.7.tar.bz2` into `public/pyodide/` via `scripts/vendor-pyodide.js`. Includes CPython (PSF License).                             |
 
 Runtime libraries keep their own licenses (recorded in `package-lock.json`). Notable ones: React (MIT), JSXGraph (MIT OR LGPL-3.0-or-later), Mermaid (MIT), Papa Parse, Plotly, ml-pca, ml-distance, and ml-kmeans (MIT). DOMPurify is MPL-2.0 OR Apache-2.0.

@@ -38,6 +38,12 @@ export const referencedProjects = [
     note: 'SQLite 3.54.0 WASM/JS build unpacked into public/sqlite/ by scripts/vendor-sqlite.js.',
   },
   {
+    name: 'Pyodide',
+    license: 'MPL-2.0',
+    url: 'https://github.com/pyodide/pyodide',
+    note: 'Pyodide 314.0.7 (Python 3.14) runtime unpacked into public/pyodide/ by scripts/vendor-pyodide.js. Includes CPython under the PSF License.',
+  },
+  {
     name: 'Hoppscotch',
     license: 'MIT',
     url: 'https://github.com/hoppscotch/hoppscotch',

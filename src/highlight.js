@@ -107,10 +107,13 @@ function refractorApi(mod) {
 
 // ponytail: one refractor chunk for every grammar. Split per language if that chunk gets slow.
 export function ensureHighlight(language) {
-  if (!language || scanners[language] || refractorScanners.has(language)) return Promise.resolve(false)
+  if (!language) return Promise.resolve(false)
+  if (scanners[language]) return Promise.resolve(false)
+  if (refractorScanners.has(language)) return Promise.resolve(true)
   refractorPromise ??= import('refractor').then(refractorApi)
   return refractorPromise.then(refractor => {
-    if (!refractor?.registered(language) || refractorScanners.has(language)) return false
+    if (refractorScanners.has(language)) return true
+    if (!refractor?.registered(language)) return false
     refractorScanners.set(language, text => flattenHighlight(refractor.highlight(text, language)))
     return true
   }).catch(() => false)

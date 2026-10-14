@@ -4,9 +4,9 @@
   "version": "3.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js && node scripts/vendor-crafts.js && node scripts/vendor-sqlite.js",
-    "predev": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js && node scripts/vendor-crafts.js && node scripts/vendor-sqlite.js",
-    "prebuild": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js && node scripts/vendor-crafts.js && node scripts/vendor-sqlite.js",
+    "postinstall": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js && node scripts/vendor-crafts.js && node scripts/vendor-sqlite.js && node scripts/vendor-pyodide.js",
+    "predev": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js && node scripts/vendor-crafts.js && node scripts/vendor-sqlite.js && node scripts/vendor-pyodide.js",
+    "prebuild": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js && node scripts/vendor-crafts.js && node scripts/vendor-sqlite.js && node scripts/vendor-pyodide.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { flattenHighlight } from '../src/highlight.js'
+import { ensureHighlight, flattenHighlight, paint } from '../src/highlight.js'
 import { formatSyntax } from '../src/syntaxFormat.js'
 import { syntaxLanguage } from '../src/syntaxLanguages.js'
 
@@ -30,4 +30,11 @@ test('javascript format breaks a one-line function', async () => {
 test('python highlights but does not format', async () => {
   assert.equal(syntaxLanguage('python').format, '')
   await assert.rejects(() => formatSyntax('x=1', syntaxLanguage('python')), /not available/)
+})
+
+test('ensureHighlight loads python for editors', async () => {
+  assert.ok(await ensureHighlight('python'))
+  const parts = paint('def f(): pass', 'python')
+  assert.ok(parts.some(part => part.kind === 'keyword'))
+  assert.ok(await ensureHighlight('python'))
 })

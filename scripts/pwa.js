@@ -10,7 +10,7 @@ export function pwaAssets() {
     configResolved(config) { outputDirectory = resolve(config.root, config.build.outDir) },
     async closeBundle() {
       const files = (await readdir(outputDirectory, { recursive: true }))
-        .filter(file => /\.(html|js|mjs|css|png|svg|wasm|webmanifest)$/.test(file) && file !== 'sw.js' && !/^(drawio|hoppscotch|crafts)\//.test(String(file).replace(/\\/g, '/'))).sort()
+        .filter(file => /\.(html|js|mjs|css|png|svg|wasm|webmanifest)$/.test(file) && file !== 'sw.js' && !/^(drawio|hoppscotch|crafts|pyodide)\//.test(String(file).replace(/\\/g, '/'))).sort()
       const hash = createHash('sha256')
       for (const file of files) { hash.update(file); hash.update(await readFile(resolve(outputDirectory, file))) }
       const source = await readFile(new URL('../src/service-worker.js', import.meta.url), 'utf8')

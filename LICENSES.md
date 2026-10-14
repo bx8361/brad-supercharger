@@ -38,6 +38,10 @@ The **Hoppscotch** tool vendors the Hoppscotch web client from the official [hop
 
 The **SQLite** tool vendors the official [SQLite WASM/JS](https://sqlite.org/wasm) build `3.54.0` (public domain) into `public/sqlite/` via `scripts/vendor-sqlite.js`. The archive is `sqlite-wasm-3540000.zip` in the project root, or a download from sqlite.org when that file is absent.
 
+## Pyodide
+
+The **Python** tool vendors the [Pyodide](https://github.com/pyodide/pyodide) runtime `314.0.7` (MPL-2.0, with CPython under the PSF License) into `public/pyodide/` via `scripts/vendor-pyodide.js`. The archive is `pyodide-314.0.7.tar.bz2` in the project root. Only the runtime files are unpacked; package wheels in that archive are not installed.
+
 ## Data Playground
 
 Data Playground uses Papa Parse, Plotly, ml-pca, ml-distance, and ml-kmeans (MIT). These dependencies ship with Supercharger; their installed package metadata includes the license notices.

@@ -35,6 +35,9 @@ public/crafts/
 # SQLite WASM (unpacked from sqlite-wasm-3540000.zip by scripts/vendor-sqlite.js)
 public/sqlite/
 
+# Pyodide (unpacked from pyodide-314.0.7.tar.bz2 by scripts/vendor-pyodide.js)
+public/pyodide/
+
 # OS
 .DS_Store
 Thumbs.db
