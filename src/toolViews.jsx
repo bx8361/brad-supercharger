@@ -3007,12 +3007,14 @@ function SqliteTool({ data, setData }) {
   }
 
   return <div className="tool-content">
-    <div className="inline-controls">
-      <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
-      <label className="file-button"><FileUp size={14} /> {t('Open database')}<input type="file" accept=".sqlite,.sqlite3,.db,application/x-sqlite3,application/vnd.sqlite3" onChange={openFile} /></label>
-      <button type="button" className="text-action" disabled={busy} onClick={async () => { setError(''); try { downloadBlob(await exportSqlite(), 'database.sqlite') } catch (e) { setError(e.message || 'Could not export the database.') } }}><Download size={14} /> {t('Download database')}</button>
-      <button type="button" className="text-action" disabled={busy} onClick={reset}><Trash2 size={14} /> {t('New database')}</button>
-      <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.sqlite) }} />
+    <div className="wasm-toolbar">
+      <div className="inline-controls">
+        <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
+        <label className="file-button"><FileUp size={14} /> {t('Open database')}<input type="file" accept=".sqlite,.sqlite3,.db,application/x-sqlite3,application/vnd.sqlite3" onChange={openFile} /></label>
+        <button type="button" className="text-action" disabled={busy} onClick={async () => { setError(''); try { downloadBlob(await exportSqlite(), 'database.sqlite') } catch (e) { setError(e.message || 'Could not export the database.') } }}><Download size={14} /> {t('Download database')}</button>
+        <button type="button" className="text-action" disabled={busy} onClick={reset}><Trash2 size={14} /> {t('New database')}</button>
+        <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.sqlite) }} />
+      </div>
       <WasmNetworkWarning />
     </div>
     <Split>
@@ -3061,10 +3063,12 @@ function PythonTool({ data, setData }) {
   }
 
   return <div className="tool-content">
-    <div className="inline-controls">
-      <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
-      <button type="button" className="text-action" onClick={reset}><RefreshCw size={14} /> {t('Restart Python')}</button>
-      <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.python) }} />
+    <div className="wasm-toolbar">
+      <div className="inline-controls">
+        <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
+        <button type="button" className="text-action" onClick={reset}><RefreshCw size={14} /> {t('Restart Python')}</button>
+        <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.python) }} />
+      </div>
       <WasmNetworkWarning />
     </div>
     <Split>

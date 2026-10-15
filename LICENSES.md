@@ -30,6 +30,16 @@ Lorem Ipsum generator texts under `src/assets/lipsums/` come from NLipsum / DevT
 
 The **draw.io editor** tool vendors the [jgraph/drawio](https://github.com/jgraph/drawio) web application (Apache-2.0, release pinned in `scripts/vendor-drawio.js`) into `public/drawio/` via `scripts/vendor-drawio.js`. **JSXGraph** and **Mermaid** are npm dependencies; see their package metadata for license terms.
 
+## ArtCraft
+
+The **Crafts** tools vendor [ArtCraft](https://getartcraft.com/apps) web builds (MIT OR Apache-2.0) into `public/crafts/` via `scripts/vendor-crafts.js`. The zip files live in `sources/`:
+
+- WordCraft `0.7.0` (`wordcraft-web-0.7.0.zip`)
+- GridCraft `0.7.0` (`gridcraft-web-0.7.0.zip`)
+- PhotoCraft `0.9.0` (`photocraft-web-0.9.0.zip`)
+- FilmCraft `0.8.0` (`filmcraft-web-0.8.0.zip`)
+- DeckCraft `0.7.0` (`deckcraft-web-0.7.0.zip`)
+
 ## Hoppscotch
 
 The **Hoppscotch** tool vendors the Hoppscotch web client from the official [hoppscotch/hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) container image (MIT, release pinned in `scripts/vendor-hoppscotch.js`) into `public/hoppscotch/`. Hoppscotch was formerly known as Postwoman. Collections and workspaces are stored in your browser unless you connect a self-hosted backend.

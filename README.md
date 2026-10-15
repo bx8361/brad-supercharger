@@ -1,8 +1,13 @@
+[日本語](README_ja.md) · [简体中文](README_zh-Hans.md) · [繁體中文](README_zh-Hant.md)
+
 # Brad's Supercharger
 
 A local-first toolbox for everyday developer work. It is a static [React](https://react.dev/) + [Vite](https://vite.dev/) site: tool inputs are processed in the browser, and nothing is sent to a server.
 
 Published site: [https://bx8361.github.io/brad-supercharger/](https://bx8361.github.io/brad-supercharger/)
+
+> [!TIP]
+> This site can be installed as a desktop app. In Chrome, use the address bar, the browser menu, or **Install app** in the sidebar. It opens in its own window. After the first load it works offline; an update applies once every Supercharger window is closed and the app is opened again.
 
 ## Run locally
 
@@ -15,18 +20,17 @@ npm run dev
 
 - **draw.io** `31.6.1` ([Apache-2.0](https://github.com/jgraph/drawio)) into `public/drawio/`
 - **Hoppscotch** `2026.6.1` ([MIT](https://github.com/hoppscotch/hoppscotch)) into `public/hoppscotch/`
+- **ArtCraft** WordCraft `0.7.0`, GridCraft `0.7.0`, PhotoCraft `0.9.0`, FilmCraft `0.8.0`, DeckCraft `0.7.0` ([MIT OR Apache-2.0](https://getartcraft.com/apps)) into `public/crafts/`, from the matching zip files in `sources/`
 - **SQLite WASM** `3.54.0` ([public domain](https://sqlite.org/copyright.html)) into `public/sqlite/`, from `sqlite-wasm-3540000.zip` when that file is in the project root
 - **Pyodide** `314.0.7` ([MPL-2.0](https://github.com/pyodide/pyodide)) into `public/pyodide/`, from `pyodide-314.0.7.tar.bz2` in the project root
 - **JupyterLite** `0.8.6` ([BSD-3-Clause](https://github.com/jupyterlite/jupyterlite)) into `public/jupyterlite/`, built with `python3` via `scripts/vendor-jupyterlite.js`
 
-Rebuild with `node scripts/vendor-drawio.js`, `node scripts/vendor-hoppscotch.js`, `node scripts/vendor-sqlite.js`, `node scripts/vendor-pyodide.js`, or `node scripts/vendor-jupyterlite.js`.
+Rebuild with `node scripts/vendor-drawio.js`, `node scripts/vendor-hoppscotch.js`, `node scripts/vendor-crafts.js`, `node scripts/vendor-sqlite.js`, `node scripts/vendor-pyodide.js`, or `node scripts/vendor-jupyterlite.js`.
 
 ```sh
 npm run build
 npm run preview
 ```
-
-Publishing the production build is documented in [publish.md](publish.md).
 
 ## Tools
 
@@ -45,6 +49,7 @@ Publishing the production build is documented in [publish.md](publish.md).
 - **List comparer** — lines that are shared or unique
 - **Markdown preview** — write Markdown and preview it (images and embedded media are omitted)
 - **Text analyzer** — counts and transforms such as case, sort, and trim
+- **Scratchpad** — notes kept in this browser
 - **Text comparer** — diff two text blocks
 
 ### Encoders and decoders
@@ -64,6 +69,7 @@ Publishing the production build is documented in [publish.md](publish.md).
 - **JSON formatter** — validate, format, minify, or sort JSON
 - **SQL formatter** — format SQL for common dialects
 - **XML formatter** — format or minify XML
+- **Syntax formatter** — format and highlight source in one editor
 
 ### Generators
 
@@ -80,6 +86,16 @@ Publishing the production build is documented in [publish.md](publish.md).
 - **Function graph** — plot expressions on a [JSXGraph](https://jsxgraph.org/) board
 - **Mermaid diagrams** — write [Mermaid](https://mermaid.js.org/) markup and preview the diagram
 - **draw.io editor** — self-hosted [draw.io](https://www.drawio.com/) (`diagrams.net`)
+
+### Crafts
+
+Third-party [ArtCraft](https://getartcraft.com/apps) web apps (WebAssembly), unpacked into `public/crafts/`. Each one runs on this site’s origin.
+
+- **WordCraft** — write and design documents
+- **GridCraft** — edit spreadsheets
+- **PhotoCraft** — edit images
+- **FilmCraft** — edit video, color, and sound
+- **DeckCraft** — build and present slide decks
 
 ### Media
 
@@ -105,10 +121,6 @@ Favorites, recent tools, theme, navigation, and tool options are stored in this 
 
 Drag the sidebar’s right edge to change its width. Drag the grip under a tool to change that tool’s height; each tool remembers its own height. Focus a grip and use the arrow keys, or double-click it (or press Home) to reset.
 
-## Install in Chrome
-
-Use a production build over HTTPS, or `npm run preview` on localhost. Chrome can install the site from the address bar, the browser menu, or **Install app** in the sidebar. The installed app opens in its own window. After the first online load, the service worker caches shipped app files for offline use. It does not cache tool inputs. An update applies after every Supercharger tab and window is closed and the app is opened again. The Vite dev server does not register the worker.
-
 ## Credits and licenses
 
 The interface and the JavaScript in this repository are original, except for the third-party pieces below. This repository does not ship a project-wide `LICENSE` file. Full notices are in [LICENSES.md](LICENSES.md); the in-app **Third-party notices** page lists the same references and the shipped npm packages.
@@ -120,6 +132,7 @@ The interface and the JavaScript in this repository are original, except for the
 | [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch)       | GPL-2.0-or-later        | Calculator syntax, function names, and constants, reimplemented in original JavaScript. No SpeedCrunch C++ source is included.                                                 |
 | [NLipsum](https://github.com/DevToys-app/DevToys.Tools) lipsum texts | Public domain           | Placeholder corpora under `src/assets/lipsums/`.                                                                                                                               |
 | [draw.io](https://github.com/jgraph/drawio) `31.6.1`                 | Apache-2.0              | Vendored web app in `public/drawio/` via `scripts/vendor-drawio.js`.                                                                                                           |
+| [ArtCraft](https://getartcraft.com/apps)                             | MIT OR Apache-2.0       | WordCraft `0.7.0`, GridCraft `0.7.0`, PhotoCraft `0.9.0`, FilmCraft `0.8.0`, and DeckCraft `0.7.0` unpacked from `sources/` into `public/crafts/` via `scripts/vendor-crafts.js`. |
 | [Hoppscotch](https://github.com/hoppscotch/hoppscotch) `2026.6.1`    | MIT                     | Vendored web client in `public/hoppscotch/` via `scripts/vendor-hoppscotch.js`, from the [hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) image. |
 | [SQLite](https://sqlite.org/wasm) `3.54.0`                            | Public domain           | WASM/JS build unpacked from `sqlite-wasm-3540000.zip` into `public/sqlite/` via `scripts/vendor-sqlite.js`.                                                                    |
 | [Pyodide](https://github.com/pyodide/pyodide) `314.0.7`               | MPL-2.0                 | Python 3.14 runtime unpacked from `pyodide-314.0.7.tar.bz2` into `public/pyodide/` via `scripts/vendor-pyodide.js`. Includes CPython (PSF License).                             |

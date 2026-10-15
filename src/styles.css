@@ -365,7 +365,10 @@ html.jupyterlite-zen .jupyterlite-toolbar { position:relative;z-index:2;margin:0
 html.jupyterlite-zen .jupyterlite-frame { position:absolute;left:0;right:0;top:45px;width:100%;height:calc(100dvh - 45px);min-height:0;border:0;border-radius:0; }
 .craft-tool { min-height:calc(100dvh - 210px); }
 .craft-toolbar { align-items:center; }
+.wasm-toolbar { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.wasm-toolbar > .inline-controls { flex:1; min-width:0; }
 .wasm-network-warning { order:1; display:inline-flex; align-items:center; max-width:42rem; margin:0 0 0 auto; padding:6px 10px; border:1px solid #c49212; border-radius:6px; background:color-mix(in srgb, #e6b422 22%, var(--surface)); color:color-mix(in srgb, #b8860b 78%, var(--text)); font:600 13px/1.35 var(--font-sans); }
+.wasm-toolbar > .wasm-network-warning { flex:0 1 auto; margin:0; }
 .craft-frame { display:block;width:100%;flex:1;height:calc(100dvh - 220px);min-height:560px;border:1px solid var(--border);border-radius:7px;background:#1b1c1f; }
 html.craft-zen .sidebar, html.craft-zen .topbar, html.craft-zen .tool-heading, html.craft-zen .tool-bottom-note, html.craft-zen .mobile-scrim { display:none !important; }
 html.craft-zen .main-column { margin-left:0 !important; }

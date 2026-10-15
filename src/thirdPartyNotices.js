@@ -26,10 +26,16 @@ export const referencedProjects = [
     note: 'Lorem Ipsum generator corpora bundled as XML under src/assets/lipsums/.',
   },
   {
+    name: 'draw.io',
+    license: 'Apache-2.0',
+    url: 'https://github.com/jgraph/drawio',
+    note: 'draw.io 31.6.1 web app vendored into public/drawio/ by scripts/vendor-drawio.js.',
+  },
+  {
     name: 'ArtCraft (WordCraft, GridCraft, PhotoCraft, FilmCraft, DeckCraft)',
     license: 'MIT OR Apache-2.0',
     url: 'https://getartcraft.com/apps',
-    note: 'Web builds unpacked from sources/ into public/crafts/ by scripts/vendor-crafts.js.',
+    note: 'WordCraft 0.7.0, GridCraft 0.7.0, PhotoCraft 0.9.0, FilmCraft 0.8.0, and DeckCraft 0.7.0 unpacked from sources/ into public/crafts/ by scripts/vendor-crafts.js.',
   },
   {
     name: 'SQLite',
@@ -70,6 +76,8 @@ export const npmPackages = [
   { name: 'dompurify', license: 'MPL-2.0 OR Apache-2.0', url: 'https://www.npmjs.com/package/dompurify' },
   { name: 'jsonpath-plus', license: 'MIT', url: 'https://www.npmjs.com/package/jsonpath-plus' },
   { name: 'jsqr', license: 'Apache-2.0', url: 'https://www.npmjs.com/package/jsqr' },
+  { name: 'jsxgraph', license: 'MIT OR LGPL-3.0-or-later', url: 'https://www.npmjs.com/package/jsxgraph' },
+  { name: 'mermaid', license: 'MIT', url: 'https://www.npmjs.com/package/mermaid' },
   { name: 'lucide-react', license: 'ISC', url: 'https://www.npmjs.com/package/lucide-react' },
   { name: 'marked', license: 'MIT', url: 'https://www.npmjs.com/package/marked' },
   { name: 'prettier', license: 'MIT', url: 'https://www.npmjs.com/package/prettier' },
