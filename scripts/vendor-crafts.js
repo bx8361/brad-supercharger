@@ -33,15 +33,16 @@ for (const [id, zipName, version] of apps) {
 import os, sys, zipfile
 src, dest = sys.argv[1], sys.argv[2]
 skip = {'.htaccess', '_headers', 'LICENSE-MIT', 'LICENSE-APACHE', 'README.md', 'HOSTING.md'}
+root = os.path.realpath(dest)
 with zipfile.ZipFile(src) as z:
     for info in z.infolist():
-        rel = info.filename.split('/', 1)[-1]
+        rel = info.filename.split('/', 1)[-1].replace('\\\\', '/')
         if not rel or info.is_dir() or os.path.basename(rel) in skip:
             continue
-        out = os.path.join(dest, rel)
-        parent = os.path.dirname(out)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+        out = os.path.realpath(os.path.join(root, rel))
+        if os.path.commonpath([root, out]) != root:
+            continue
+        os.makedirs(os.path.dirname(out), exist_ok=True)
         with z.open(info) as inp, open(out, 'wb') as outf:
             outf.write(inp.read())
 `, zip, dest], { stdio: 'inherit' })

@@ -40,11 +40,11 @@ The **SQLite** tool vendors the official [SQLite WASM/JS](https://sqlite.org/was
 
 ## Pyodide
 
-The **Python** tool vendors the [Pyodide](https://github.com/pyodide/pyodide) runtime `314.0.7` (MPL-2.0, with CPython under the PSF License) into `public/pyodide/` via `scripts/vendor-pyodide.js`. The archive is `pyodide-314.0.7.tar.bz2` in the project root. Only the runtime files are unpacked; package wheels in that archive are not installed.
+The **Python** tool vendors the [Pyodide](https://github.com/pyodide/pyodide) runtime `314.0.7` (MPL-2.0, with CPython under the PSF License) into `public/pyodide/` via `scripts/vendor-pyodide.js`. The archive is `pyodide-314.0.7.tar.bz2` in the project root. The runtime files are unpacked, plus the `micropip`, IPython, and Jedi wheels JupyterLite loads from that folder. Other package wheels in that archive are not installed.
 
 ## JupyterLite
 
-The **JupyterLite** tool builds [JupyterLite](https://github.com/jupyterlite/jupyterlite) `0.8.6` (BSD-3-Clause) with the [Pyodide kernel](https://github.com/jupyterlite/pyodide-kernel) into `public/jupyterlite/` via `scripts/vendor-jupyterlite.js`. The build requires `python3` and runs on `npm install`. Notebooks and files are stored in the browser (IndexedDB) for this site; they are separate from the **Python** REPL session.
+The **JupyterLite** tool builds [JupyterLite](https://github.com/jupyterlite/jupyterlite) `0.8.6` (BSD-3-Clause) with the [Pyodide kernel](https://github.com/jupyterlite/pyodide-kernel) into `public/jupyterlite/` via `scripts/vendor-jupyterlite.js`. The build requires `python3` and runs on `npm install`. The kernel loads Pyodide from `public/pyodide/` on this site. Notebooks and files are stored in the browser (IndexedDB) for this site; they are separate from the **Python** REPL session.
 
 ## Data Playground
 

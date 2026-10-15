@@ -1,52 +1,43 @@
-// ponytail: one interpreter for the tab. Reset drops user names; it does not reload the wasm.
+// ponytail: one worker for the tab. Restart drops it so a stuck script can be replaced.
 const indexURL = () => new URL(`${import.meta.env.BASE_URL}pyodide/`, window.location.href).href
 
-let opening
-let pyodide
+let worker
+let seq = 0
+const pending = new Map()
 
-function shown(value) {
-  if (value == null) return ''
-  const text = typeof value.toString === 'function' ? value.toString() : String(value)
-  value.destroy?.()
-  return text === 'None' ? '' : text
-}
-
-async function engine() {
-  opening ??= (async () => {
-    const { loadPyodide } = await import(/* @vite-ignore */ new URL('pyodide.mjs', indexURL()).href)
-    pyodide = await loadPyodide({ indexURL: indexURL() })
-  })()
-  await opening
-  return pyodide
-}
-
-export async function runPython(code) {
-  const py = await engine()
-  const lines = []
-  const write = line => lines.push(line)
-  py.setStdout({ batched: write })
-  py.setStderr({ batched: write })
-  if (!String(code ?? '').trim()) return ''
-  let value
-  try {
-    value = await py.runPythonAsync(code)
-  } catch (error) {
-    const text = lines.join('\n')
-    const message = error?.message || String(error)
-    throw new Error(text ? `${text}\n${message}` : message)
+function thread() {
+  if (worker) return worker
+  worker = new Worker(new URL('./pythonWorker.js', import.meta.url), { type: 'module' })
+  worker.onmessage = event => {
+    const { id, ok, result, error } = event.data
+    const settle = pending.get(id)
+    if (!settle) return
+    pending.delete(id)
+    if (ok) settle.resolve(result)
+    else settle.reject(new Error(error || 'Python failed.'))
   }
-  const text = lines.join('\n')
-  const tail = shown(value)
-  if (!tail) return text
-  return text ? `${text}\n${tail}` : tail
+  worker.onerror = event => {
+    for (const settle of pending.values()) settle.reject(new Error(event.message || 'Python failed.'))
+    pending.clear()
+  }
+  return worker
 }
 
-export async function resetPython() {
-  const py = await engine()
-  py.runPython(`
-_names = [n for n in globals() if not n.startswith("_")]
-for _name in _names:
-    del globals()[_name]
-del _names, _name
-`)
+function call(code) {
+  const id = ++seq
+  return new Promise((resolve, reject) => {
+    pending.set(id, { resolve, reject })
+    thread().postMessage({ id, code, indexURL: indexURL() })
+  })
+}
+
+export function runPython(code) {
+  return call(code)
+}
+
+export function resetPython() {
+  worker?.terminate()
+  worker = null
+  for (const settle of pending.values()) settle.reject(new Error('Python restarted.'))
+  pending.clear()
 }

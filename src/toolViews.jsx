@@ -1947,6 +1947,10 @@ function ScratchpadTool({ data, setData }) {
 
 const craftTitles = { wordcraft: 'WordCraft', gridcraft: 'GridCraft', photocraft: 'PhotoCraft', filmcraft: 'FilmCraft', deckcraft: 'DeckCraft' }
 
+function WasmNetworkWarning() {
+  return <span className="wasm-network-warning" role="note">{t('This app is from a third party. There could be security issues. Use at your own risk.')}</span>
+}
+
 function CraftTool({ id }) {
   const [zen, setZen] = useState(false)
   const src = `${import.meta.env.BASE_URL}crafts/${id}/index.html`
@@ -1958,6 +1962,7 @@ function CraftTool({ id }) {
     <div className="inline-controls craft-toolbar">
       <button type="button" className="text-action" onClick={() => setZen(value => !value)}>{zen ? <Minimize2 size={14} /> : <Maximize2 size={14} />} {zen ? t('Exit zen') : t('Zen')}</button>
       <button type="button" className="text-action" onClick={() => window.open(src, '_blank', 'noopener,noreferrer')}><ExternalLink size={14} /> {t("Open tab")}</button>
+      <WasmNetworkWarning />
     </div>
     <iframe className="craft-frame" title={craftTitles[id]} src={src} allow="fullscreen; clipboard-read; clipboard-write; autoplay" allowFullScreen />
   </div>
@@ -2000,6 +2005,7 @@ function JupyterLiteTool() {
     <div className="inline-controls jupyterlite-toolbar">
       <button type="button" className="text-action" onClick={() => setZen(value => !value)}>{zen ? <Minimize2 size={14} /> : <Maximize2 size={14} />} {zen ? t('Exit zen') : t('Zen')}</button>
       <button type="button" className="text-action" onClick={() => window.open(jupyterliteSrc, '_blank', 'noopener,noreferrer')}><ExternalLink size={14} /> {t("Open tab")}</button>
+      <WasmNetworkWarning />
     </div>
     <iframe className="jupyterlite-frame" title={t("JupyterLite notebook editor")} src={jupyterliteSrc} allow="clipboard-read; clipboard-write" />
   </div>
@@ -3007,6 +3013,7 @@ function SqliteTool({ data, setData }) {
       <button type="button" className="text-action" disabled={busy} onClick={async () => { setError(''); try { downloadBlob(await exportSqlite(), 'database.sqlite') } catch (e) { setError(e.message || 'Could not export the database.') } }}><Download size={14} /> {t('Download database')}</button>
       <button type="button" className="text-action" disabled={busy} onClick={reset}><Trash2 size={14} /> {t('New database')}</button>
       <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.sqlite) }} />
+      <WasmNetworkWarning />
     </div>
     <Split>
       <Editor label="SQL" language="sql" value={sql} onChange={value => set(setData, 'input', value)} placeholder="Enter SQL to run." onKeyDown={e => {
@@ -3056,8 +3063,9 @@ function PythonTool({ data, setData }) {
   return <div className="tool-content">
     <div className="inline-controls">
       <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
-      <button type="button" className="text-action" disabled={busy} onClick={reset}><RefreshCw size={14} /> {t('Restart Python')}</button>
+      <button type="button" className="text-action" onClick={reset}><RefreshCw size={14} /> {t('Restart Python')}</button>
       <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.python) }} />
+      <WasmNetworkWarning />
     </div>
     <Split>
       <Editor label="Python" language="python" tabSize={4} value={code} onChange={value => set(setData, 'input', value)} placeholder="Enter Python to run." onKeyDown={e => {

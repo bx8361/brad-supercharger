@@ -849,6 +849,7 @@ export const zhHans = {
   'Distance requires at least one numeric feature.': '距离至少需要一个数值特征。',
   'Zen': 'Zen',
   'Open tab': '在新标签页打开',
+  'This app is from a third party. There could be security issues. Use at your own risk.': '此应用来自第三方，可能存在安全问题。使用风险自负。',
   'Chrome extension': 'Chrome 扩展',
   'Firefox extension': 'Firefox 扩展',
   'Install the Hoppscotch browser extension, add': '安装 Hoppscotch 浏览器扩展，将',

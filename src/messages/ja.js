@@ -849,6 +849,7 @@ export const ja = {
   'Distance requires at least one numeric feature.': '距離には少なくとも 1 つの数値特徴量が必要です。',
   'Zen': 'Zen',
   'Open tab': '新しいタブで開く',
+  'This app is from a third party. There could be security issues. Use at your own risk.': 'このアプリは第三者製です。セキュリティ上の問題がある可能性があります。自己責任でご利用ください。',
   'Chrome extension': 'Chrome 拡張機能',
   'Firefox extension': 'Firefox 拡張機能',
   'Install the Hoppscotch browser extension, add': 'Hoppscotch ブラウザ拡張機能を入れ、',

@@ -20,10 +20,24 @@ async function engine() {
   opening ??= (async () => {
     const sqlite3InitModule = (await import(/* @vite-ignore */ base())).default
     sqlite3 = await sqlite3InitModule()
-    db = new sqlite3.oo1.DB(':memory:', 'c')
+    db = openDb(':memory:', 'c')
   })()
   await opening
   return sqlite3
+}
+
+function harden(database) {
+  const capi = sqlite3.capi
+  for (const [op, on] of [[capi.SQLITE_DBCONFIG_DEFENSIVE, 1], [capi.SQLITE_DBCONFIG_TRUSTED_SCHEMA, 0]]) {
+    const rc = capi.sqlite3_db_config(database.pointer, op, on, 0)
+    if (rc) throw new Error(`SQLite config ${op} failed (${rc})`)
+  }
+}
+
+function openDb(...args) {
+  const database = new sqlite3.oo1.DB(...args)
+  harden(database)
+  return database
 }
 
 function replace(next) {
@@ -60,12 +74,12 @@ export async function openSqliteBytes(bytes) {
   const api = await engine()
   const name = `/import-${Date.now()}.sqlite`
   api.capi.sqlite3_js_posix_create_file(name, bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes))
-  replace(new api.oo1.DB(name, 'w'))
+  replace(openDb(name, 'w'))
 }
 
 export async function resetSqlite() {
   const api = await engine()
-  replace(new api.oo1.DB(':memory:', 'c'))
+  replace(openDb(':memory:', 'c'))
 }
 
 export async function exportSqlite() {
