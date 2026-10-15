@@ -49,6 +49,12 @@ export const referencedProjects = [
     url: 'https://github.com/hoppscotch/hoppscotch',
     note: 'API client UI vendored into public/hoppscotch/ via scripts/vendor-hoppscotch.js (formerly Postwoman).',
   },
+  {
+    name: 'JupyterLite',
+    license: 'BSD-3-Clause',
+    url: 'https://github.com/jupyterlite/jupyterlite',
+    note: 'JupyterLab in the browser (0.8.6) built into public/jupyterlite/ via scripts/vendor-jupyterlite.js, with the Pyodide kernel (MPL-2.0).',
+  },
 ]
 
 export const npmPackages = [

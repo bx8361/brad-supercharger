@@ -17,8 +17,9 @@ npm run dev
 - **Hoppscotch** `2026.6.1` ([MIT](https://github.com/hoppscotch/hoppscotch)) into `public/hoppscotch/`
 - **SQLite WASM** `3.54.0` ([public domain](https://sqlite.org/copyright.html)) into `public/sqlite/`, from `sqlite-wasm-3540000.zip` when that file is in the project root
 - **Pyodide** `314.0.7` ([MPL-2.0](https://github.com/pyodide/pyodide)) into `public/pyodide/`, from `pyodide-314.0.7.tar.bz2` in the project root
+- **JupyterLite** `0.8.6` ([BSD-3-Clause](https://github.com/jupyterlite/jupyterlite)) into `public/jupyterlite/`, built with `python3` via `scripts/vendor-jupyterlite.js`
 
-Rebuild with `node scripts/vendor-drawio.js`, `node scripts/vendor-hoppscotch.js`, `node scripts/vendor-sqlite.js`, or `node scripts/vendor-pyodide.js`.
+Rebuild with `node scripts/vendor-drawio.js`, `node scripts/vendor-hoppscotch.js`, `node scripts/vendor-sqlite.js`, `node scripts/vendor-pyodide.js`, or `node scripts/vendor-jupyterlite.js`.
 
 ```sh
 npm run build
@@ -94,6 +95,7 @@ Publishing the production build is documented in [publish.md](publish.md).
 - **XML tester** — validate XML against an XSD
 - **SQLite** — run SQL in the browser with SQLite WASM. The database stays in this tab
 - **Python** — run Python in the browser with Pyodide. Values stay in this tab
+- **JupyterLite** — Jupyter notebooks in the browser (Pyodide kernel). Notebooks stay in this browser for this site
 - **Regex tester** — test, replace, and extract with JavaScript, Python, Go, Java, .NET, and Rust patterns
 - **Hoppscotch** — REST, GraphQL, and WebSocket client (formerly Postwoman). Collections stay in the browser unless you connect a backend. The Hoppscotch browser extension can help with CORS.
 
@@ -121,5 +123,6 @@ The interface and the JavaScript in this repository are original, except for the
 | [Hoppscotch](https://github.com/hoppscotch/hoppscotch) `2026.6.1`    | MIT                     | Vendored web client in `public/hoppscotch/` via `scripts/vendor-hoppscotch.js`, from the [hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) image. |
 | [SQLite](https://sqlite.org/wasm) `3.54.0`                            | Public domain           | WASM/JS build unpacked from `sqlite-wasm-3540000.zip` into `public/sqlite/` via `scripts/vendor-sqlite.js`.                                                                    |
 | [Pyodide](https://github.com/pyodide/pyodide) `314.0.7`               | MPL-2.0                 | Python 3.14 runtime unpacked from `pyodide-314.0.7.tar.bz2` into `public/pyodide/` via `scripts/vendor-pyodide.js`. Includes CPython (PSF License).                             |
+| [JupyterLite](https://github.com/jupyterlite/jupyterlite) `0.8.6`     | BSD-3-Clause            | JupyterLab static site built into `public/jupyterlite/` via `scripts/vendor-jupyterlite.js` (requires `python3`). Includes the Pyodide kernel (MPL-2.0).                          |
 
 Runtime libraries keep their own licenses (recorded in `package-lock.json`). Notable ones: React (MIT), JSXGraph (MIT OR LGPL-3.0-or-later), Mermaid (MIT), Papa Parse, Plotly, ml-pca, ml-distance, and ml-kmeans (MIT). DOMPurify is MPL-2.0 OR Apache-2.0.

@@ -1988,6 +1988,23 @@ function HoppscotchTool() {
   </div>
 }
 
+const jupyterliteSrc = `${import.meta.env.BASE_URL}jupyterlite/lab/index.html`
+
+function JupyterLiteTool() {
+  const [zen, setZen] = useState(false)
+  useEffect(() => {
+    document.documentElement.classList.toggle('jupyterlite-zen', zen)
+    return () => document.documentElement.classList.remove('jupyterlite-zen')
+  }, [zen])
+  return <div className="tool-content jupyterlite-tool">
+    <div className="inline-controls jupyterlite-toolbar">
+      <button type="button" className="text-action" onClick={() => setZen(value => !value)}>{zen ? <Minimize2 size={14} /> : <Maximize2 size={14} />} {zen ? t('Exit zen') : t('Zen')}</button>
+      <button type="button" className="text-action" onClick={() => window.open(jupyterliteSrc, '_blank', 'noopener,noreferrer')}><ExternalLink size={14} /> {t("Open tab")}</button>
+    </div>
+    <iframe className="jupyterlite-frame" title={t("JupyterLite notebook editor")} src={jupyterliteSrc} allow="clipboard-read; clipboard-write" />
+  </div>
+}
+
 const jsonPathCheatSheet = [
   ['$', 'Root object element'],
   ['@', 'Current object element'],
@@ -3058,7 +3075,7 @@ const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundToo
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
   if (craftTitles[id]) return <CraftTool id={id} />
-  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
+  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }

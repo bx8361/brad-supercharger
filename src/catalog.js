@@ -1,5 +1,5 @@
 import {
-  Archive, Braces, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
+  Archive, BookOpen, Braces, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
   Clapperboard, FileText, Image, Images, KeyRound, Languages, LineChart, Link2, ListChecks, ListFilter, LockKeyhole, Network, Palette, PenLine, Presentation, QrCode, Quote, Radio, Regex, Sheet,
   ScrollText, Shield, Sigma, Stamp, StickyNote, Table2, Terminal, TextCursorInput, Type, WandSparkles, Workflow,
 } from 'lucide-react'
@@ -67,6 +67,7 @@ export const tools = [
   { id: 'xml-tester', name: 'XML tester', short: 'XSD', description: 'Validate XML documents against an XSD schema.', category: 'test', icon: FileSearch, keywords: 'xsd schema validate xml' },
   { id: 'sqlite', name: 'SQLite', short: 'DB', description: 'Run SQL in the browser with SQLite WASM. The database stays in this tab.', category: 'test', icon: Database, keywords: 'sqlite wasm sql query database playground' },
   { id: 'python', name: 'Python', short: 'Py', description: 'Run Python in the browser with Pyodide. Values stay in this tab.', category: 'test', icon: Terminal, keywords: 'python pyodide wasm runner repl interpreter script' },
+  { id: 'jupyterlite', name: 'JupyterLite', short: 'JL', description: 'Run Jupyter notebooks in the browser with Pyodide. Notebooks stay in this tab.', category: 'test', icon: BookOpen, keywords: 'jupyter jupyterlite notebook lab pyodide ipynb kernel' },
   { id: 'regex', name: 'Regex tester', short: '.*', description: 'Test, replace, and extract with JavaScript, Python, Go, Java, .NET, and Rust patterns.', category: 'test', icon: Regex, keywords: 'pattern match capture groups tester flags multiline python golang java rust csharp substitution extraction replace' },
   { id: 'hoppscotch', name: 'Hoppscotch', short: 'API', description: 'Send REST, GraphQL, and WebSocket requests (Postwoman). Works with the Hoppscotch browser extension for CORS.', category: 'test', icon: Radio, keywords: 'hoppscotch postwoman api rest graphql websocket http client request interceptor cors extension' },
 ]
