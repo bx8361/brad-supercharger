@@ -16,7 +16,7 @@ const toolOptions = {
   'number-base': ['formatNumber'],
   uuid: ['count', 'version', 'hyphens', 'uppercase'], hash: ['algorithm'], password: ['length', 'count', 'sets'],
   lorem: ['count', 'unit', 'corpus'],
-  'image-converter': ['format'],
+  'image-converter': ['format', 'svgWidth', 'svgHeight'],
   jsonpath: ['query'],
   regex: ['flavor', 'mode', 'allMatches', 'ignoreCase', 'ignoreWhitespace', 'multiline', 'dotAll', 'singleline', 'rightToLeft', 'unicode'],
   compare: ['mode', 'layout', 'ignoreLead', 'ignoreTrail', 'ignoreEmbedded', 'ignoreCase', 'ignoreNewlines'],

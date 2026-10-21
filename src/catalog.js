@@ -51,7 +51,7 @@ export const tools = [
   { id: 'lorem', name: 'Lorem Ipsum', short: '¶', description: 'Generate placeholder text on demand.', category: 'generate', icon: ScrollText, keywords: 'dummy copy paragraphs words' },
   { id: 'password', name: 'Password generator', short: '•••', description: 'Generate strong random passwords.', category: 'generate', icon: KeyRound, keywords: 'secret secure passphrase' },
   { id: 'uuid', name: 'UUID generator', short: 'ID', description: 'Create UUID v1, v4, or v7 identifiers.', category: 'generate', icon: Fingerprint, keywords: 'guid unique identifier v1 v4 v7 hyphens uppercase' },
-  { id: 'image-converter', name: 'Image converter', short: 'Img', description: 'Convert images between PNG, JPEG, and WebP.', category: 'graphic', icon: Image, keywords: 'png jpeg jpg webp convert format picture' },
+  { id: 'image-converter', name: 'Image converter', short: 'Img', description: 'Convert PNG, JPEG, WebP, and SVG images to PNG, JPEG, or WebP.', category: 'graphic', icon: Image, keywords: 'png jpeg jpg webp svg convert format picture' },
   { id: 'image-watermark', name: 'Image watermark', short: 'WM', description: 'Add tiled text watermarks to photos locally.', category: 'graphic', icon: Stamp, keywords: 'id card stamp overlay opacity text picture' },
   { id: 'image-coordinates', name: 'Image coordinates', short: 'XY', description: 'Pick points or rectangles and copy pixel coordinates.', category: 'graphic', icon: Crosshair, keywords: 'position region bbox markup ui design' },
   { id: 'jsxgraph', name: 'Function graph', short: 'ƒ', description: 'Plot math expressions on an interactive board (pan and zoom).', category: 'graphic', icon: LineChart, keywords: 'jsxgraph graph plot function desmos math curve formula' },

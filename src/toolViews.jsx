@@ -27,7 +27,7 @@ import {
   bestMasterVariant, canStreamToFile, createM3u8Download, listMasterVariants, loadPlaylistFromUrl, m3u8UrlFromLocation, parseM3u8,
 } from './m3u8Ops.js'
 import {
-  convertImageFile, downloadBlob, imageOutputFormats, renderWatermarkedCanvas, watermarkedImageBlob,
+  convertImageFile, downloadBlob, imageOutputFormats, isSvgFile, renderWatermarkedCanvas, watermarkedImageBlob,
 } from './imageOps.js'
 import { lipsumCorpora, lipsumCorpusIds } from './lipsumCorpora.js'
 import {
@@ -884,7 +884,7 @@ async function copyPngBlob(blob) {
     error.name = 'NotSupportedError'
     throw error
   }
-  await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+  await navigator.clipboard.write([new ClipboardItem({ 'image/png': Promise.resolve(blob) })])
 }
 
 const DRAWIO_FILES_KEY = 'supercharger:drawio-files'
@@ -2457,7 +2457,11 @@ function M3u8Tool({ data, setData }) {
 
 function ImageConverterTool({ data, setData }) {
   const format = textValue(data, 'format', 'png')
+  const svgWidth = textValue(data, 'svgWidth', '')
+  const svgHeight = textValue(data, 'svgHeight', '')
   const [items, setItems] = useState([])
+  const hasSvg = items.some(item => isSvgFile(item.file))
+  const svgSize = { width: svgWidth, height: svgHeight }
   useEffect(() => () => items.forEach(item => {
     if (item.preview) URL.revokeObjectURL(item.preview)
     if (item.outputUrl) URL.revokeObjectURL(item.outputUrl)
@@ -2486,7 +2490,7 @@ function ImageConverterTool({ data, setData }) {
     if (!item) return
     setItems(current => current.map(entry => entry.id === id ? { ...entry, status: 'working', error: '' } : entry))
     try {
-      const blob = await convertImageFile(item.file, format)
+      const blob = await convertImageFile(item.file, format, 0.92, svgSize)
       const outputUrl = URL.createObjectURL(blob)
       setItems(current => current.map(entry => {
         if (entry.id !== id) return entry
@@ -2502,7 +2506,7 @@ function ImageConverterTool({ data, setData }) {
   }
   async function blobForItem(item) {
     if (item.outputUrl) return fetch(item.outputUrl).then(response => response.blob())
-    const blob = await convertImageFile(item.file, format)
+    const blob = await convertImageFile(item.file, format, 0.92, svgSize)
     const outputUrl = URL.createObjectURL(blob)
     setItems(current => current.map(entry => {
       if (entry.id !== item.id) return entry
@@ -2518,15 +2522,25 @@ function ImageConverterTool({ data, setData }) {
       downloadBlob(blob, `${base}.${format}`)
     }
   }
+  function pngBlobForItem(item) {
+    if (format === 'png' && item.outputUrl) return fetch(item.outputUrl).then(response => response.blob())
+    return convertImageFile(item.file, 'png', 0.92, svgSize)
+  }
+  function copyItem(item) {
+    return withToast('Copying image…', 'Copied image', () => copyPngBlob(pngBlobForItem(item)))
+  }
   return <div className="tool-content">
     <div className="inline-controls">
       <label>{t("Convert to")}<select value={format} onChange={e => set(setData, 'format', e.target.value)}>{imageOutputFormats.map(entry => <option key={entry.id} value={entry.id}>{entry.label}</option>)}</select></label>
-      <label className="file-button"><FileUp size={14} /> {t("Choose images")}<input type="file" accept="image/*" multiple onChange={e => { addFiles(e.target.files || []); e.target.value = '' }} /></label>
+      {hasSvg && <label>{t("Width")}<input type="number" min="1" max="8192" placeholder={t("Auto")} value={svgWidth} onChange={e => set(setData, 'svgWidth', e.target.value)} /></label>}
+      {hasSvg && <label>{t("Height")}<input type="number" min="1" max="8192" placeholder={t("Auto")} value={svgHeight} onChange={e => set(setData, 'svgHeight', e.target.value)} /></label>}
+      <label className="file-button"><FileUp size={14} /> {t("Choose images")}<input type="file" accept="image/*,.svg" multiple onChange={e => { addFiles(e.target.files || []); e.target.value = '' }} /></label>
       <button type="button" className="text-action" onClick={convertAll} disabled={!items.length}><RefreshCw size={14} /> {t("Convert all")}</button>
       <button type="button" className="text-action" onClick={saveAll} disabled={!items.length}><Download size={14} /> {t("Save all")}</button>
       <button type="button" className="text-action" onClick={removeAll} disabled={!items.length}><Trash2 size={14} /> {t("Delete all")}</button>
     </div>
     <p className="subtle">{t("Runs locally in the browser. PNG, JPEG, and WebP export use the canvas API.")}</p>
+    {hasSvg && <p className="subtle">{t("SVG size in pixels. Leave a side blank to keep the aspect ratio.")}</p>}
     <div className="image-converter-list">
       {items.length ? items.map(item => <section className="editor-card image-converter-item" key={item.id}>
         <div className="panel-top"><span>{item.name}</span><span>{item.status === 'working' ? t('Converting…') : item.status === 'done' ? t('Ready') : item.status === 'error' ? t('Failed') : t('Queued')}</span></div>
@@ -2541,6 +2555,7 @@ function ImageConverterTool({ data, setData }) {
             const base = item.name.replace(/\.[^.]+$/, '') || item.name
             downloadBlob(blob, `${base}.${format}`)
           }} disabled={item.status === 'working'}><Download size={14} /> {t("Save")}</button>
+          <button type="button" className="text-action" onClick={() => copyItem(item)} disabled={item.status === 'working'}><Copy size={14} /> {t("Copy image")}</button>
         </div>
         {item.error && <p className="error-note image-converter-error">{t(item.error)}</p>}
       </section>) : <p className="subtle">{t("Choose one or more images to convert.")}</p>}
