@@ -83,6 +83,18 @@ test('always incognito stays off unless it is exactly true', () => {
   }
 })
 
+test('calculator history and results persist only when saving text is allowed', () => {
+  const calculator = {
+    angleUnit: 'r', input: 'ans', ans: '2', variables: '{"x":1}',
+    history: '[{"expr":"1+1","value":2,"result":"2"}]',
+  }
+  const off = persistedSaved({ ...emptySaved, tools: { calculator } })
+  assert.equal(off.tools.calculator, undefined)
+  const on = persistedSaved({ ...emptySaved, saveSensitiveData: true, tools: { calculator } })
+  assert.deepEqual(on.tools.calculator, calculator)
+  assert.equal(readSaved(storage(on)).tools.calculator.history, calculator.history)
+})
+
 test('workspace dimensions survive reload without saving tool text', () => {
   const saved = persistedSaved({ ...state, sidebarWidth: 340, tools: {
     json: { input: 'private JSON', workspaceHeight: 800 },

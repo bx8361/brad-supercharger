@@ -32,7 +32,7 @@ import {
 import { lipsumCorpora, lipsumCorpusIds } from './lipsumCorpora.js'
 import {
   angleUnits, autoFixCalculatorExpression, calculatorConstantCatalog, calculatorFunctionCatalog,
-  cloneCalculatorSession, createCalculatorSession, evaluateCalculatorExpression, formatCalculatorExpression, formatCalculatorResult, resultFormats, searchCalculatorSymbols,
+  cloneCalculatorSession, createCalculatorSession, evaluateCalculatorExpression, formatCalculatorExpression, formatCalculatorResult, resultFormats, searchCalculatorSymbols, stepCalculatorRecall,
 } from './calculatorOps.js'
 import { queryJsonPath, regexControls, regexFlavors, regexHelp, validateXmlAgainstXsd } from './testerOps.js'
 import { exportSqlite, openSqliteBytes, resetSqlite, runSqlite } from './sqliteOps.js'
@@ -2771,6 +2771,7 @@ function CalculatorTool({ data, setData }) {
   }, [data.variables])
   const historyRef = useRef(null)
   const inputRef = useRef(null)
+  const recall = useRef({ index: null, draft: '' })
   const [lineError, setLineError] = useState('')
   const [dock, setDock] = useState('functions')
   const [dockQuery, setDockQuery] = useState('')
@@ -2815,7 +2816,8 @@ function CalculatorTool({ data, setData }) {
       if (out.skipped) return
       const entry = {
         expr: out.expression || expr,
-        value: out.result,
+        value: Number.isFinite(out.result) ? out.result : null,
+        result: formatCalculatorResult(out.result, precision, resultFormat, grouping),
         error: '',
         assigned: out.assigned || '',
         comment: out.comment || '',
@@ -2828,10 +2830,32 @@ function CalculatorTool({ data, setData }) {
     }
   }
 
+  function resetRecall() { recall.current = { index: null, draft: '' } }
+
   function submit() {
     const trimmed = input.trim()
     if (!trimmed) return
+    resetRecall()
     runLine(autoFixCalculatorExpression(trimmed))
+  }
+
+  function onHistoryKey(e) {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+    const next = stepCalculatorRecall(history.length, recall.current.index, e.key === 'ArrowUp' ? -1 : 1)
+    if (next === recall.current.index) return
+    e.preventDefault()
+    if (recall.current.index == null) recall.current.draft = input
+    recall.current.index = next
+    set(setData, 'input', next == null ? recall.current.draft : history[next].expr)
+    setLineError('')
+  }
+
+  function reuseExpression(index) {
+    if (recall.current.index == null) recall.current.draft = input
+    recall.current.index = index
+    set(setData, 'input', history[index].expr)
+    setLineError('')
+    inputRef.current?.focus()
   }
 
   function insertSymbol(id) {
@@ -2840,6 +2864,7 @@ function CalculatorTool({ data, setData }) {
   }
 
   function clearHistory() {
+    resetRecall()
     setData({ history: '[]', variables: '{}', ans: '', input: '' })
     setLineError('')
   }
@@ -2862,7 +2887,7 @@ function CalculatorTool({ data, setData }) {
       <label className="check-pill"><input type="checkbox" checked={autoCalc} onChange={e => set(setData, 'autoCalc', e.target.checked)} />{t("Auto calculate")}</label>
       <label className="check-pill"><input type="checkbox" checked={autoAns} onChange={e => set(setData, 'autoAns', e.target.checked)} />{t("Auto ans")}</label>
       <label className="check-pill"><input type="checkbox" checked={keepExpression} onChange={e => set(setData, 'keepExpression', e.target.checked)} />{t("Keep expression")}</label>
-      <Sample onClick={() => setData({ input: initialSamples.calculator, angleUnit: 'd', resultFormat: 'g', precision: '12', history: '[]', variables: '{}', ans: '' })} />
+      <Sample onClick={() => { resetRecall(); setData({ input: initialSamples.calculator, angleUnit: 'd', resultFormat: 'g', precision: '12', history: '[]', variables: '{}', ans: '' }) }} />
       <button type="button" className="text-action" onClick={clearHistory}>{t("Clear")}</button>
     </div>
     <div className="calculator-workspace">
@@ -2870,7 +2895,7 @@ function CalculatorTool({ data, setData }) {
         <div ref={historyRef} className="calculator-history" aria-live="polite">
           {history.length === 0 && <p className="calculator-empty">{t("Enter evaluates. The line above the input is the live result when Auto calculate is on.")}</p>}
           {history.map((row, index) => <div key={index} className={`calculator-entry${row.error ? ' has-error' : ''}`}>
-            <button type="button" className="calculator-expr" title={t("Reuse expression")} onClick={() => set(setData, 'input', row.expr)}>{formatCalculatorExpression(row.expr, grouping)}{row.comment ? ` ? ${row.comment}` : ''}</button>
+            <button type="button" className="calculator-expr" title={t("Reuse expression")} onClick={() => reuseExpression(index)}>{formatCalculatorExpression(row.expr, grouping)}{row.comment ? ` ? ${row.comment}` : ''}</button>
             {row.error
               ? <div className="calculator-error">{translateCalculatorError(row.error)}</div>
               : <div className="calculator-result">= {row.assigned ? `${row.assigned} ` : ''}{shownResult(row)}</div>}
@@ -2880,7 +2905,7 @@ function CalculatorTool({ data, setData }) {
           {preview && <div className="calculator-preview" aria-live="polite">
             <div className={preview.error ? 'calculator-error' : 'calculator-result'}>{preview.error ? translateCalculatorError(preview.error) : `= ${preview.text}`}</div>
           </div>}
-          <input ref={inputRef} className="calculator-input" value={input} spellCheck="false" placeholder={t("Expression")} aria-label={t("Expression")} onChange={e => { set(setData, 'input', e.target.value); setLineError('') }} />
+          <input ref={inputRef} className="calculator-input" value={input} spellCheck="false" placeholder={t("Expression")} aria-label={t("Expression")} onKeyDown={onHistoryKey} onChange={e => { resetRecall(); set(setData, 'input', e.target.value); setLineError('') }} />
           <button type="submit" className="calculator-evaluate">{t("Evaluate")}</button>
         </form>
         {hints.length > 0 && <div className="calculator-hints">{hints.map(h => <button key={`${h.kind}-${h.id}`} type="button" className="hint-chip" onClick={() => insertSymbol(h.kind === 'function' ? `${h.id}(` : h.id)}>{h.id}</button>)}</div>}

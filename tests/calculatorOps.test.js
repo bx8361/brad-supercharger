@@ -6,6 +6,7 @@ import {
   evaluateCalculatorExpression,
   formatCalculatorExpression,
   formatCalculatorResult,
+  stepCalculatorRecall,
   stripCalculatorComment,
 } from '../src/calculatorOps.js'
 
@@ -46,6 +47,16 @@ test('formatCalculatorResult trims noise', () => {
   assert.equal(formatCalculatorResult(260525, 12, 'g', true), '260 525')
   assert.equal(formatCalculatorResult(1234.5, 2, 'f', true), '1 234.50')
   assert.equal(formatCalculatorExpression('423925-163400'), '423 925-163 400')
+})
+
+test('up and down walk calculator history back to the draft', () => {
+  assert.equal(stepCalculatorRecall(3, null, -1), 2)
+  assert.equal(stepCalculatorRecall(3, 2, -1), 1)
+  assert.equal(stepCalculatorRecall(3, 0, -1), 0)
+  assert.equal(stepCalculatorRecall(3, 0, 1), 1)
+  assert.equal(stepCalculatorRecall(3, 2, 1), null)
+  assert.equal(stepCalculatorRecall(0, null, -1), null)
+  assert.equal(stepCalculatorRecall(2, null, 1), null)
 })
 
 test('auto ans prefixes the previous result', () => {

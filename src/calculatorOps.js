@@ -603,6 +603,17 @@ export function formatCalculatorResult(value, precision = 15, format = 'g', grou
   return groupDigits(text, grouping)
 }
 
+// ponytail: index is the shown history row; null is the unsent draft. Down past the newest returns null.
+export function stepCalculatorRecall(length, index, direction) {
+  if (direction < 0) {
+    const start = index == null ? length : index
+    const next = start - 1
+    return next >= 0 ? next : index
+  }
+  if (index == null) return null
+  return index + 1 < length ? index + 1 : null
+}
+
 export function searchCalculatorSymbols(query, limit = 12) {
   const q = query.trim().toLowerCase()
   if (!q) return []
