@@ -29,7 +29,7 @@ public/drawio/
 # Hoppscotch API client (fetched by scripts/vendor-hoppscotch.js on npm install)
 public/hoppscotch/
 
-# ArtCraft web apps (unpacked from sources/ by scripts/vendor-crafts.js)
+# ArtCraft web apps (unpacked from third-party/ by scripts/vendor-crafts.js)
 public/crafts/
 
 # SQLite WASM (unpacked from sqlite-wasm-3540000.zip by scripts/vendor-sqlite.js)
@@ -57,3 +57,6 @@ Thumbs.db
 # Optional: uncomment if you use these tools
 # .eslintcache
 # *.tsbuildinfo
+
+
+/third-party

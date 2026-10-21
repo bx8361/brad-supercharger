@@ -32,13 +32,13 @@ The **draw.io editor** tool vendors the [jgraph/drawio](https://github.com/jgrap
 
 ## ArtCraft
 
-The **Crafts** tools vendor [ArtCraft](https://getartcraft.com/apps) web builds (MIT OR Apache-2.0) into `public/crafts/` via `scripts/vendor-crafts.js`. The zip files live in `sources/`:
+The **Crafts** tools vendor [ArtCraft](https://getartcraft.com/apps) web builds (MIT OR Apache-2.0) into `public/crafts/` via `scripts/vendor-crafts.js`. The zip files live in `third-party/`:
 
-- WordCraft `0.7.0` (`wordcraft-web-0.7.0.zip`)
-- GridCraft `0.7.0` (`gridcraft-web-0.7.0.zip`)
-- PhotoCraft `0.9.0` (`photocraft-web-0.9.0.zip`)
-- FilmCraft `0.8.0` (`filmcraft-web-0.8.0.zip`)
-- DeckCraft `0.7.0` (`deckcraft-web-0.7.0.zip`)
+- WordCraft `0.8.0` (`wordcraft-web-0.8.0.zip`)
+- GridCraft `0.9.0` (`gridcraft-web-0.9.0.zip`)
+- PhotoCraft `0.11.1` (`photocraft-web-0.11.1.zip`)
+- FilmCraft `0.9.0` (`filmcraft-web-0.9.0.zip`)
+- DeckCraft `0.8.0` (`deckcraft-web-0.8.0.zip`)
 
 ## Hoppscotch
 

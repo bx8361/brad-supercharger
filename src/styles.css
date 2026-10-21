@@ -137,6 +137,8 @@ kbd { display:inline-flex;align-items:center;gap:3px;white-space:nowrap;padding:
 .tool-heading { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px; }
 .tool-heading .eyebrow { margin-bottom:12px; }.tool-heading .eyebrow i { color:var(--border);font-style:normal; }
 .tool-heading h1 { display:flex;align-items:center;gap:8px;margin:0;font:600 21.5px var(--font-sans);letter-spacing:-.7px; }
+.tool-version { margin-left:6px;color:var(--text-caption);font:500 12px var(--font-sans);letter-spacing:0; }
+.tool-nav .tool-version { font-size:11px; }
 .tool-heading p { margin:0;color:var(--muted);font-size:13px;line-height:1.4; }
 .favorite-button { display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--muted);font-size:12px; }.favorite-button span { font-size:15.5px; }.favorite-button:hover,.favorite-button.is-favorite { color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--border)); }
 .tool-content { display:flex;flex-direction:column;gap:12px; }

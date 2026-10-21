@@ -4,13 +4,13 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 
-// ponytail: unpack sources/*.zip as-is. Re-run when the version marker changes.
+// ponytail: unpack third-party/*.zip as-is. Re-run when the version marker changes.
 const apps = [
-  ['wordcraft', 'wordcraft-web-0.7.0.zip', '0.7.0'],
-  ['gridcraft', 'gridcraft-web-0.7.0.zip', '0.7.0'],
-  ['photocraft', 'photocraft-web-0.9.0.zip', '0.9.0'],
-  ['filmcraft', 'filmcraft-web-0.8.0.zip', '0.8.0'],
-  ['deckcraft', 'deckcraft-web-0.7.0.zip', '0.7.0'],
+  ['wordcraft', 'wordcraft-web-0.8.0.zip', '0.8.0'],
+  ['gridcraft', 'gridcraft-web-0.9.0.zip', '0.9.0'],
+  ['photocraft', 'photocraft-web-0.11.1.zip', '0.11.1'],
+  ['filmcraft', 'filmcraft-web-0.9.0.zip', '0.9.0'],
+  ['deckcraft', 'deckcraft-web-0.8.0.zip', '0.8.0'],
 ]
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -25,7 +25,7 @@ for (const [id, zipName, version] of apps) {
     console.log(`${id} ${version} already in public/crafts/${id}`)
     continue
   }
-  const zip = join(root, 'sources', zipName)
+  const zip = join(root, 'third-party', zipName)
   if (!existsSync(zip)) throw new Error(`Missing ${zip}`)
   await rm(dest, { recursive: true, force: true })
   await mkdir(dest, { recursive: true })
@@ -58,7 +58,7 @@ function patchCraftLang(id, dest) {
   let html = readFileSync(indexPath, 'utf8')
   html = html.replace(/<script>\/\* ponytail: [\s\S]*?<\/script>\s*/g, '')
   if (id === 'wordcraft') {
-    const script = `  <script>/* ponytail: wordcraft-web 0.7.0 UI font is Latin-only, so a Chinese navigator paints every label as ?. */try{const lang="en-US";Object.defineProperty(Navigator.prototype,"language",{get(){return lang}});Object.defineProperty(Navigator.prototype,"languages",{get(){return [lang]}})}catch(e){}</script>\n`
+    const script = `  <script>/* ponytail: wordcraft-web 0.8.0 UI font is Latin-only, so a Chinese navigator paints every label as ?. */try{const lang="en-US";Object.defineProperty(Navigator.prototype,"language",{get(){return lang}});Object.defineProperty(Navigator.prototype,"languages",{get(){return [lang]}})}catch(e){}</script>\n`
     html = html.replace('<head>', `<head>\n${script}`)
   }
   writeFileSync(indexPath, html)

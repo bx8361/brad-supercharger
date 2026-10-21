@@ -20,7 +20,7 @@ npm run dev
 
 - **draw.io** `31.6.1`（[Apache-2.0](https://github.com/jgraph/drawio)）到 `public/drawio/`
 - **Hoppscotch** `2026.6.1`（[MIT](https://github.com/hoppscotch/hoppscotch)）到 `public/hoppscotch/`
-- **ArtCraft** WordCraft `0.7.0`、GridCraft `0.7.0`、PhotoCraft `0.9.0`、FilmCraft `0.8.0`、DeckCraft `0.7.0`（[MIT OR Apache-2.0](https://getartcraft.com/apps)）到 `public/crafts/`，来自 `sources/` 里对应的 zip
+- **ArtCraft** WordCraft `0.8.0`、GridCraft `0.9.0`、PhotoCraft `0.11.1`、FilmCraft `0.9.0`、DeckCraft `0.8.0`（[MIT OR Apache-2.0](https://getartcraft.com/apps)）到 `public/crafts/`，来自 `third-party/` 里对应的 zip
 - **SQLite WASM** `3.54.0`（[公有领域](https://sqlite.org/copyright.html)）到 `public/sqlite/`。项目根目录有 `sqlite-wasm-3540000.zip` 时使用该文件
 - **Pyodide** `314.0.7`（[MPL-2.0](https://github.com/pyodide/pyodide)）到 `public/pyodide/`，来自项目根目录的 `pyodide-314.0.7.tar.bz2`
 - **JupyterLite** `0.8.6`（[BSD-3-Clause](https://github.com/jupyterlite/jupyterlite)）到 `public/jupyterlite/`，由 `scripts/vendor-jupyterlite.js` 用 `python3` 构建
@@ -132,7 +132,7 @@ npm run preview
 | [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch) | GPL-2.0-or-later | 计算器的语法、函数名和常数，用原创 JavaScript 重新实现。不含 SpeedCrunch 的 C++ 源代码。 |
 | [NLipsum](https://github.com/DevToys-app/DevToys.Tools) 占位文本 | Public domain | `src/assets/lipsums/` 下的占位语料。 |
 | [draw.io](https://github.com/jgraph/drawio) `31.6.1` | Apache-2.0 | 由 `scripts/vendor-drawio.js` 置入 `public/drawio/` 的网页应用。 |
-| [ArtCraft](https://getartcraft.com/apps) | MIT OR Apache-2.0 | WordCraft `0.7.0`、GridCraft `0.7.0`、PhotoCraft `0.9.0`、FilmCraft `0.8.0`、DeckCraft `0.7.0`。由 `scripts/vendor-crafts.js` 从 `sources/` 解包到 `public/crafts/`。 |
+| [ArtCraft](https://getartcraft.com/apps) | MIT OR Apache-2.0 | WordCraft `0.8.0`、GridCraft `0.9.0`、PhotoCraft `0.11.1`、FilmCraft `0.9.0`、DeckCraft `0.8.0`。由 `scripts/vendor-crafts.js` 从 `third-party/` 解包到 `public/crafts/`。 |
 | [Hoppscotch](https://github.com/hoppscotch/hoppscotch) `2026.6.1` | MIT | 由 `scripts/vendor-hoppscotch.js` 置入 `public/hoppscotch/` 的网页客户端，来自 [hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) 镜像。 |
 | [SQLite](https://sqlite.org/wasm) `3.54.0` | Public domain | WASM/JS 构建。由 `scripts/vendor-sqlite.js` 从 `sqlite-wasm-3540000.zip` 解包到 `public/sqlite/`。 |
 | [Pyodide](https://github.com/pyodide/pyodide) `314.0.7` | MPL-2.0 | Python 3.14 运行时。由 `scripts/vendor-pyodide.js` 从 `pyodide-314.0.7.tar.bz2` 解包到 `public/pyodide/`。包含 CPython（PSF License）。 |
