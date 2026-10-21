@@ -20,7 +20,7 @@ const toolOptions = {
   jsonpath: ['query'],
   regex: ['flavor', 'mode', 'allMatches', 'ignoreCase', 'ignoreWhitespace', 'multiline', 'dotAll', 'singleline', 'rightToLeft', 'unicode'],
   compare: ['mode', 'layout', 'ignoreLead', 'ignoreTrail', 'ignoreEmbedded', 'ignoreCase', 'ignoreNewlines'],
-  escape: ['direction', 'format'], list: ['mode', 'ignoreCase'],
+  escape: ['direction', 'format'], unicode: ['direction', 'format'], list: ['mode', 'ignoreCase'],
 }
 
 export function persistedSaved(saved) {

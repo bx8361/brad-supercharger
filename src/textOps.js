@@ -245,6 +245,43 @@ export function unescapeString(text, format = 'json') {
   return JSON.parse(`"${text}"`)
 }
 
+function codePointChar(cp) {
+  if (!Number.isInteger(cp) || cp < 0 || cp > 0x10FFFF) throw new Error('Invalid code point.')
+  return String.fromCodePoint(cp)
+}
+
+export function charsToUnicode(text, format = 'u+') {
+  const chars = [...text]
+  if (format === 'decimal') return chars.map(ch => String(ch.codePointAt(0))).join(' ')
+  if (format === 'js') {
+    let out = ''
+    for (const ch of chars) {
+      const cp = ch.codePointAt(0)
+      if (cp > 0xFFFF) {
+        const u = cp - 0x10000
+        out += '\\u' + (0xD800 + (u >> 10)).toString(16).toUpperCase().padStart(4, '0')
+        out += '\\u' + (0xDC00 + (u & 0x3FF)).toString(16).toUpperCase().padStart(4, '0')
+      } else out += '\\u' + cp.toString(16).toUpperCase().padStart(4, '0')
+    }
+    return out
+  }
+  return chars.map(ch => 'U+' + ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')).join(' ')
+}
+
+export function unicodeToChars(text, format = 'u+') {
+  if (!text.trim()) return ''
+  if (format === 'decimal') {
+    if (!/^[\d\s,]+$/.test(text)) throw new Error('Invalid code point.')
+    return text.trim().split(/[\s,]+/).filter(Boolean).map(part => codePointChar(Number(part))).join('')
+  }
+  if (format === 'js') {
+    if (/\\u(?!\{[0-9A-Fa-f]{1,6}\}|[0-9A-Fa-f]{4})|\\U(?![0-9A-Fa-f]{8})/.test(text)) throw new Error('Invalid code point.')
+    return text.replace(/\\u\{([0-9A-Fa-f]{1,6})\}|\\u([0-9A-Fa-f]{4})|\\U([0-9A-Fa-f]{8})/g, (_, brace, u4, u8) => codePointChar(parseInt(brace || u4 || u8, 16)))
+  }
+  if (!/^(?:\s|U\+[0-9A-Fa-f]{1,6})+$/i.test(text)) throw new Error('Invalid code point.')
+  return [...text.matchAll(/U\+([0-9A-Fa-f]{1,6})/gi)].map(m => codePointChar(parseInt(m[1], 16))).join('')
+}
+
 export function compareLists(left, right, mode = 'both', ignoreCase = false) {
   const key = s => ignoreCase ? s.toLocaleLowerCase() : s
   const a = left.split(/\r?\n/).filter(s => s.length)

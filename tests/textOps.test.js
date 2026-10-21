@@ -1,11 +1,21 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { analyze, compareChangeParts, compareLists, escapeString, lineEnding, sideBySideRows, toCamel, toSnake, unescapeString } from '../src/textOps.js'
+import { analyze, charsToUnicode, compareChangeParts, compareLists, escapeString, lineEnding, sideBySideRows, toCamel, toSnake, unescapeString, unicodeToChars } from '../src/textOps.js'
 
 test('json escape round-trips quotes and newlines', () => {
   const raw = 'Say "hello"\nnext'
   assert.equal(escapeString(raw), 'Say \\"hello\\"\\nnext')
   assert.equal(unescapeString(escapeString(raw)), raw)
+})
+
+test('unicode code points round-trip, including emoji', () => {
+  const raw = 'Hi 你 😀'
+  assert.equal(charsToUnicode(raw), 'U+0048 U+0069 U+0020 U+4F60 U+0020 U+1F600')
+  assert.equal(unicodeToChars(charsToUnicode(raw)), raw)
+  assert.equal(unicodeToChars(charsToUnicode(raw, 'js'), 'js'), raw)
+  assert.equal(unicodeToChars('\\u{1F600}', 'js'), '😀')
+  assert.equal(unicodeToChars(charsToUnicode(raw, 'decimal'), 'decimal'), raw)
+  assert.throws(() => unicodeToChars('U+110000'), /Invalid code point/)
 })
 
 test('xml escape and unescape', () => {

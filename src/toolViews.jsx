@@ -37,7 +37,7 @@ import {
 import { queryJsonPath, regexControls, regexFlavors, regexHelp, validateXmlAgainstXsd } from './testerOps.js'
 import { exportSqlite, openSqliteBytes, resetSqlite, runSqlite } from './sqliteOps.js'
 import { resetPython, runPython } from './pythonOps.js'
-import { analyze, caretInfo, compareChangeParts, compareLists, escapeString, reverseLines, shuffleLines, sideBySideRows, sortByLast, sortLines, toAlternating, toCamel, toCobol, toConstant, toCRLF, toInverse, toKebab, toLF, toPascal, toRandomCase, toSentence, toSnake, toTitle, toTrain, trimLines, unescapeString, uniqueLines } from './textOps.js'
+import { analyze, caretInfo, charsToUnicode, compareChangeParts, compareLists, escapeString, reverseLines, shuffleLines, sideBySideRows, sortByLast, sortLines, toAlternating, toCamel, toCobol, toConstant, toCRLF, toInverse, toKebab, toLF, toPascal, toRandomCase, toSentence, toSnake, toTitle, toTrain, trimLines, unescapeString, unicodeToChars, uniqueLines } from './textOps.js'
 import { JSXGraph } from 'jsxgraph'
 import '../node_modules/jsxgraph/distrib/jsxgraph.css'
 import mermaid from 'mermaid'
@@ -2728,6 +2728,14 @@ function CompareTool({ data, setData }) {
     <Split axis="y" storageKey="compare-height" className="compare-stack">{editors}<section className={`editor-card diff-card${added || removed ? '' : ' is-same'}`}><div className="panel-top"><span>{t(layout === 'side' ? 'Side by side' : 'Inline')} · {t(mode === 'lines' ? 'Lines' : 'Words')}</span><span className="diff-legend"><i className="added-bg" /> {t("Added")}<i className="removed-bg" /> {t("Removed")}</span></div>{rows ? <Split className="side-diff" storageKey={SPLIT_KEY} {...linked}><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.left} /></pre>)}</div><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.right} /></pre>)}</div></Split> : <pre>{markup}</pre>}</section></Split></div>
 }
 
+function UnicodeTool({ data, setData }) {
+  const input = textValue(data, 'input', initialSamples.unicode), direction = textValue(data, 'direction', 'encode'), format = textValue(data, 'format', 'u+')
+  let output = '', error = ''
+  try { output = direction === 'encode' ? charsToUnicode(input, format) : unicodeToChars(input, format) }
+  catch (e) { error = input ? e.message : '' }
+  return <div className="tool-content"><div className="inline-controls"><label>{t("Direction")}<select value={direction} onChange={e => set(setData, 'direction', e.target.value)}><option value="encode">{t("Characters to Unicode")}</option><option value="decode">{t("Unicode to characters")}</option></select></label><label>{t("Format")}<select value={format} onChange={e => set(setData, 'format', e.target.value)}><option value="u+">{t("U+0041")}</option><option value="js">{t("\\u0041")}</option><option value="decimal">{t("Decimal")}</option></select></label><Sample onClick={() => setData({ direction: 'encode', format: 'u+', input: initialSamples.unicode })} /></div><Split><Editor label={direction === 'encode' ? 'Plain text' : 'Unicode'} value={input} onChange={v => set(setData, 'input', v)} /><Output label={direction === 'encode' ? 'Unicode' : 'Characters'} value={output} error={!!error} placeholder={error || 'Enter text to convert.'} /></Split>{error && <p className="error-note">{t(error)}</p>}</div>
+}
+
 function EscapeTool({ data, setData }) {
   const input = textValue(data, 'input', initialSamples.escape), direction = textValue(data, 'direction', 'escape'), format = textValue(data, 'format', 'json')
   let output = '', error = ''
@@ -3087,7 +3095,7 @@ const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundToo
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
   if (craftTitles[id]) return <CraftTool id={id} />
-  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, list: ListCompareTool }
+  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, unicode: UnicodeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }
