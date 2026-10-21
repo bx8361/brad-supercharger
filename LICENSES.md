@@ -40,6 +40,8 @@ The **Crafts** tools vendor [ArtCraft](https://getartcraft.com/apps) web builds 
 - FilmCraft `0.9.0` (`filmcraft-web-0.9.0.zip`)
 - DeckCraft `0.8.0` (`deckcraft-web-0.8.0.zip`)
 
+WordCraft document text uses [Noto Sans CJK SC](https://github.com/notofonts/noto-cjk) Regular `Sans2.004` (SIL Open Font License 1.1). `scripts/vendor-crafts.js` downloads it next to WordCraft as `NotoSansCJKsc-Regular.otf`, with the license in `NotoSansCJKsc-OFL.txt`.
+
 ## Hoppscotch
 
 The **Hoppscotch** tool vendors the Hoppscotch web client from the official [hoppscotch/hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) container image (MIT, release pinned in `scripts/vendor-hoppscotch.js`) into `public/hoppscotch/`. Hoppscotch was formerly known as Postwoman. Collections and workspaces are stored in your browser unless you connect a self-hosted backend.

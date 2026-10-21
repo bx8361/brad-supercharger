@@ -35,7 +35,7 @@ export const referencedProjects = [
     name: 'ArtCraft (WordCraft, GridCraft, PhotoCraft, FilmCraft, DeckCraft)',
     license: 'MIT OR Apache-2.0',
     url: 'https://getartcraft.com/apps',
-    note: 'WordCraft 0.8.0, GridCraft 0.9.0, PhotoCraft 0.11.1, FilmCraft 0.9.0, and DeckCraft 0.8.0 unpacked from third-party/ into public/crafts/ by scripts/vendor-crafts.js.',
+    note: 'WordCraft 0.8.0, GridCraft 0.9.0, PhotoCraft 0.11.1, FilmCraft 0.9.0, and DeckCraft 0.8.0 unpacked from third-party/ into public/crafts/ by scripts/vendor-crafts.js. WordCraft also loads Noto Sans CJK SC Regular (OFL-1.1, Sans2.004) for Chinese document text.',
   },
   {
     name: 'SQLite',

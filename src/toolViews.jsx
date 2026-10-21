@@ -1964,7 +1964,7 @@ function CraftTool({ id }) {
       <button type="button" className="text-action" onClick={() => window.open(src, '_blank', 'noopener,noreferrer')}><ExternalLink size={14} /> {t("Open tab")}</button>
       <WasmNetworkWarning />
     </div>
-    <iframe className="craft-frame" title={craftTitles[id]} src={src} allow="fullscreen; clipboard-read; clipboard-write; autoplay" allowFullScreen />
+    <iframe className="craft-frame" title={craftTitles[id]} src={src} allow="fullscreen; clipboard-read; clipboard-write; autoplay; local-fonts" allowFullScreen />
   </div>
 }
 
