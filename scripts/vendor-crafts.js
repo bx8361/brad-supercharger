@@ -1,4 +1,5 @@
-import { createWriteStream, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { createWriteStream, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pipeline } from 'node:stream/promises'
@@ -28,6 +29,7 @@ for (const [id, zipName, version] of apps) {
   const marker = join(dest, '.craft-version')
   if (existsSync(marker) && readFileSync(marker, 'utf8').trim() === version && existsSync(join(dest, 'index.html'))) {
     await patchCraftLang(id, dest)
+    if (id === 'deckcraft') patchDeckcraftPid(dest)
     console.log(`${id} ${version} already in public/crafts/${id}`)
     continue
   }
@@ -56,7 +58,36 @@ with zipfile.ZipFile(src) as z:
   if (!existsSync(join(dest, 'index.html'))) throw new Error(`${id} index.html missing after extract`)
   await writeFile(marker, `${version}\n`, 'utf8')
   await patchCraftLang(id, dest)
+  if (id === 'deckcraft') patchDeckcraftPid(dest)
   console.log(`Installed ${id} ${version} to public/crafts/${id}`)
+}
+
+// ponytail: deckcraft-web 0.8.0 hashes std::process::id() at startup, which panics on wasm32. That once-cell is the byte sequence below; mark it done and return. A 32-byte wasm stack slot is left behind, once. Remove when a newer web zip boots without this.
+function patchDeckcraftPid(dest) {
+  const name = readdirSync(dest).find(file => file.endsWith('_bg.wasm'))
+  if (!name) throw new Error('deckcraft wasm missing')
+  const wasmPath = join(dest, name)
+  let wasm = readFileSync(wasmPath)
+  const from = Buffer.from('41d087b602413141e887b60210bc7400', 'hex')
+  const to = Buffer.from('4198c5db0241033a00000f0101010101', 'hex')
+  const at = wasm.indexOf(from)
+  if (at < 0) {
+    if (!wasm.includes(to)) throw new Error('deckcraft 0.8.0 pid panic site missing')
+  } else {
+    if (wasm.indexOf(from, at + 1) !== -1) throw new Error('deckcraft pid panic site is not unique')
+    wasm = Buffer.concat([wasm.subarray(0, at), to, wasm.subarray(at + from.length)])
+    if (!WebAssembly.validate(wasm)) throw new Error('patched deckcraft wasm is invalid')
+    writeFileSync(wasmPath, wasm)
+  }
+  const digest = `sha384-${createHash('sha384').update(wasm).digest('base64')}`
+  const indexPath = join(dest, 'index.html')
+  const html = readFileSync(indexPath, 'utf8')
+  const href = html.indexOf(`href="./${name}"`)
+  if (href < 0) throw new Error('deckcraft index.html does not preload the wasm')
+  const integ = html.indexOf('integrity="', href)
+  const end = html.indexOf('"', integ + 'integrity="'.length)
+  const next = `${html.slice(0, integ)}integrity="${digest}${html.slice(end)}`
+  if (next !== html) writeFileSync(indexPath, next)
 }
 
 async function ensureCjkFont(dest) {
