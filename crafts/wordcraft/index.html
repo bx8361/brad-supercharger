@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>/* ponytail: wordcraft-web 0.8.0 UI font is Latin-only, so a Chinese navigator paints every label as ?. */try{const lang="en-US";Object.defineProperty(Navigator.prototype,"language",{get(){return lang}});Object.defineProperty(Navigator.prototype,"languages",{get(){return [lang]}})}catch(e){}</script>
+  <script>/* ponytail: wordcraft-web 0.9.0 UI font is Latin-only, so a Chinese navigator paints every label as ?. */try{const lang="en-US";Object.defineProperty(Navigator.prototype,"language",{get(){return lang}});Object.defineProperty(Navigator.prototype,"languages",{get(){return [lang]}})}catch(e){}</script>
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
@@ -9,10 +9,10 @@
   <link rel="icon" href="./wordcraft-fa59e09a3f921e03.ico" integrity="sha384-99DzWb82rFgkdw7hjKziyDQaHbMTklb9MWeLKF7LcVUnq80H4nDrc/pjHJtAj/AA"/>
   
 <script type="module">
-import init, * as bindings from './wordcraft-web-dac7e7b375acbaf2.js';
-async function seedWordcraftCjk(){/* ponytail: wordcraft-web 0.8.0 ships no CJK face; IndexedDB wordcraft/fonts is loaded at startup. */const key="NotoSansCJKsc-Regular.otf";const db=await new Promise((ok,err)=>{const req=indexedDB.open("wordcraft",1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains("fonts"))req.result.createObjectStore("fonts")};req.onsuccess=()=>ok(req.result);req.onerror=()=>err(req.error)});const have=await new Promise((ok,err)=>{const q=db.transaction("fonts").objectStore("fonts").get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>err(q.error)});if(have){db.close();return}const res=await fetch("./"+key);if(!res.ok)throw new Error("cjk font "+res.status);const bytes=new Uint8Array(await res.arrayBuffer());await new Promise((ok,err)=>{const q=db.transaction("fonts","readwrite").objectStore("fonts").put(bytes,key);q.onsuccess=()=>ok();q.onerror=()=>err(q.error)});db.close()}
+import init, * as bindings from './wordcraft-web-5cc86b80984cdfee.js';
+async function seedWordcraftCjk(){/* ponytail: wordcraft-web 0.9.0 ships no CJK face; IndexedDB wordcraft/fonts is loaded at startup. */const key="NotoSansCJKsc-Regular.otf";const db=await new Promise((ok,err)=>{const req=indexedDB.open("wordcraft",1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains("fonts"))req.result.createObjectStore("fonts")};req.onsuccess=()=>ok(req.result);req.onerror=()=>err(req.error)});const have=await new Promise((ok,err)=>{const q=db.transaction("fonts").objectStore("fonts").get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>err(q.error)});if(have){db.close();return}const res=await fetch("./"+key);if(!res.ok)throw new Error("cjk font "+res.status);const bytes=new Uint8Array(await res.arrayBuffer());await new Promise((ok,err)=>{const q=db.transaction("fonts","readwrite").objectStore("fonts").put(bytes,key);q.onsuccess=()=>ok();q.onerror=()=>err(q.error)});db.close()}
 try{await seedWordcraftCjk()}catch(e){console.warn(e)}
-const wasm = await init({ module_or_path: './wordcraft-web-dac7e7b375acbaf2_bg.wasm' });
+const wasm = await init({ module_or_path: './wordcraft-web-5cc86b80984cdfee_bg.wasm' });
 
 
 window.wasmBindings = bindings;
@@ -27,7 +27,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
     #wordcraft_loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
       color: #555; font: 14px system-ui, sans-serif; pointer-events: none; }
   </style>
-<link rel="modulepreload" href="./wordcraft-web-dac7e7b375acbaf2.js" crossorigin="anonymous" integrity="sha384-gYoGGTemmd2j3/dhKoEl8zLsVnqxKhYemDwQefw7ScuxIQG5yPZn19Yu+kL2oa66"><link rel="preload" href="./wordcraft-web-dac7e7b375acbaf2_bg.wasm" crossorigin="anonymous" integrity="sha384-uSXbkJ/sRVLCG4PMg3n9MFBeTPjohru9DWv3Azk4CfNP4BKlfPU2V3KU+iGqZhg3" as="fetch" type="application/wasm"></head>
+<link rel="modulepreload" href="./wordcraft-web-5cc86b80984cdfee.js" crossorigin="anonymous" integrity="sha384-RR4Ks7BEvUXdmI7at6dvOxzwZonkD8KZ+zCXRAnvQegrmAkZw1AtYL4IEmiWzNkS"><link rel="preload" href="./wordcraft-web-5cc86b80984cdfee_bg.wasm" crossorigin="anonymous" integrity="sha384-hyX+URcRj6FLzEZnaf2n1dd6FoG70iN4mQhxeiLGHFS3T15ryn91VgB+2Of5CFc3" as="fetch" type="application/wasm"></head>
 <body>
   <canvas id="wordcraft_canvas"></canvas>
   <div id="wordcraft_loading">Loading WordCraft&hellip;</div>
