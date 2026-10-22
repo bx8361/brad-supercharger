@@ -20,7 +20,7 @@ npm run dev
 
 - **draw.io** `31.6.1` ([Apache-2.0](https://github.com/jgraph/drawio)) into `public/drawio/`
 - **Hoppscotch** `2026.6.1` ([MIT](https://github.com/hoppscotch/hoppscotch)) into `public/hoppscotch/`
-- **ArtCraft** WordCraft `0.8.0`, GridCraft `0.9.0`, PhotoCraft `0.11.1`, FilmCraft `0.9.0`, DeckCraft `0.8.0` ([MIT OR Apache-2.0](https://getartcraft.com/apps)) into `public/crafts/`, from the matching zip files in `third-party/`
+- **ArtCraft** WordCraft `0.9.0`, GridCraft `0.10.0`, PhotoCraft `0.12.0`, FilmCraft `0.10.0`, DeckCraft `0.9.0` ([MIT OR Apache-2.0](https://getartcraft.com/apps)) into `public/crafts/`, from the matching zip files in `third-party/`
 - **SQLite WASM** `3.54.0` ([public domain](https://sqlite.org/copyright.html)) into `public/sqlite/`, from `sqlite-wasm-3540000.zip` when that file is in the project root
 - **Pyodide** `314.0.7` ([MPL-2.0](https://github.com/pyodide/pyodide)) into `public/pyodide/`, from `pyodide-314.0.7.tar.bz2` in the project root
 - **JupyterLite** `0.8.6` ([BSD-3-Clause](https://github.com/jupyterlite/jupyterlite)) into `public/jupyterlite/`, built with `python3` via `scripts/vendor-jupyterlite.js`
@@ -132,7 +132,7 @@ The interface and the JavaScript in this repository are original, except for the
 | [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch)       | GPL-2.0-or-later        | Calculator syntax, function names, and constants, reimplemented in original JavaScript. No SpeedCrunch C++ source is included.                                                 |
 | [NLipsum](https://github.com/DevToys-app/DevToys.Tools) lipsum texts | Public domain           | Placeholder corpora under `src/assets/lipsums/`.                                                                                                                               |
 | [draw.io](https://github.com/jgraph/drawio) `31.6.1`                 | Apache-2.0              | Vendored web app in `public/drawio/` via `scripts/vendor-drawio.js`.                                                                                                           |
-| [ArtCraft](https://getartcraft.com/apps)                             | MIT OR Apache-2.0       | WordCraft `0.8.0`, GridCraft `0.9.0`, PhotoCraft `0.11.1`, FilmCraft `0.9.0`, and DeckCraft `0.8.0` unpacked from `third-party/` into `public/crafts/` via `scripts/vendor-crafts.js`. |
+| [ArtCraft](https://getartcraft.com/apps)                             | MIT OR Apache-2.0       | WordCraft `0.9.0`, GridCraft `0.10.0`, PhotoCraft `0.12.0`, FilmCraft `0.10.0`, and DeckCraft `0.9.0` unpacked from `third-party/` into `public/crafts/` via `scripts/vendor-crafts.js`. |
 | [Hoppscotch](https://github.com/hoppscotch/hoppscotch) `2026.6.1`    | MIT                     | Vendored web client in `public/hoppscotch/` via `scripts/vendor-hoppscotch.js`, from the [hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) image. |
 | [SQLite](https://sqlite.org/wasm) `3.54.0`                            | Public domain           | WASM/JS build unpacked from `sqlite-wasm-3540000.zip` into `public/sqlite/` via `scripts/vendor-sqlite.js`.                                                                    |
 | [Pyodide](https://github.com/pyodide/pyodide) `314.0.7`               | MPL-2.0                 | Python 3.14 runtime unpacked from `pyodide-314.0.7.tar.bz2` into `public/pyodide/` via `scripts/vendor-pyodide.js`. Includes CPython (PSF License).                             |

@@ -34,13 +34,13 @@ The **draw.io editor** tool vendors the [jgraph/drawio](https://github.com/jgrap
 
 The **Crafts** tools vendor [ArtCraft](https://getartcraft.com/apps) web builds (MIT OR Apache-2.0) into `public/crafts/` via `scripts/vendor-crafts.js`. The zip files live in `third-party/`:
 
-- WordCraft `0.8.0` (`wordcraft-web-0.8.0.zip`)
-- GridCraft `0.9.0` (`gridcraft-web-0.9.0.zip`)
-- PhotoCraft `0.11.1` (`photocraft-web-0.11.1.zip`)
-- FilmCraft `0.9.0` (`filmcraft-web-0.9.0.zip`)
-- DeckCraft `0.8.0` (`deckcraft-web-0.8.0.zip`)
+- WordCraft `0.9.0` (`wordcraft-web-0.9.0.zip`)
+- GridCraft `0.10.0` (`gridcraft-web-0.10.0.zip`)
+- PhotoCraft `0.12.0` (`photocraft-web-0.12.0.zip`)
+- FilmCraft `0.10.0` (`filmcraft-web-0.10.0.zip`)
+- DeckCraft `0.9.0` (`deckcraft-web-0.9.0.zip`)
 
-WordCraft document text uses [Noto Sans CJK SC](https://github.com/notofonts/noto-cjk) Regular `Sans2.004` (SIL Open Font License 1.1). `scripts/vendor-crafts.js` downloads it next to WordCraft as `NotoSansCJKsc-Regular.otf`, with the license in `NotoSansCJKsc-OFL.txt`.
+WordCraft and PhotoCraft text use [Noto Sans CJK SC](https://github.com/notofonts/noto-cjk) Regular `Sans2.004` (SIL Open Font License 1.1). `scripts/vendor-crafts.js` downloads it as `NotoSansCJKsc-Regular.otf`, with the license in `NotoSansCJKsc-OFL.txt`. WordCraft stores it in IndexedDB. PhotoCraft lists it in `fonts/manifest.txt`.
 
 ## Hoppscotch
 

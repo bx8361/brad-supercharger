@@ -13,11 +13,11 @@ const cjkFontName = 'NotoSansCJKsc-Regular.otf'
 
 // ponytail: unpack third-party/*.zip as-is. Re-run when the version marker changes.
 const apps = [
-  ['wordcraft', 'wordcraft-web-0.8.0.zip', '0.8.0'],
-  ['gridcraft', 'gridcraft-web-0.9.0.zip', '0.9.0'],
-  ['photocraft', 'photocraft-web-0.11.1.zip', '0.11.1'],
-  ['filmcraft', 'filmcraft-web-0.9.0.zip', '0.9.0'],
-  ['deckcraft', 'deckcraft-web-0.8.0.zip', '0.8.0'],
+  ['wordcraft', 'wordcraft-web-0.9.0.zip', '0.9.0'],
+  ['gridcraft', 'gridcraft-web-0.10.0.zip', '0.10.0'],
+  ['photocraft', 'photocraft-web-0.12.0.zip', '0.12.0'],
+  ['filmcraft', 'filmcraft-web-0.10.0.zip', '0.10.0'],
+  ['deckcraft', 'deckcraft-web-0.9.0.zip', '0.9.0'],
 ]
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -62,17 +62,17 @@ with zipfile.ZipFile(src) as z:
   console.log(`Installed ${id} ${version} to public/crafts/${id}`)
 }
 
-// ponytail: deckcraft-web 0.8.0 hashes std::process::id() at startup, which panics on wasm32. That once-cell is the byte sequence below; mark it done and return. A 32-byte wasm stack slot is left behind, once. Remove when a newer web zip boots without this.
+// ponytail: deckcraft-web 0.9.0 calls std::process::id() while initializing a once-cell, which panics on wasm32 ("no pids on this platform"). That panic is the byte sequence below; mark the cell complete and return. The 32-byte wasm stack slot from this call is left behind, once. Remove when a newer web zip boots without this.
 function patchDeckcraftPid(dest) {
   const name = readdirSync(dest).find(file => file.endsWith('_bg.wasm'))
   if (!name) throw new Error('deckcraft wasm missing')
   const wasmPath = join(dest, name)
   let wasm = readFileSync(wasmPath)
-  const from = Buffer.from('41d087b602413141e887b60210bc7400', 'hex')
-  const to = Buffer.from('4198c5db0241033a00000f0101010101', 'hex')
+  const from = Buffer.from('419090b602413141a890b60210ec7400', 'hex')
+  const to = Buffer.from('41b8cedb0241033a00000f0101010101', 'hex')
   const at = wasm.indexOf(from)
   if (at < 0) {
-    if (!wasm.includes(to)) throw new Error('deckcraft 0.8.0 pid panic site missing')
+    if (!wasm.includes(to)) throw new Error('deckcraft 0.9.0 pid panic site missing')
   } else {
     if (wasm.indexOf(from, at + 1) !== -1) throw new Error('deckcraft pid panic site is not unique')
     wasm = Buffer.concat([wasm.subarray(0, at), to, wasm.subarray(at + from.length)])
@@ -113,10 +113,10 @@ async function patchCraftLang(id, dest) {
   let html = readFileSync(indexPath, 'utf8')
   html = html.replace(/<script>\/\* ponytail: [\s\S]*?<\/script>\s*/g, '')
   if (id === 'wordcraft') {
-    const script = `  <script>/* ponytail: wordcraft-web 0.8.0 UI font is Latin-only, so a Chinese navigator paints every label as ?. */try{const lang="en-US";Object.defineProperty(Navigator.prototype,"language",{get(){return lang}});Object.defineProperty(Navigator.prototype,"languages",{get(){return [lang]}})}catch(e){}</script>\n`
+    const script = `  <script>/* ponytail: wordcraft-web 0.9.0 UI font is Latin-only, so a Chinese navigator paints every label as ?. */try{const lang="en-US";Object.defineProperty(Navigator.prototype,"language",{get(){return lang}});Object.defineProperty(Navigator.prototype,"languages",{get(){return [lang]}})}catch(e){}</script>\n`
     html = html.replace('<head>', `<head>\n${script}`)
     await ensureCjkFont(dest)
-    const seed = `async function seedWordcraftCjk(){/* ponytail: wordcraft-web 0.8.0 ships no CJK face; IndexedDB wordcraft/fonts is loaded at startup. */const key=${JSON.stringify(cjkFontName)};const db=await new Promise((ok,err)=>{const req=indexedDB.open("wordcraft",1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains("fonts"))req.result.createObjectStore("fonts")};req.onsuccess=()=>ok(req.result);req.onerror=()=>err(req.error)});const have=await new Promise((ok,err)=>{const q=db.transaction("fonts").objectStore("fonts").get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>err(q.error)});if(have){db.close();return}const res=await fetch("./"+key);if(!res.ok)throw new Error("cjk font "+res.status);const bytes=new Uint8Array(await res.arrayBuffer());await new Promise((ok,err)=>{const q=db.transaction("fonts","readwrite").objectStore("fonts").put(bytes,key);q.onsuccess=()=>ok();q.onerror=()=>err(q.error)});db.close()}
+    const seed = `async function seedWordcraftCjk(){/* ponytail: wordcraft-web 0.9.0 ships no CJK face; IndexedDB wordcraft/fonts is loaded at startup. */const key=${JSON.stringify(cjkFontName)};const db=await new Promise((ok,err)=>{const req=indexedDB.open("wordcraft",1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains("fonts"))req.result.createObjectStore("fonts")};req.onsuccess=()=>ok(req.result);req.onerror=()=>err(req.error)});const have=await new Promise((ok,err)=>{const q=db.transaction("fonts").objectStore("fonts").get(key);q.onsuccess=()=>ok(q.result);q.onerror=()=>err(q.error)});if(have){db.close();return}const res=await fetch("./"+key);if(!res.ok)throw new Error("cjk font "+res.status);const bytes=new Uint8Array(await res.arrayBuffer());await new Promise((ok,err)=>{const q=db.transaction("fonts","readwrite").objectStore("fonts").put(bytes,key);q.onsuccess=()=>ok();q.onerror=()=>err(q.error)});db.close()}
 try{await seedWordcraftCjk()}catch(e){console.warn(e)}
 `
     const start = html.indexOf('async function seedWordcraftCjk()')
@@ -126,6 +126,12 @@ try{await seedWordcraftCjk()}catch(e){console.warn(e)}
     }
     if (!html.includes('const wasm = await init(')) throw new Error('wordcraft index.html has no wasm init')
     html = html.replace('const wasm = await init(', `${seed}const wasm = await init(`)
+  }
+  if (id === 'photocraft') {
+    // ponytail: photocraft-web 0.12.0 fetches fonts/manifest.txt. Grid, Film, and Deck web builds have no host-font hook.
+    await ensureCjkFont(dest)
+    await mkdir(join(dest, 'fonts'), { recursive: true })
+    writeFileSync(join(dest, 'fonts', 'manifest.txt'), `Noto Sans CJK SC | Regular | ${cjkFontName} | Hans | OFL-1.1 | NotoSansCJKsc-OFL.txt\n`)
   }
   writeFileSync(indexPath, html)
 }

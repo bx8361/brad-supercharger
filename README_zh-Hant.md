@@ -19,7 +19,7 @@ npm run dev
 
 - **draw.io** `31.6.1`（[Apache-2.0](https://github.com/jgraph/drawio)）到 `public/drawio/`
 - **Hoppscotch** `2026.6.1`（[MIT](https://github.com/hoppscotch/hoppscotch)）到 `public/hoppscotch/`
-- **ArtCraft** WordCraft `0.8.0`、GridCraft `0.9.0`、PhotoCraft `0.11.1`、FilmCraft `0.9.0`、DeckCraft `0.8.0`（[MIT OR Apache-2.0](https://getartcraft.com/apps)）到 `public/crafts/`，來自 `third-party/` 裡對應的 zip
+- **ArtCraft** WordCraft `0.9.0`、GridCraft `0.10.0`、PhotoCraft `0.12.0`、FilmCraft `0.10.0`、DeckCraft `0.9.0`（[MIT OR Apache-2.0](https://getartcraft.com/apps)）到 `public/crafts/`，來自 `third-party/` 裡對應的 zip
 - **SQLite WASM** `3.54.0`（[公有領域](https://sqlite.org/copyright.html)）到 `public/sqlite/`。專案根目錄有 `sqlite-wasm-3540000.zip` 時使用該檔案
 - **Pyodide** `314.0.7`（[MPL-2.0](https://github.com/pyodide/pyodide)）到 `public/pyodide/`，來自專案根目錄的 `pyodide-314.0.7.tar.bz2`
 - **JupyterLite** `0.8.6`（[BSD-3-Clause](https://github.com/jupyterlite/jupyterlite)）到 `public/jupyterlite/`，由 `scripts/vendor-jupyterlite.js` 用 `python3` 建置
@@ -154,7 +154,7 @@ npm run preview
 | [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch)    | GPL-2.0-or-later        | 計算機的語法、函式名和常數，用原創 JavaScript 重新實作。不含 SpeedCrunch 的 C++ 原始碼。                                                                                                |
 | [NLipsum](https://github.com/DevToys-app/DevToys.Tools) 佔位文字      | Public domain           | `src/assets/lipsums/` 下的佔位語料。                                                                                                                              |
 | [draw.io](https://github.com/jgraph/drawio) `31.6.1`              | Apache-2.0              | 由 `scripts/vendor-drawio.js` 置入 `public/drawio/` 的網頁應用程式。                                                                                                  |
-| [ArtCraft](https://getartcraft.com/apps)                          | MIT OR Apache-2.0       | WordCraft `0.8.0`、GridCraft `0.9.0`、PhotoCraft `0.11.1`、FilmCraft `0.9.0`、DeckCraft `0.8.0`。由 `scripts/vendor-crafts.js` 從 `third-party/` 解包到 `public/crafts/`。 |
+| [ArtCraft](https://getartcraft.com/apps)                          | MIT OR Apache-2.0       | WordCraft `0.9.0`、GridCraft `0.10.0`、PhotoCraft `0.12.0`、FilmCraft `0.10.0`、DeckCraft `0.9.0`。由 `scripts/vendor-crafts.js` 從 `third-party/` 解包到 `public/crafts/`。 |
 | [Hoppscotch](https://github.com/hoppscotch/hoppscotch) `2026.6.1` | MIT                     | 由 `scripts/vendor-hoppscotch.js` 置入 `public/hoppscotch/` 的網頁用戶端，來自 [hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) 映像。      |
 | [SQLite](https://sqlite.org/wasm) `3.54.0`                        | Public domain           | WASM/JS 建置。由 `scripts/vendor-sqlite.js` 從 `sqlite-wasm-3540000.zip` 解包到 `public/sqlite/`。                                                                  |
 | [Pyodide](https://github.com/pyodide/pyodide) `314.0.7`           | MPL-2.0                 | Python 3.14 執行環境。由 `scripts/vendor-pyodide.js` 從 `pyodide-314.0.7.tar.bz2` 解包到 `public/pyodide/`。包含 CPython（PSF License）。                                  |
