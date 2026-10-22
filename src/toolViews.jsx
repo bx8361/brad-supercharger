@@ -20,6 +20,7 @@ import { formatSyntax } from './syntaxFormat.js'
 import { editorLanguage, syntaxLanguage, syntaxLanguages } from './syntaxLanguages.js'
 import { ensureHighlight, findPattern, findRanges, paint, replaceRanges } from './highlight.js'
 import { activeFolds, applyDisplayEdit, applyViewEdit, displayToView, hideFolds, indentPieces, indentUnit, jsonFolds, mapRange, mapViewSpan, revealFold, viewToDisplay, visibleLines, wrapIndent } from './jsonFold.js'
+import { indentLines, toggleLineComments } from './lineEdit.js'
 import { convertFromBase } from './numberBaseOps.js'
 import { compareDigests, generateLipsum, generateUuid } from './generateOps.js'
 import { decryptShareText, encryptShareText } from './cryptoShareOps.js'
@@ -36,7 +37,7 @@ import {
 } from './calculatorOps.js'
 import { queryJsonPath, regexControls, regexFlavors, regexHelp, validateXmlAgainstXsd } from './testerOps.js'
 import { exportSqlite, openSqliteBytes, resetSqlite, runSqlite } from './sqliteOps.js'
-import { resetPython, runPython } from './pythonOps.js'
+import { formatPython, resetPython, runPython } from './pythonOps.js'
 import { analyze, caretInfo, charsToUnicode, compareChangeParts, compareLists, escapeString, reverseLines, shuffleLines, sideBySideRows, sortByLast, sortLines, toAlternating, toCamel, toCobol, toConstant, toCRLF, toInverse, toKebab, toLF, toPascal, toRandomCase, toSentence, toSnake, toTitle, toTrain, trimLines, unescapeString, unicodeToChars, uniqueLines } from './textOps.js'
 import { JSXGraph } from 'jsxgraph'
 import '../node_modules/jsxgraph/distrib/jsxgraph.css'
@@ -147,7 +148,7 @@ function indentDepth(lead, unit) {
   return depth
 }
 
-function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false, indentGuides = null, matchMargin = false, emphasizeIndent = false, fold = null, tabSize }) {
+function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false, indentGuides = null, matchMargin = false, emphasizeIndent = false, fold = null, tabSize, lineEdit = null }) {
   const lineWrap = useLineWrap(wrap)
   const lineRows = multiline ? rows : 1
   const areaRef = useRef(null)
@@ -157,6 +158,7 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   const [contentWidth, setContentWidth] = useState(0)
   const widthOfRef = useRef(() => 1)
   const pendingCaret = useRef(null)
+  const pendingRange = useRef(null)
   const findRef = useRef(null)
   const replaceRef = useRef(null)
   const focusFind = useRef(true)
@@ -323,8 +325,17 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   }, [lineWrap, jsonMode])
   useLayoutEffect(() => {
     const area = areaRef.current
+    const range = pendingRange.current
     const pos = pendingCaret.current
-    if (pos == null || !area || document.activeElement !== area) return
+    if ((!range && pos == null) || !area || document.activeElement !== area) return
+    if (range) {
+      pendingRange.current = null
+      pendingCaret.current = null
+      const a = viewToDisplay(range.start, synthetics)
+      const b = viewToDisplay(range.end, synthetics)
+      if (area.selectionStart !== a || area.selectionEnd !== b) area.setSelectionRange(a, b)
+      return
+    }
     const at = viewToDisplay(pos, synthetics)
     pendingCaret.current = null
     if (area.selectionStart !== at || area.selectionEnd !== at) area.setSelectionRange(at, at)
@@ -430,6 +441,25 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
       onChange(folds.length ? applyViewEdit(text, folds, view, nextView) : nextView)
     }
   }
+  function replaceView(nextView, start, end) {
+    pendingRange.current = { start, end }
+    onChange(folds.length ? applyViewEdit(text, folds, view, nextView) : nextView)
+  }
+  function onCodeKey(e) {
+    if (!lineEdit || readOnly || !onChange || e.altKey) return false
+    const area = e.currentTarget
+    const start = displayToView(area.selectionStart, synthetics)
+    const end = displayToView(area.selectionEnd, synthetics)
+    const tab = !e.ctrlKey && !e.metaKey && e.key === 'Tab'
+    const comment = (e.ctrlKey || e.metaKey) && e.key === '/'
+    if (!tab && !comment) return false
+    e.preventDefault()
+    const next = tab
+      ? indentLines(view, start, end, lineEdit.tab || '    ', e.shiftKey)
+      : toggleLineComments(view, start, end, lineEdit.comment || '#')
+    replaceView(next.text, next.start, next.end)
+    return true
+  }
   function onAreaChange(e) {
     if (!onChange) return
     const nextDisplay = e.target.value
@@ -489,7 +519,7 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
         const mod = (e.metaKey || e.ctrlKey) && !e.altKey
         if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); showFind() }
         else if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); showReplace() }
-        else onKeyDown?.(e)
+        else if (!onCodeKey(e)) onKeyDown?.(e)
       }} placeholder={placeholderText} rows={lineRows} spellCheck="false" />
       </div>
     </div>
@@ -3096,6 +3126,18 @@ function PythonTool({ data, setData }) {
     }
   }
 
+  async function format() {
+    setBusy(true)
+    setError('')
+    try {
+      set(setData, 'input', await formatPython(code))
+    } catch (e) {
+      setError(e.message || 'Could not format.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function reset() {
     if (!window.confirm(t('Replace the Python session in this tab?'))) return
     setBusy(true)
@@ -3114,13 +3156,14 @@ function PythonTool({ data, setData }) {
     <div className="wasm-toolbar">
       <div className="inline-controls">
         <button type="button" className="text-action" disabled={busy} onClick={() => run()}><Play size={14} /> {t('Run')}</button>
+        <button type="button" className="text-action" disabled={busy} onClick={format}><Sparkles size={14} /> {t('Format code')}</button>
         <button type="button" className="text-action" onClick={reset}><RefreshCw size={14} /> {t('Restart Python')}</button>
         <Sample onClick={() => { setError(''); set(setData, 'input', initialSamples.python) }} />
       </div>
       <WasmNetworkWarning />
     </div>
     <Split>
-      <Editor label="Python" language="python" tabSize={4} value={code} onChange={value => set(setData, 'input', value)} placeholder="Enter Python to run." onKeyDown={e => {
+      <Editor label="Python" language="python" tabSize={4} lineEdit={{ tab: '    ', comment: '#' }} value={code} onChange={value => set(setData, 'input', value)} placeholder="Enter Python to run." onKeyDown={e => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run() }
       }} />
       <Output label="Result" value={error || output} language={error ? 'python' : undefined} error={false} placeholder={busy ? 'Loading Python…' : 'Enter Python to run.'} />

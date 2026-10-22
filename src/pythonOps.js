@@ -23,16 +23,25 @@ function thread() {
   return worker
 }
 
-function call(code) {
+let chain = Promise.resolve()
+
+function call(code, op = 'run') {
   const id = ++seq
-  return new Promise((resolve, reject) => {
+  const run = () => new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject })
-    thread().postMessage({ id, code, indexURL: indexURL() })
+    thread().postMessage({ id, code, op, indexURL: indexURL() })
   })
+  const job = chain.then(run, run)
+  chain = job.then(() => {}, () => {})
+  return job
 }
 
 export function runPython(code) {
   return call(code)
+}
+
+export function formatPython(code) {
+  return call(code, 'format')
 }
 
 export function resetPython() {
