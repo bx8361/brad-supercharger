@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bx8361.github.io/brad-supercharger/sitemap.xml
