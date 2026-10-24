@@ -61,3 +61,7 @@ The **JupyterLite** tool builds [JupyterLite](https://github.com/jupyterlite/jup
 ## Data Playground
 
 Data Playground uses Papa Parse, Plotly, ml-pca, ml-distance, and ml-kmeans (MIT). These dependencies ship with Supercharger; their installed package metadata includes the license notices.
+
+## OpenCC
+
+The Chinese converter uses unmodified phrase dictionaries, character dictionaries, compatibility normalization, and `s2t`/`t2s` configurations from [OpenCC](https://github.com/BYVoid/OpenCC) (Apache-2.0), commit `025f371dc76b598d77384fbdab90c937471844d8`. Resources and the upstream license are under `third-party/simplified-traditional-chinese/`; `opencc-resource-manifest.json` records their provenance and hashes. Conversion uses longest phrase matches before character fallback, with the first listed candidate for ambiguous entries.

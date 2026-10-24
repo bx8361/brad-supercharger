@@ -1,4 +1,13 @@
 export const zhHans = {
+  'Simplified ↔ Traditional Chinese': '简体 ↔ 繁体中文',
+  'Convert Chinese using phrase-aware Simplified and Traditional rules.': '按词组规则转换简体与繁体中文。',
+  'Simplified → Traditional': '简体 → 繁体',
+  'Traditional → Simplified': '繁体 → 简体',
+  'Simplified Chinese': '简体中文',
+  'Traditional Chinese': '繁体中文',
+  'Uses phrase-aware OpenCC rules. All conversion stays in your browser.': '使用 OpenCC 词组规则，所有转换均在浏览器内完成。',
+  'Loading Chinese dictionaries…': '正在加载中文词典…',
+  'Could not load Chinese dictionaries. Reopen the tool to retry.': '无法加载中文词典。请重新打开工具重试。',
   'Language': '语言',
   'Used for the toolbox interface. Detected from this browser the first time you open it.': '用于工具箱界面。第一次打开时按这个浏览器的语言选择。',
   'Home': '首页',

@@ -1,4 +1,13 @@
 export const zhHant = {
+  'Simplified ↔ Traditional Chinese': '簡體 ↔ 繁體中文',
+  'Convert Chinese using phrase-aware Simplified and Traditional rules.': '依詞組規則轉換簡體與繁體中文。',
+  'Simplified → Traditional': '簡體 → 繁體',
+  'Traditional → Simplified': '繁體 → 簡體',
+  'Simplified Chinese': '簡體中文',
+  'Traditional Chinese': '繁體中文',
+  'Uses phrase-aware OpenCC rules. All conversion stays in your browser.': '使用 OpenCC 詞組規則，所有轉換皆在瀏覽器內完成。',
+  'Loading Chinese dictionaries…': '正在載入中文詞典…',
+  'Could not load Chinese dictionaries. Reopen the tool to retry.': '無法載入中文詞典。請重新開啟工具以重試。',
   'Language': '語言',
   'Used for the toolbox interface. Detected from this browser the first time you open it.': '用於工具箱介面。第一次開啟時依這個瀏覽器的語言選擇。',
   'Home': '首頁',

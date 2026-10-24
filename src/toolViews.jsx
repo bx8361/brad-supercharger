@@ -1420,6 +1420,43 @@ function FreqList({ title, rows }) {
   return <section className="editor-card freq-card"><div className="panel-top"><span>{t(title)}</span><span>{rows.length ? (rows.length > shown.length ? t('{shown} of {total}', { shown: shown.length, total: rows.length }) : String(shown.length)) : '—'}</span></div><div className="freq-list">{shown.length ? shown.map(([name, count]) => <div key={name}><span>{name}</span><b>{count.toLocaleString()}</b></div>) : <p className="subtle">{t("Nothing to count yet.")}</p>}</div></section>
 }
 
+function ChineseTool({ data, setData }) {
+  const input = textValue(data, 'input', initialSamples.chinese)
+  const direction = textValue(data, 'direction', 's2t')
+  const [converter, setConverter] = useState(null)
+  const [loadError, setLoadError] = useState('')
+  useEffect(() => {
+    let active = true
+    import('./chineseResources.js').then(module => {
+      if (active) setConverter(() => module.convertChinese)
+    }).catch(() => {
+      if (active) setLoadError('Could not load Chinese dictionaries. Reopen the tool to retry.')
+    })
+    return () => { active = false }
+  }, [])
+  const output = useMemo(() => converter ? converter(input, direction) : '', [converter, input, direction])
+  const simplified = direction === 's2t'
+  function swap() {
+    setData({ direction: simplified ? 't2s' : 's2t', input: output })
+  }
+  return <div className="tool-content">
+    <div className="inline-controls">
+      <label>{t('Direction')}<select value={direction} onChange={e => set(setData, 'direction', e.target.value)}>
+        <option value="s2t">{t('Simplified → Traditional')}</option>
+        <option value="t2s">{t('Traditional → Simplified')}</option>
+      </select></label>
+      <button type="button" className="text-action" onClick={swap} disabled={!converter || !output}><RefreshCw size={14} /> {t('Swap')}</button>
+      <Sample onClick={() => setData({ direction: 's2t', input: initialSamples.chinese })} />
+      <span className="muted-tip">{t('Uses phrase-aware OpenCC rules. All conversion stays in your browser.')}</span>
+    </div>
+    <Split>
+      <Editor label={simplified ? 'Simplified Chinese' : 'Traditional Chinese'} value={input} onChange={v => set(setData, 'input', v)} />
+      <Output label={simplified ? 'Traditional Chinese' : 'Simplified Chinese'} value={output} error={!!loadError} placeholder={loadError || (converter ? 'Enter text to convert.' : 'Loading Chinese dictionaries…')} />
+    </Split>
+    {loadError && <p className="error-note">{t(loadError)}</p>}
+  </div>
+}
+
 function YAMLTool({ data, setData }) {
   const input = textValue(data, 'input', initialSamples.yaml), direction = textValue(data, 'direction', 'yaml-json'), indent = textValue(data, 'indent', '2')
   let output = '', error = ''
@@ -3178,7 +3215,7 @@ const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundToo
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
   if (craftTitles[id]) return <CraftTool id={id} />
-  const views = { json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, unicode: UnicodeTool, list: ListCompareTool }
+  const views = { chinese: ChineseTool, json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, unicode: UnicodeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }

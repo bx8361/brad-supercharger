@@ -2,6 +2,12 @@
 
 export const referencedProjects = [
   {
+    name: 'OpenCC',
+    license: 'Apache-2.0',
+    url: 'https://github.com/BYVoid/OpenCC',
+    note: 'Bundled Simplified/Traditional Chinese phrase dictionaries and s2t/t2s configurations from third-party/simplified-traditional-chinese/.',
+  },
+  {
     name: 'DevToys',
     license: 'MIT',
     url: 'https://github.com/DevToys-app/DevToys',

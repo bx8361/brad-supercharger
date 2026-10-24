@@ -1,4 +1,13 @@
 export const ja = {
+  'Simplified ↔ Traditional Chinese': '簡体字 ↔ 繁体字中国語',
+  'Convert Chinese using phrase-aware Simplified and Traditional rules.': '語句を考慮したルールで中国語の簡体字と繁体字を変換します。',
+  'Simplified → Traditional': '簡体字 → 繁体字',
+  'Traditional → Simplified': '繁体字 → 簡体字',
+  'Simplified Chinese': '簡体字中国語',
+  'Traditional Chinese': '繁体字中国語',
+  'Uses phrase-aware OpenCC rules. All conversion stays in your browser.': '語句を考慮した OpenCC ルールを使用。変換はすべてブラウザ内で行われます。',
+  'Loading Chinese dictionaries…': '中国語辞書を読み込み中…',
+  'Could not load Chinese dictionaries. Reopen the tool to retry.': '中国語辞書を読み込めませんでした。ツールを開き直して再試行してください。',
   'Language': '言語',
   'Used for the toolbox interface. Detected from this browser the first time you open it.': 'ツールボックスの表示言語です。最初に開いたとき、このブラウザの言語から選びます。',
   'Home': 'ホーム',
