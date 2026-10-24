@@ -1,1 +1,1 @@
-Noto Sans CJK SC | Regular | NotoSansCJKsc-Regular.otf | Hans | OFL-1.1 | NotoSansCJKsc-OFL.txt
+Noto Sans CJK SC | Regular | fonts/NotoSansCJKsc-Regular.otf | Hans,Hant | OFL-1.1 | fonts/NotoSansCJKsc-OFL.txt
