@@ -22,6 +22,10 @@ Third-party JavaScript packages used at build/runtime are distributed under thei
 
 The Calculator tool’s expression syntax, function naming, and scientific constant set are modeled on [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch) (GPL-2.0-or-later). This project reimplements that behavior in original JavaScript; no SpeedCrunch C++ source is included.
 
+## nerdamer-prime and Algebrite
+
+The **Nerdamer-prime** and **Algebrite** tools run the [nerdamer-prime](https://github.com/together-science/nerdamer-prime) and [Algebrite](https://github.com/davidedc/Algebrite) npm packages (both MIT) in a Web Worker. Results are typeset with [KaTeX](https://katex.org) (MIT).
+
 ## Lorem Ipsum corpora
 
 Lorem Ipsum generator texts under `src/assets/lipsums/` come from NLipsum / DevToys lipsum XML templates and are treated as public domain literary excerpts for placeholder text.

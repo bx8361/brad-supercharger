@@ -42,6 +42,8 @@ npm run preview
 - **时间戳** — 转换 Unix 时间戳和日期
 - **进制转换** — 在二进制、八进制、十进制、十六进制之间转换整数
 - **计算器** — 科学表达式、历史和常数，风格接近 [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch)
+- **Nerdamer-prime** — 使用 [nerdamer-prime](https://github.com/together-science/nerdamer-prime) 进行符号微积分（导数、积分、极限、拉普拉斯变换、解方程），附可直接运行示例的运算帮助
+- **Algebrite** — 使用 [Algebrite](http://algebrite.org) 进行符号微积分（导数、积分、泰勒级数、矩阵、特殊多项式），附可直接运行示例的运算帮助
 
 ### 文本
 

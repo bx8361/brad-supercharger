@@ -45,6 +45,8 @@ npm run preview
 - **時間戳** — 轉換 Unix 時間戳和日期
 - **進制轉換** — 在二進位、八進位、十進位、十六進位之間轉換整數
 - **計算機** — 科學表達式、歷史和常數，風格接近 [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch)
+- **Nerdamer-prime** — 使用 [nerdamer-prime](https://github.com/together-science/nerdamer-prime) 進行符號微積分（導數、積分、極限、拉普拉斯變換、解方程式），附可直接執行範例的運算說明
+- **Algebrite** — 使用 [Algebrite](http://algebrite.org) 進行符號微積分（導數、積分、泰勒級數、矩陣、特殊多項式），附可直接執行範例的運算說明
 
 
 

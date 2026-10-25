@@ -1,5 +1,6 @@
 import {
   Archive, BookOpen, Braces, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
+  Pi, SquareFunction,
   CaseSensitive, Clapperboard, FileText, Image, Images, KeyRound, Languages, LineChart, Link2, ListChecks, ListFilter, LockKeyhole, Network, Palette, PenLine, Presentation, QrCode, Quote, Radio, Regex, Sheet,
   ScrollText, Shield, Sigma, Stamp, StickyNote, Table2, Terminal, TextCursorInput, Type, WandSparkles, Workflow,
 } from 'lucide-react'
@@ -29,6 +30,8 @@ export const tools = [
   { id: 'timestamp', name: 'Timestamp', short: 'UTC', description: 'Convert Unix timestamps and dates.', category: 'convert', icon: Clock3, keywords: 'unix epoch date time seconds milliseconds' },
   { id: 'number-base', name: 'Number base', short: '0x', description: 'Convert integers across common bases.', category: 'convert', icon: Sigma, keywords: 'binary decimal hexadecimal octal bigint' },
   { id: 'calculator', name: 'Calculator', short: '∑', description: 'SpeedCrunch-style scientific calculator with history and constants.', category: 'convert', icon: Calculator, keywords: 'math expression scientific sin cos pi evaluate formula' },
+  { id: 'nerdamer', name: 'Nerdamer-prime', short: '∫', description: 'Symbolic calculus with nerdamer-prime: derivatives, integrals, limits, and equation solving.', category: 'convert', icon: SquareFunction, keywords: 'nerdamer cas symbolic calculus derivative integral limit solve algebra laplace matrix math' },
+  { id: 'algebrite', name: 'Algebrite', short: 'd/dx', description: 'Symbolic calculus with Algebrite: derivatives, integrals, Taylor series, and matrices.', category: 'convert', icon: Pi, keywords: 'algebrite cas symbolic calculus derivative integral taylor series algebra matrix polynomial math' },
   { id: 'escape', name: 'Escape / unescape', short: '\\n', description: 'Escape or unescape JSON and XML text.', category: 'text', icon: Quote, keywords: 'json javascript xml string escape unescape quote' },
   { id: 'unicode', name: 'Unicode', short: 'U+', description: 'Convert characters to Unicode code points, or code points back to characters.', category: 'text', icon: CaseSensitive, keywords: 'unicode code point utf-16 utf-8 char character \\u u+ decimal emoji' },
   { id: 'list', name: 'List comparer', short: 'A∩B', description: 'See which lines are shared or unique.', category: 'text', icon: ListChecks, keywords: 'set intersection union difference lines' },

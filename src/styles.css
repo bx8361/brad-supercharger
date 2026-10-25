@@ -311,8 +311,24 @@ select,.inline-controls input[type="number"],.regex-controls input { min-width:1
 .calculator-dock-list button { width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:7px 8px; border:0; border-radius:6px; background:transparent; text-align:left; font:13px var(--font-mono); }
 .calculator-dock-list button:hover { background:var(--surface-3); color:var(--accent); }
 .calculator-dock-list span { color:var(--muted); font:12px var(--font-sans); }
+.cas-workspace { grid-template-columns:minmax(0,1fr) 340px; }
+.cas-result { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.cas-result > span { overflow-wrap:anywhere; margin-right:auto; }
+.cas-result .icon-action { min-height:22px; font:12px var(--font-sans); }
+.cas-math { overflow-x:auto; padding:2px 0; color:var(--text); font-size:18px; }
+.cas-decimal { color:var(--muted); font-size:15px; overflow-wrap:anywhere; }
+.cas-help { grid-template-rows:auto auto minmax(0,1fr); }
+.cas-help-filters { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px; padding-right:8px; }
+.cas-help-filters .calculator-dock-search { margin-right:0; min-width:0; }
+.cas-help-filters select { height:34px; max-width:130px; font-size:12px; }
+.cas-help-list li { display:grid; gap:3px; padding:8px; border-bottom:1px solid var(--border-soft); }
+.cas-help-list .cas-syntax { color:var(--text); font:13px var(--font-mono); overflow-wrap:anywhere; }
+.cas-help-list .cas-meaning { color:var(--muted); font:12px/1.4 var(--font-sans); }
+.cas-help-list .cas-example { display:flex; align-items:center; gap:4px; }
+.calculator-dock-list .cas-example button { width:auto; flex:1; min-width:0; padding:4px 6px; color:var(--tok-string); font-size:12px; overflow-wrap:anywhere; }
+.calculator-dock-list .cas-example .cas-run { flex:none; padding:5px; color:var(--muted); }
 @media(max-width:900px) {
-  .calculator-workspace { grid-template-columns:1fr; min-height:0; }
+  .calculator-workspace, .cas-workspace { grid-template-columns:1fr; min-height:0; }
   .calculator-dock { min-height:280px; }
 }
 

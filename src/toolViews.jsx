@@ -35,6 +35,9 @@ import {
   angleUnits, autoFixCalculatorExpression, calculatorConstantCatalog, calculatorFunctionCatalog,
   cloneCalculatorSession, createCalculatorSession, evaluateCalculatorExpression, formatCalculatorExpression, formatCalculatorResult, resultFormats, searchCalculatorSymbols, stepCalculatorRecall,
 } from './calculatorOps.js'
+import { casEngines, casOperationDomains, casOperations, casSymbolHints } from './casOps.js'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 import { queryJsonPath, regexControls, regexFlavors, regexHelp, validateXmlAgainstXsd } from './testerOps.js'
 import { exportSqlite, openSqliteBytes, resetSqlite, runSqlite } from './sqliteOps.js'
 import { formatPython, resetPython, runPython } from './pythonOps.js'
@@ -2932,7 +2935,7 @@ function CalculatorTool({ data, setData }) {
     setLineError('')
   }
 
-  function reuseExpression(index) {
+  function repickExpression(index) {
     if (recall.current.index == null) recall.current.draft = input
     recall.current.index = index
     set(setData, 'input', history[index].expr)
@@ -2977,7 +2980,7 @@ function CalculatorTool({ data, setData }) {
         <div ref={historyRef} className="calculator-history" aria-live="polite">
           {history.length === 0 && <p className="calculator-empty">{t("Enter evaluates. The line above the input is the live result when Auto calculate is on.")}</p>}
           {history.map((row, index) => <div key={index} className={`calculator-entry${row.error ? ' has-error' : ''}`}>
-            <button type="button" className="calculator-expr" title={t("Reuse expression")} onClick={() => reuseExpression(index)}>{formatCalculatorExpression(row.expr, grouping)}{row.comment ? ` ? ${row.comment}` : ''}</button>
+            <button type="button" className="calculator-expr" title={t("Reuse expression")} onClick={() => repickExpression(index)}>{formatCalculatorExpression(row.expr, grouping)}{row.comment ? ` ? ${row.comment}` : ''}</button>
             {row.error
               ? <div className="calculator-error">{translateCalculatorError(row.error)}</div>
               : <div className="calculator-result">= {row.assigned ? `${row.assigned} ` : ''}{shownResult(row)}</div>}
@@ -3008,6 +3011,178 @@ function CalculatorTool({ data, setData }) {
     </div>
   </div>
 }
+
+const casWorkers = {}
+let casRequestId = 0
+const CAS_TIMEOUT_MS = 10000
+
+// ponytail: one long-lived worker per engine; a timeout kills it and the next request starts a fresh one
+function runCas(engine, payload) {
+  return new Promise((resolve, reject) => {
+    let worker = casWorkers[engine]
+    try {
+      // ponytail: literal URLs so Vite bundles each worker; the worker build cannot code-split a shared one
+      worker ??= casWorkers[engine] = engine === 'nerdamer'
+        ? new Worker(new URL('./nerdamerWorker.js', import.meta.url), { type: 'module' })
+        : new Worker(new URL('./algebriteWorker.js', import.meta.url), { type: 'module' })
+    } catch (e) {
+      reject(e)
+      return
+    }
+    const id = ++casRequestId
+    const drop = () => { worker.terminate(); if (casWorkers[engine] === worker) delete casWorkers[engine] }
+    const timer = window.setTimeout(() => { drop(); reject(new Error('This expression took too long. It was stopped; try a simpler one.')) }, CAS_TIMEOUT_MS)
+    worker.onmessage = e => {
+      if (e.data.id !== id) return
+      clearTimeout(timer)
+      if (e.data.error) reject(new Error(e.data.error))
+      else resolve(e.data)
+    }
+    worker.onerror = e => { clearTimeout(timer); drop(); reject(new Error(e.message || 'Could not load the math engine.')) }
+    worker.postMessage({ id, ...payload })
+  })
+}
+
+function MathResult({ latex }) {
+  const html = useMemo(() => {
+    try { return katex.renderToString(latex, { throwOnError: false, displayMode: false }) } catch { return '' }
+  }, [latex])
+  if (!html) return null
+  return <div className="cas-math" dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+function CasCalculatorTool({ engine, data, setData }) {
+  const meta = casEngines[engine]
+  const operations = casOperations[engine]
+  const input = textValue(data, 'input', '')
+  const showMath = textValue(data, 'showMath', true) !== false && textValue(data, 'showMath', true) !== 'false'
+  const keepExpression = checked(data, 'keepExpression')
+  const history = useMemo(() => {
+    try { return JSON.parse(textValue(data, 'history', '[]')) } catch { return [] }
+  }, [data.history])
+  const definitions = useMemo(() => history.filter(row => row.definition && !row.error).map(row => row.definition), [history])
+  const historyRef = useRef(null)
+  const inputRef = useRef(null)
+  const recall = useRef({ index: null, draft: '' })
+  const [busy, setBusy] = useState(false)
+  const [lineError, setLineError] = useState('')
+  const [helpQuery, setHelpQuery] = useState('')
+  const [domain, setDomain] = useState('')
+  const hints = useMemo(() => casSymbolHints(engine, (input.match(/[A-Za-z][A-Za-z0-9_]*$/) || [''])[0]), [engine, input])
+
+  useEffect(() => {
+    if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight
+  }, [history.length, busy])
+
+  async function evaluate(expr, fromInput = true) {
+    const trimmed = expr.trim()
+    if (!trimmed || busy) return
+    recall.current = { index: null, draft: '' }
+    setBusy(true)
+    setLineError('')
+    try {
+      const out = await runCas(engine, { expression: trimmed, definitions })
+      if (out.skipped) return
+      const entry = { expr: out.expression || trimmed, result: out.result, latex: out.latex || '', decimal: out.decimal || '', assigned: out.assigned || '', definition: out.definition || '', error: '' }
+      setData({ history: JSON.stringify([...history, entry]), ...(fromInput && !keepExpression ? { input: '' } : {}) })
+    } catch (e) {
+      setData({ history: JSON.stringify([...history, { expr: trimmed, result: '', latex: '', decimal: '', assigned: '', definition: '', error: e.message }]) })
+      setLineError(e.message)
+    } finally {
+      setBusy(false)
+      inputRef.current?.focus()
+    }
+  }
+
+  function onHistoryKey(e) {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+    const next = stepCalculatorRecall(history.length, recall.current.index, e.key === 'ArrowUp' ? -1 : 1)
+    if (next === recall.current.index) return
+    e.preventDefault()
+    if (recall.current.index == null) recall.current.draft = input
+    recall.current.index = next
+    set(setData, 'input', next == null ? recall.current.draft : history[next].expr)
+    setLineError('')
+  }
+
+  function pickExpression(expr) {
+    recall.current = { index: null, draft: '' }
+    set(setData, 'input', expr)
+    setLineError('')
+    inputRef.current?.focus()
+  }
+
+  function insertSymbol(name) {
+    set(setData, 'input', input.replace(/[A-Za-z][A-Za-z0-9_]*$/, '') + `${name}(`)
+    inputRef.current?.focus()
+  }
+
+  function clearHistory() {
+    recall.current = { index: null, draft: '' }
+    setData({ history: '[]', input: '' })
+    setLineError('')
+  }
+
+  const query = helpQuery.trim().toLowerCase()
+  const shownOperations = operations.filter(op => (!domain || op.domain === domain)
+    && (!query || `${op.syntax} ${op.example} ${t(op.meaning)} ${t(op.domain)}`.toLowerCase().includes(query)))
+  const domains = casOperationDomains.filter(d => operations.some(op => op.domain === d))
+
+  return <div className="tool-content calculator-tool cas-tool">
+    <div className="inline-controls calculator-options">
+      <label className="check-pill"><input type="checkbox" checked={showMath} onChange={e => set(setData, 'showMath', e.target.checked)} />{t("Show math")}</label>
+      <label className="check-pill"><input type="checkbox" checked={keepExpression} onChange={e => set(setData, 'keepExpression', e.target.checked)} />{t("Keep expression")}</label>
+      <Sample onClick={() => pickExpression(meta.sample)} />
+      <button type="button" className="text-action" onClick={clearHistory}>{t("Clear")}</button>
+      <span className="muted-tip">{t('Powered by {name}', { name: meta.label })} · <a href={meta.url} target="_blank" rel="noreferrer">{t("Docs")}</a></span>
+    </div>
+    <div className="calculator-workspace cas-workspace">
+      <section className="calculator-panel editor-card">
+        <div ref={historyRef} className="calculator-history" aria-live="polite">
+          {history.length === 0 && <p className="calculator-empty">{t("Enter evaluates. Pick an example from the help panel to try an operation.")} {t(meta.note)}</p>}
+          {history.map((row, index) => <div key={index} className={`calculator-entry${row.error ? ' has-error' : ''}`}>
+            <button type="button" className="calculator-expr" title={t("Reuse expression")} onClick={() => pickExpression(row.expr)}>{row.expr}</button>
+            {row.error
+              ? <div className="calculator-error">{t(row.error)}</div>
+              : <>
+                <div className="calculator-result cas-result"><span>{row.assigned ? `${row.assigned} = ` : row.definition ? '' : '= '}{row.result}</span><CopyAction value={row.result} label="Copy" />{row.latex && <CopyAction value={row.latex} label="Copy LaTeX" />}</div>
+                {showMath && row.latex && <MathResult latex={row.latex} />}
+                {row.decimal && <div className="cas-decimal">≈ {row.decimal}</div>}
+              </>}
+          </div>)}
+          {busy && <p className="calculator-empty" role="status">{t("Calculating…")}</p>}
+        </div>
+        <form className="calculator-input-row" onSubmit={e => { e.preventDefault(); evaluate(input) }}>
+          <input ref={inputRef} className="calculator-input" value={input} spellCheck="false" placeholder={meta.placeholder} aria-label={t("Expression")} onKeyDown={onHistoryKey} onChange={e => { recall.current = { index: null, draft: '' }; set(setData, 'input', e.target.value); setLineError('') }} />
+          <button type="submit" className="calculator-evaluate" disabled={busy}>{t("Evaluate")}</button>
+        </form>
+        {hints.length > 0 && <div className="calculator-hints">{hints.map(name => <button key={name} type="button" className="hint-chip" onClick={() => insertSymbol(name)}>{name}</button>)}</div>}
+        {lineError && <p className="error-note">{t(lineError)}</p>}
+      </section>
+      <aside className="calculator-dock editor-card cas-help">
+        <div className="panel-top"><span>{t("Operations")}</span><span className="muted-tip">{shownOperations.length}</span></div>
+        <div className="cas-help-filters">
+          <input className="calculator-dock-search" value={helpQuery} placeholder={t("Find an operation")} aria-label={t("Find an operation")} onChange={e => setHelpQuery(e.target.value)} />
+          <select value={domain} aria-label={t("Topic")} onChange={e => setDomain(e.target.value)}><option value="">{t("All topics")}</option>{domains.map(d => <option key={d} value={d}>{t(d)}</option>)}</select>
+        </div>
+        <ul className="calculator-dock-list cas-help-list">
+          {shownOperations.map(op => <li key={op.id}>
+            <code className="cas-syntax">{op.syntax}</code>
+            <span className="cas-meaning">{t(op.meaning)}</span>
+            <span className="cas-example">
+              <button type="button" title={t("Use example")} onClick={() => pickExpression(op.example)}>{op.example}</button>
+              <button type="button" className="cas-run" title={t("Run example")} aria-label={t("Run example")} disabled={busy} onClick={() => evaluate(op.example, false)}><Play size={12} /></button>
+            </span>
+          </li>)}
+          {shownOperations.length === 0 && <li className="calculator-empty">{t("No operations match.")}</li>}
+        </ul>
+      </aside>
+    </div>
+  </div>
+}
+
+function NerdamerTool(props) { return <CasCalculatorTool engine="nerdamer" {...props} /> }
+function AlgebriteTool(props) { return <CasCalculatorTool engine="algebrite" {...props} /> }
 
 function ListCompareTool({ data, setData }) {
   const left = textValue(data, 'left', initialSamples.listLeft), right = textValue(data, 'right', initialSamples.listRight)
@@ -3215,7 +3390,7 @@ const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundToo
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
   if (craftTitles[id]) return <CraftTool id={id} />
-  const views = { chinese: ChineseTool, json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, unicode: UnicodeTool, list: ListCompareTool }
+  const views = { chinese: ChineseTool, json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, nerdamer: NerdamerTool, algebrite: AlgebriteTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, unicode: UnicodeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null
 }

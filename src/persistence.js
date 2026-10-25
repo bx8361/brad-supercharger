@@ -13,7 +13,7 @@ const toolOptions = {
   base64: ['mode'], url: ['mode', 'direction'],
   html: ['direction'], timestamp: ['mode'],
   cron: ['count'], 'json-table': ['format'], yaml: ['direction', 'indent'],
-  'number-base': ['formatNumber'],
+  'number-base': ['formatNumber'], nerdamer: ['showMath', 'keepExpression'], algebrite: ['showMath', 'keepExpression'],
   uuid: ['count', 'version', 'hyphens', 'uppercase'], hash: ['algorithm'], password: ['length', 'count', 'sets'],
   lorem: ['count', 'unit', 'corpus'],
   'image-converter': ['format', 'svgWidth', 'svgHeight'],

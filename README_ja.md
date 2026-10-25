@@ -42,6 +42,8 @@ npm run preview
 - **タイムスタンプ** — Unix タイムスタンプと日付を変換します
 - **進数変換** — 整数を 2 進、8 進、10 進、16 進で変換します
 - **電卓** — 数式、履歴、定数。[SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch) 風の関数電卓です
+- **Nerdamer-prime** — [nerdamer-prime](https://github.com/together-science/nerdamer-prime) による記号計算（微分、積分、極限、ラプラス変換、方程式）。例をすぐ実行できる演算ヘルプ付き
+- **Algebrite** — [Algebrite](http://algebrite.org) による記号計算（微分、積分、テイラー級数、行列、特殊多項式）。例をすぐ実行できる演算ヘルプ付き
 
 ### テキスト
 

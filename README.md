@@ -42,6 +42,8 @@ npm run preview
 - **Timestamp** — convert Unix timestamps and calendar dates
 - **Number base** — convert integers across binary, octal, decimal, and hex
 - **Calculator** — scientific expressions, history, and constants, in the style of [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch)
+- **Nerdamer-prime** — symbolic calculus (derivatives, integrals, limits, Laplace transforms, solving) with [nerdamer-prime](https://github.com/together-science/nerdamer-prime), plus a searchable operations help panel with runnable examples
+- **Algebrite** — symbolic calculus (derivatives, integrals, Taylor series, matrices, special polynomials) with [Algebrite](http://algebrite.org), plus a searchable operations help panel with runnable examples
 
 ### Text
 
@@ -142,4 +144,4 @@ The interface and the JavaScript in this repository are original, except for the
 | [Pyodide](https://github.com/pyodide/pyodide) `314.0.7`               | MPL-2.0                 | Python 3.14 runtime unpacked from `pyodide-314.0.7.tar.bz2` into `public/pyodide/` via `scripts/vendor-pyodide.js`. Includes CPython (PSF License).                             |
 | [JupyterLite](https://github.com/jupyterlite/jupyterlite) `0.8.6`     | BSD-3-Clause            | JupyterLab static site built into `public/jupyterlite/` via `scripts/vendor-jupyterlite.js` (requires `python3`). Includes the Pyodide kernel (MPL-2.0).                          |
 
-Runtime libraries keep their own licenses (recorded in `package-lock.json`). Notable ones: React (MIT), JSXGraph (MIT OR LGPL-3.0-or-later), Mermaid (MIT), Papa Parse, Plotly, ml-pca, ml-distance, and ml-kmeans (MIT). DOMPurify is MPL-2.0 OR Apache-2.0.
+Runtime libraries keep their own licenses (recorded in `package-lock.json`). Notable ones: React (MIT), JSXGraph (MIT OR LGPL-3.0-or-later), Mermaid (MIT), nerdamer-prime, Algebrite, and KaTeX (MIT), Papa Parse, Plotly, ml-pca, ml-distance, and ml-kmeans (MIT). DOMPurify is MPL-2.0 OR Apache-2.0.
