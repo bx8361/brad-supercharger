@@ -1,8 +1,8 @@
 import {
-  Archive, BookOpen, Braces, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
+  Archive, BookMarked, BookOpen, Braces, BrainCircuit, ChartScatter, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
   Pi, SquareFunction,
   CaseSensitive, Clapperboard, FileText, Image, Images, KeyRound, Languages, LineChart, Link2, ListChecks, ListFilter, LockKeyhole, Network, Palette, PenLine, Presentation, QrCode, Quote, Radio, Regex, Sheet,
-  ScrollText, Shield, Sigma, Stamp, StickyNote, Table2, Terminal, TextCursorInput, Type, WandSparkles, Workflow,
+  ScrollText, Shield, Sigma, SquareCode, Stamp, StickyNote, Table2, Terminal, TextCursorInput, Type, WandSparkles, Workflow,
 } from 'lucide-react'
 
 // Group order and labels follow DevToys (https://devtoys.app/).
@@ -16,6 +16,7 @@ export const groups = [
   { id: 'crafts', label: 'Crafts', icon: Palette },
   { id: 'media', label: 'Media', icon: CloudDownload },
   { id: 'data-playground', label: 'Data Playground', icon: Table2 },
+  { id: 'cheatsheets', label: 'Cheatsheets', icon: BookMarked },
   { id: 'test', label: 'Testers', icon: FlaskConical },
 ]
 
@@ -23,6 +24,9 @@ export const tools = [
   { id: 'playground-data', name: 'Data', description: 'Load CSV or sample datasets and inspect columns and rows.', category: 'data-playground', icon: Table2, keywords: 'data playground csv upload iris customers dataset preview' },
   { id: 'playground-analyze', name: 'Analyze', description: 'Explore PCA, correlation, similarity, distance, k-means, and statistics.', category: 'data-playground', icon: Sigma, keywords: 'data playground mining pca correlation similarity distance clustering statistics' },
   { id: 'playground-visualize', name: 'Visualize', description: 'Chart your dataset with scatter, histogram, box, line, and bar plots.', category: 'data-playground', icon: LineChart, keywords: 'data playground plot chart scatter histogram box line bar' },
+  { id: 'cheatsheet-ml', name: 'Machine Learning', description: 'scikit-learn, XGBoost, LightGBM, and CatBoost parameters with defaults and when to change them.', category: 'cheatsheets', icon: ChartScatter, keywords: 'cheatsheet cheat sheet machine learning ml sklearn scikit-learn xgboost lightgbm catboost parameters hyperparameters defaults imputer scaler random forest' },
+  { id: 'cheatsheet-nn', name: 'Neural Networks', description: 'PyTorch and Keras 3 / TensorFlow layers, losses, optimizers, schedulers, and training recipes.', category: 'cheatsheets', icon: BrainCircuit, keywords: 'cheatsheet cheat sheet neural network deep learning pytorch torch keras layers conv lstm transformer loss optimizer' },
+  { id: 'cheatsheet-snippets', name: 'Data snippets', description: 'Copyable pandas, NumPy, Matplotlib, and ML workflow snippets.', category: 'cheatsheets', icon: SquareCode, keywords: 'cheatsheet cheat sheet snippets pandas numpy matplotlib seaborn python code examples' },
   { id: 'cron', name: 'Cron parser', short: '⏱', description: 'Explain cron expressions and show upcoming runs.', category: 'convert', icon: CalendarClock, keywords: 'crontab schedule expression next runs' },
   { id: 'json-table', name: 'JSON to table', short: 'Tbl', description: 'Turn JSON arrays into tables or CSV.', category: 'convert', icon: Table2, keywords: 'array csv tsv spreadsheet columns rows' },
   { id: 'chinese', name: 'Simplified ↔ Traditional Chinese', short: '简繁', description: 'Convert Chinese using phrase-aware Simplified and Traditional rules.', category: 'convert', icon: Languages, keywords: 'chinese simplified traditional opencc phrase 简体 繁體 简繁 簡繁 中文 汉字 漢字' },

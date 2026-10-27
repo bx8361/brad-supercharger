@@ -111,6 +111,16 @@ DeckCraft 0.10.0 [uses the browser clock instead of process IDs on WebAssembly](
 
 **Data**, **Analyze**, and **Visualize** share one dataset for the current browser session. Load CSV or the Iris and customer samples, then run PCA, correlation, similarity, distance, k-means, descriptive statistics, or charts. PNG and CSV exports stay on this machine. Iris loads first; press **Run** in Analyze to compute PCA.
 
+### Cheatsheets
+
+- **Machine Learning** — scikit-learn, XGBoost, LightGBM, and CatBoost: parameter tables with defaults, options, and when to change them
+- **Neural Networks** — PyTorch and Keras 3 / TensorFlow layers, losses, optimizers, schedulers, and training recipes
+- **Data snippets** — copyable pandas, NumPy, Matplotlib, and ML workflow code
+
+Type in the filter to search names, parameters, and snippets at once. Matching parameters show under each entry; click one to jump to its row. Use ↑ / ↓ to move through results and Esc to clear.
+
+Each sheet opens with **Workflows (SOP)**: step-by-step procedures such as split → preprocess → train → evaluate → test, CV + grid search, boosting with early stopping, imbalanced data, time series, fine-tuning, EDA, and a leakage checklist. Each one has a step table and runnable code.
+
 ### Testers
 
 - **JSONPath tester** — query JSON with JSONPath

@@ -3386,10 +3386,12 @@ function PythonTool({ data, setData }) {
 }
 
 const DataPlaygroundTool = lazy(() => import('./dataPlayground/DataPlaygroundTool.jsx'))
+const CheatsheetTool = lazy(() => import('./cheatsheets/CheatsheetTool.jsx'))
 
 export function renderTool(id, props) {
   if (id.startsWith('playground-')) return <Suspense fallback={<p role="status">{t("Loading Data Playground…")}</p>}><DataPlaygroundTool view={id.slice('playground-'.length)} Editor={Editor} /></Suspense>
   if (craftTitles[id]) return <CraftTool id={id} />
+  if (id.startsWith('cheatsheet-')) return <WrapScope key={id} data={props.data} setData={props.setData}><Suspense fallback={<p role="status">{t("Loading cheatsheet…")}</p>}><CheatsheetTool sheet={id.slice('cheatsheet-'.length)} {...props} Output={Output} /></Suspense></WrapScope>
   const views = { chinese: ChineseTool, json: JSONTool, sql: SQLTool, xml: XMLTool, base64: Base64Tool, 'base64-image': Base64ImageTool, certificate: CertificateTool, gzip: GZipTool, url: URLTool, html: HTMLTool, jwt: JWTTool, qrcode: QRCodeTool, cipher: CipherTool, cron: CronParserTool, 'json-table': JsonTableTool, 'number-base': NumberBaseTool, calculator: CalculatorTool, nerdamer: NerdamerTool, algebrite: AlgebriteTool, timestamp: TimestampTool, uuid: UUIDTool, hash: HashTool, password: PasswordTool, lorem: LoremTool, 'image-converter': ImageConverterTool, 'image-watermark': ImageWatermarkTool, 'image-coordinates': ImageCoordinateTool, jsxgraph: JsxGraphTool, mermaid: MermaidTool, drawio: DrawioTool, scratchpad: ScratchpadTool, syntax: SyntaxTool, hoppscotch: HoppscotchTool, jupyterlite: JupyterLiteTool, sqlite: SqliteTool, python: PythonTool, m3u8: M3u8Tool, analyzer: AnalyzerTool, yaml: YAMLTool, markdown: MarkdownTool, jsonpath: JsonPathTool, 'xml-tester': XmlTesterTool, regex: RegexTool, compare: CompareTool, escape: EscapeTool, unicode: UnicodeTool, list: ListCompareTool }
   const Component = views[id]
   return Component ? <WrapScope key={id} data={props.data} setData={props.setData}><Component {...props} /></WrapScope> : null

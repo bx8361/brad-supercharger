@@ -20,6 +20,7 @@ const toolOptions = {
   jsonpath: ['query'],
   regex: ['flavor', 'mode', 'allMatches', 'ignoreCase', 'ignoreWhitespace', 'multiline', 'dotAll', 'singleline', 'rightToLeft', 'unicode'],
   compare: ['mode', 'layout', 'ignoreLead', 'ignoreTrail', 'ignoreEmbedded', 'ignoreCase', 'ignoreNewlines'],
+  'cheatsheet-ml': ['entry', 'lib'], 'cheatsheet-nn': ['entry', 'lib'], 'cheatsheet-snippets': ['entry', 'lib'],
   escape: ['direction', 'format'], unicode: ['direction', 'format'], list: ['mode', 'ignoreCase'],
 }
 
