@@ -1,7 +1,7 @@
 {
   "name": "brads-supercharger",
   "private": true,
-  "version": "5.2.0",
+  "version": "5.4.0",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/vendor-drawio.js && node scripts/vendor-hoppscotch.js && node scripts/vendor-crafts.js && node scripts/vendor-sqlite.js && node scripts/vendor-pyodide.js && node scripts/vendor-jupyterlite.js",
