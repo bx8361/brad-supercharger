@@ -20,7 +20,7 @@ npm run dev
 
 - **draw.io** `31.6.1`（[Apache-2.0](https://github.com/jgraph/drawio)）を `public/drawio/` へ
 - **Hoppscotch** `2026.6.1`（[MIT](https://github.com/hoppscotch/hoppscotch)）を `public/hoppscotch/` へ
-- **ArtCraft** WordCraft `0.9.0`、GridCraft `0.10.0`、PhotoCraft `0.12.0`、FilmCraft `0.10.0`、DeckCraft `0.9.0`（[MIT OR Apache-2.0](https://getartcraft.com/apps)）を `public/crafts/` へ。対応する zip は `third-party/` に置きます
+- **ArtCraft** WordCraft `0.11.0`、GridCraft `0.12.1`、PhotoCraft `0.16.0`、FilmCraft `0.13.0`、DeckCraft `0.11.1`（[MIT OR Apache-2.0](https://getartcraft.com/apps)）を `public/crafts/` へ。対応する zip は `third-party/` に置きます
 - **SQLite WASM** `3.54.0`（[パブリックドメイン](https://sqlite.org/copyright.html)）を `public/sqlite/` へ。プロジェクト直下に `sqlite-wasm-3540000.zip` があるときに使います
 - **Pyodide** `314.0.7`（[MPL-2.0](https://github.com/pyodide/pyodide)）を `public/pyodide/` へ。プロジェクト直下の `pyodide-314.0.7.tar.bz2` から展開します
 - **JupyterLite** `0.8.6`（[BSD-3-Clause](https://github.com/jupyterlite/jupyterlite)）を `public/jupyterlite/` へ。`scripts/vendor-jupyterlite.js` が `python3` でビルドします
@@ -144,7 +144,7 @@ npm run preview
 | [SpeedCrunch](https://bitbucket.org/heldercorreia/speedcrunch) | GPL-2.0-or-later | 電卓の構文、関数名、定数。独自の JavaScript で再実装しています。SpeedCrunch の C++ ソースは含みません。 |
 | [NLipsum](https://github.com/DevToys-app/DevToys.Tools) の lipsum 文 | Public domain | `src/assets/lipsums/` のプレースホルダー本文。 |
 | [draw.io](https://github.com/jgraph/drawio) `31.6.1` | Apache-2.0 | `scripts/vendor-drawio.js` で `public/drawio/` に同梱した Web アプリ。 |
-| [ArtCraft](https://getartcraft.com/apps) | MIT OR Apache-2.0 | WordCraft `0.9.0`、GridCraft `0.10.0`、PhotoCraft `0.12.0`、FilmCraft `0.10.0`、DeckCraft `0.9.0`。`scripts/vendor-crafts.js` が `third-party/` から `public/crafts/` へ展開します。 |
+| [ArtCraft](https://getartcraft.com/apps) | MIT OR Apache-2.0 | WordCraft `0.11.0`、GridCraft `0.12.1`、PhotoCraft `0.16.0`、FilmCraft `0.13.0`、DeckCraft `0.11.1`。`scripts/vendor-crafts.js` が `third-party/` から `public/crafts/` へ展開します。 |
 | [Hoppscotch](https://github.com/hoppscotch/hoppscotch) `2026.6.1` | MIT | `scripts/vendor-hoppscotch.js` で `public/hoppscotch/` に同梱した Web クライアント。[hoppscotch-frontend](https://hub.docker.com/r/hoppscotch/hoppscotch-frontend) イメージから取り出します。 |
 | [SQLite](https://sqlite.org/wasm) `3.54.0` | Public domain | WASM/JS ビルド。`scripts/vendor-sqlite.js` が `sqlite-wasm-3540000.zip` を `public/sqlite/` へ展開します。 |
 | [Pyodide](https://github.com/pyodide/pyodide) `314.0.7` | MPL-2.0 | Python 3.14 ランタイム。`scripts/vendor-pyodide.js` が `pyodide-314.0.7.tar.bz2` を `public/pyodide/` へ展開します。CPython（PSF License）を含みます。 |

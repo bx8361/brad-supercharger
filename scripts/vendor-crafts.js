@@ -12,12 +12,12 @@ const cjkFontName = 'NotoSansCJKsc-Regular.otf'
 
 // ponytail: unpack third-party/*.zip as-is. Re-run when the version marker changes.
 const apps = [
-  ['wordcraft', 'wordcraft-web-0.10.0.zip', '0.10.0'],
-  ['gridcraft', 'gridcraft-web-0.11.1.zip', '0.11.1'],
-  ['photocraft', 'photocraft-web-0.15.1.zip', '0.15.1'],
-  ['filmcraft', 'filmcraft-web-0.12.0.zip', '0.12.0'],
+  ['wordcraft', 'wordcraft-web-0.11.0.zip', '0.11.0'],
+  ['gridcraft', 'gridcraft-web-0.12.1.zip', '0.12.1'],
+  ['photocraft', 'photocraft-web-0.16.0.zip', '0.16.0'],
+  ['filmcraft', 'filmcraft-web-0.13.0.zip', '0.13.0'],
   // 0.10.0 uses the browser clock in recovery::instance_id(); the 0.9.0 PID patch is obsolete.
-  ['deckcraft', 'deckcraft-web-0.10.0.zip', '0.10.0'],
+  ['deckcraft', 'deckcraft-web-0.11.1.zip', '0.11.1'],
 ]
 
 const root = fileURLToPath(new URL('..', import.meta.url))
