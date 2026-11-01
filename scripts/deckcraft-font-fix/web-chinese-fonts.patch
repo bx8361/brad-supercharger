@@ -1,0 +1,35 @@
+--- a/crates/fonts/build.rs
++++ b/crates/fonts/build.rs
+@@ -149,7 +149,7 @@
+         if is_excluded_family(family) {
+             continue;
+         }
+-        if wasm && !matches!((*family, *style), ("BIZ UDPGothic", "Regular") | ("Inter", "Regular" | "Bold" | "Variable")) {
++        if wasm && !matches!((*family, *style), ("LXGW WenKai Lite", "Regular") | ("BIZ UDPGothic", "Regular") | ("Inter", "Regular" | "Bold" | "Variable")) {
+             continue;
+         }
+         let path = dir.join(file).canonicalize().map_err(|e| format!("{file}: {e}"))?;
+@@ -177,7 +177,7 @@
+     let inter = has("Inter", "Variable") || (has("Inter", "Regular") && has("Inter", "Bold"));
+     let biz_regular = has("BIZ UDPGothic", "Regular");
+     let biz_bold = wasm || has("BIZ UDPGothic", "Bold");
+-    let chinese = wasm || has("LXGW WenKai Lite", "Regular");
++    let chinese = has("LXGW WenKai Lite", "Regular");
+     let mut missing = Vec::new();
+     if !inter {
+         missing.push("Inter Regular/Bold (or Inter Variable)");
+--- a/crates/ui-egui/src/theme.rs
++++ b/crates/ui-egui/src/theme.rs
+@@ -194,9 +194,9 @@
+             // would leave Hangul and the ◉ laser toggle without a glyph. Hebrew backs the
+             // Language dialog's native "עברית" label where no system font supplies it.
+             || matches!(f.family, "Noto Sans Arabic" | "Noto Sans Hebrew" | "NanumGothic" | "Noto Sans Symbols" | "Noto Sans Symbols 2")
+-            // This opt-in native face follows the existing families. Keep per-character
+-            // fallback and Latin metrics; no Chinese payload enters the wasm allowlist.
+-            || (cfg!(not(target_arch = "wasm32")) && f.family == "LXGW WenKai Lite" && f.style == "Regular");
++            // The Chinese fallback follows the existing faces on desktop and web.
++            // Keep per-character fallback and existing Latin metrics.
++            || (f.family == "LXGW WenKai Lite" && f.style == "Regular");
+         if !wanted {
+             continue;
+         }

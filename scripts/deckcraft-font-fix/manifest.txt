@@ -1,0 +1,2 @@
+BIZ UDPGothic | Regular | fonts/biz-ud-pgothic/BIZUDPGothic-Regular.ttf | Jpan,Latn
+LXGW WenKai Lite | Regular | fonts/lxgw-wenkai-lite/LXGWWenKaiLite-Regular.ttf | Hans,Hant,Latn

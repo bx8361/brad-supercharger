@@ -1,0 +1,2 @@
+Inter | Regular | fonts/inter/Inter-Regular.ttf | Latn
+Inter | Bold | fonts/inter/Inter-Bold.ttf | Latn
