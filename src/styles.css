@@ -510,3 +510,11 @@ button.cs-chip:hover { border-color:var(--cyan); }
 .cs-detail > * { flex-shrink:0; }
 .tool-workspace .cs-detail .code-editor:not(.single-line) { min-height:0;resize:none; }
 @media(max-width:760px) { .cs-body { grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(160px,38%) minmax(0,1fr); } .cs-detail-head { flex-direction:column; } .cs-table td:last-child { min-width:180px; } }
+
+.conversion-row { display:grid;gap:8px;padding:12px 14px;border:1px solid var(--border-soft);border-radius:8px;background:var(--surface); }
+.conversion-title { display:flex;align-items:center;gap:7px;margin:0;color:var(--text);font:600 13px var(--font-sans); }.conversion-title svg { color:var(--accent); }
+.conversion-controls select { flex:0 1 200px;max-width:min(100%,260px);min-width:0; }
+.conversion-controls input { width:140px;height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:13px var(--font-mono); }
+.conversion-controls .conversion-result { flex:1 1 180px;min-width:140px;background:var(--surface-3);color:var(--accent);font-weight:600; }
+.conversion-equals { color:var(--muted);font:600 15px var(--font-sans); }
+.conversion-row .error-note { justify-self:start; }

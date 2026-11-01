@@ -1,6 +1,6 @@
 import {
   Archive, BookMarked, BookOpen, Braces, BrainCircuit, ChartScatter, Calculator, CalendarClock, Clock3, CloudDownload, Code2, Crosshair, Database, FileCode, FileCode2, FileSearch, Fingerprint, FlaskConical, Hash,
-  Pi, SquareFunction,
+  Pi, Ruler, SquareFunction,
   CaseSensitive, Clapperboard, FileText, Image, Images, KeyRound, Languages, LineChart, Link2, ListChecks, ListFilter, LockKeyhole, Network, Palette, PenLine, Presentation, QrCode, Quote, Radio, Regex, Sheet,
   ScrollText, Shield, Sigma, SquareCode, Stamp, StickyNote, Table2, Terminal, TextCursorInput, Type, WandSparkles, Workflow,
 } from 'lucide-react'
@@ -27,6 +27,7 @@ export const tools = [
   { id: 'cheatsheet-ml', name: 'Machine Learning', description: 'scikit-learn, XGBoost, LightGBM, and CatBoost parameters with defaults and when to change them.', category: 'cheatsheets', icon: ChartScatter, keywords: 'cheatsheet cheat sheet machine learning ml sklearn scikit-learn xgboost lightgbm catboost parameters hyperparameters defaults imputer scaler random forest' },
   { id: 'cheatsheet-nn', name: 'Neural Networks', description: 'PyTorch and Keras 3 / TensorFlow layers, losses, optimizers, schedulers, and training recipes.', category: 'cheatsheets', icon: BrainCircuit, keywords: 'cheatsheet cheat sheet neural network deep learning pytorch torch keras layers conv lstm transformer loss optimizer' },
   { id: 'cheatsheet-snippets', name: 'Data snippets', description: 'Copyable pandas, NumPy, Matplotlib, and ML workflow snippets.', category: 'cheatsheets', icon: SquareCode, keywords: 'cheatsheet cheat sheet snippets pandas numpy matplotlib seaborn python code examples' },
+  { id: 'units', name: 'Unit converter', short: 'Unit', description: 'Convert length, weight, area, and currency in one place.', category: 'convert', icon: Ruler, keywords: 'unit converter length distance meter metre centimeter centimetre millimeter kilometer inch inches foot feet yard mile nautical m cm mm km in ft yd mi weight mass kilogram gram milligram pound ounce stone tonne kg g mg lb lbs oz st taiwan 台斤 台兩 錢 台尺 台寸 斤 兩 catty tael area square m2 ft2 hectare acre 坪 甲 ping currency exchange money forex rate usd eur jpy twd life' },
   { id: 'cron', name: 'Cron parser', short: '⏱', description: 'Explain cron expressions and show upcoming runs.', category: 'convert', icon: CalendarClock, keywords: 'crontab schedule expression next runs' },
   { id: 'json-table', name: 'JSON to table', short: 'Tbl', description: 'Turn JSON arrays into tables or CSV.', category: 'convert', icon: Table2, keywords: 'array csv tsv spreadsheet columns rows' },
   { id: 'chinese', name: 'Simplified ↔ Traditional Chinese', short: '简繁', description: 'Convert Chinese using phrase-aware Simplified and Traditional rules.', category: 'convert', icon: Languages, keywords: 'chinese simplified traditional opencc phrase 简体 繁體 简繁 簡繁 中文 汉字 漢字' },

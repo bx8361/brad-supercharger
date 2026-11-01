@@ -2,12 +2,12 @@
 
 # Brad's Supercharger
 
-A local-first toolbox for everyday developer work. It is a static [React](https://react.dev/) + [Vite](https://vite.dev/) site: tool inputs are processed in the browser, and nothing is sent to a server.
+A local-first toolbox for everyday developer work. It is a static [React](https://react.dev/) + [Vite](https://vite.dev/) site: tool inputs are processed in the browser, and inputs stay on your device. The currency converter sends currency codes to Frankfurter to retrieve rates; amounts stay in the browser.
 
 Published site: [https://bx8361.github.io/brad-supercharger/](https://bx8361.github.io/brad-supercharger/)
 
 > [!TIP]
-> This site can be installed as a desktop app. In Chrome, use the address bar, the browser menu, or **Install app** in the sidebar. It opens in its own window. After the first load it works offline; an update applies once every Supercharger window is closed and the app is opened again.
+> This site can be installed as a desktop app. In Chrome, use the address bar, the browser menu, or **Install app** in the sidebar. It opens in its own window. After the first load local tools work offline (currency rates require internet); an update applies once every Supercharger window is closed and the app is opened again.
 
 ## Run locally
 
@@ -36,6 +36,7 @@ npm run preview
 
 ### Converters
 
+- **Unit converter** — length (mm, cm, m, km, in, ft, yd, mi, nmi, 台寸, 台尺), weight (mg, g, kg, t, oz, lb, st, 錢, 台兩, 台斤), area (m², km², ha, ft², acre, 坪, 甲), and currency on one page. Currency uses the latest published daily rates from the free, keyless [Frankfurter API](https://frankfurter.dev/), with refresh and the rate date; weekends and holidays may use an earlier date.
 - **Cron parser** — explain a cron expression and list upcoming runs
 - **JSON to table** — turn a JSON array into a table or CSV
 - **JSON ↔ YAML** — convert between JSON and YAML

@@ -12,6 +12,7 @@ const toolOptions = {
   syntax: ['language', 'indent', 'fold', 'guides', 'margin', 'emphasize'],
   base64: ['mode'], url: ['mode', 'direction'],
   html: ['direction'], timestamp: ['mode'],
+  units: ['lengthFrom', 'lengthTo', 'weightFrom', 'weightTo', 'areaFrom', 'areaTo', 'currencyFrom', 'currencyTo'],
   cron: ['count'], 'json-table': ['format'], yaml: ['direction', 'indent'],
   'number-base': ['formatNumber'], nerdamer: ['showMath', 'keepExpression'], algebrite: ['showMath', 'keepExpression'],
   uuid: ['count', 'version', 'hyphens', 'uppercase'], hash: ['algorithm'], password: ['length', 'count', 'sets'],
