@@ -536,6 +536,8 @@ export const ja = {
   'Paste or load an M3U8 playlist.': 'M3U8 プレイリストを貼り付けるか読み込んでください。',
   'Enter an M3U8 URL.': 'M3U8 URL を入力してください。',
   'AES-128 encrypted HLS is decrypted in the browser. Segments must be reachable from your network (CORS may block some hosts).': 'AES-128 暗号化 HLS はブラウザ内で復号します。セグメントはネットワークから取得できる必要があります（CORS でブロックされる場合があります）。',
+  'Blocked by CORS? Install': 'CORS でブロックされる場合は、',
+  ', enable it for the media host, then reload this page and retry. Turn it off when finished.': ' をインストールし、メディアのホストで有効にしてから、このページを再読み込みして再試行してください。完了後は無効にしてください。',
   '{done} / {total} done': '{done} / {total} 完了',
   '{count} downloading': '{count} 件ダウンロード中',
   '{count} failed': '{count} 件失敗',

@@ -536,6 +536,8 @@ export const zhHant = {
   'Paste or load an M3U8 playlist.': '貼上或載入 M3U8 播放清單。',
   'Enter an M3U8 URL.': '輸入 M3U8 URL。',
   'AES-128 encrypted HLS is decrypted in the browser. Segments must be reachable from your network (CORS may block some hosts).': 'AES-128 加密的 HLS 會在瀏覽器內解密。媒體片段必須能從你的網路存取（部分伺服器可能被 CORS 阻擋）。',
+  'Blocked by CORS? Install': '被 CORS 阻擋？安裝',
+  ', enable it for the media host, then reload this page and retry. Turn it off when finished.': '，為媒體來源啟用後，重新整理此頁並重試。完成後請停用。',
   '{done} / {total} done': '已完成 {done} / {total}',
   '{count} downloading': '{count} 個下載中',
   '{count} failed': '{count} 個失敗',

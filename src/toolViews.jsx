@@ -2522,6 +2522,7 @@ function M3u8Tool({ data, setData }) {
     </section>}
     {error && <p className="error-note">{translateM3u8Error(error)}</p>}
     <p className="subtle">{t("AES-128 encrypted HLS is decrypted in the browser. Segments must be reachable from your network (CORS may block some hosts).")}</p>
+    <p className="subtle">{t("Blocked by CORS? Install")} <a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en&pli=1" target="_blank" rel="noopener noreferrer">Allow CORS: Access-Control-Allow-Origin</a>{t(", enable it for the media host, then reload this page and retry. Turn it off when finished.")}</p>
   </div>
 }
 
