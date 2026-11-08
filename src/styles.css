@@ -518,3 +518,6 @@ button.cs-chip:hover { border-color:var(--cyan); }
 .conversion-controls .conversion-result { flex:1 1 180px;min-width:140px;background:var(--surface-3);color:var(--accent);font-weight:600; }
 .conversion-equals { color:var(--muted);font:600 15px var(--font-sans); }
 .conversion-row .error-note { justify-self:start; }
+.inline-controls .primary-button { order:3;margin-left:auto;align-self:center;height:32px;padding:0 13px; }
+.inline-controls .sample-action { order:1; }.inline-controls .muted-tip,.inline-controls .change-count { order:2; }
+.regex-fields label { flex:1 1 260px; }.regex-fields label:nth-child(2) input { width:100%; }

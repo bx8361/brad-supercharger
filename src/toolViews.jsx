@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { parse as parseYAML, stringify as stringifyYAML } from 'yaml'
-import { CaseSensitive, ClipboardPaste, Clock3, Copy, Download, ExternalLink, FileUp, Fingerprint, GripHorizontal, GripVertical, LockKeyhole, Maximize2, Minimize2, Pause, Play, RefreshCw, Regex, Replace, Save, Search, Sparkles, Trash2, WholeWord, X } from 'lucide-react'
+import { CaseSensitive, Check, ClipboardPaste, Clock3, Copy, Eraser, Download, ExternalLink, FileUp, Fingerprint, GripHorizontal, GripVertical, KeyRound, LockKeyhole, Maximize2, Minimize2, Pause, Play, RefreshCw, Regex, Replace, Save, Search, Sparkles, Trash2, WholeWord, X } from 'lucide-react'
 import QRCode from 'qrcode'
 import jsQR from 'jsqr'
 import UnitConverter from './UnitConverter.jsx'
@@ -152,7 +152,7 @@ function indentDepth(lead, unit) {
   return depth
 }
 
-function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false, indentGuides = null, matchMargin = false, emphasizeIndent = false, fold = null, tabSize, lineEdit = null }) {
+function TextPane({ label, value, onChange, readOnly = false, placeholder, rows = 12, footer, actions, onSelect, onKeyDown, wrap, multiline = true, error = false, language, output = false, indentGuides = null, matchMargin = false, emphasizeIndent = false, fold = null, tabSize, lineEdit = null, onClear, confirmClear = false }) {
   const lineWrap = useLineWrap(wrap)
   const lineRows = multiline ? rows : 1
   const areaRef = useRef(null)
@@ -391,10 +391,10 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   }
   function showReplace() {
     if (!onChange || readOnly) return showFind()
-    focusFind.current = false
+    focusFind.current = true
     setFindOpen(true)
     setReplaceOpen(true)
-    replaceRef.current?.focus()
+    findRef.current?.focus()
   }
   function toggleOpt(setFlag) {
     setFlag(value => !value)
@@ -484,8 +484,15 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
   }
   const labelText = t(label)
   const placeholderText = t(placeholder)
+  const clear = onClear || (onChange && !readOnly ? () => onChange('') : null)
+  function clearText() {
+    if (!clear || !text) return
+    if (confirmClear && !window.confirm(t('Clear all text in {label}?', { label: labelText }))) return
+    clear()
+    if (!readOnly) areaRef.current?.focus()
+  }
   return <section className={`editor-card${output ? ' output-card' : ''}${error ? ' has-error' : ''}`}>
-    <div className="panel-top">{output ? <span>{labelText}</span> : <label>{labelText}</label>}<div className="panel-actions"><button type="button" className="icon-action" title={t("Find in this text (Ctrl+F)")} aria-label={t('Find in {label}', { label: labelText })} onClick={() => { setReplaceOpen(false); showFind() }}><Search size={14} /></button>{onChange && !readOnly && <button type="button" className="icon-action" title={t("Replace in this text (Ctrl+H)")} aria-label={t('Replace in {label}', { label: labelText })} onClick={showReplace}><Replace size={14} /></button>}{actions}</div></div>
+    <div className="panel-top">{output ? <span>{labelText}</span> : <label>{labelText}</label>}<div className="panel-actions"><button type="button" className="icon-action" title={t("Find in this text (Ctrl+F)")} aria-label={t('Find in {label}', { label: labelText })} onClick={() => { setReplaceOpen(false); showFind() }}><Search size={14} /></button>{onChange && !readOnly && <button type="button" className="icon-action" title={t("Replace in this text (Ctrl+H)")} aria-label={t('Replace in {label}', { label: labelText })} onClick={showReplace}><Replace size={14} /></button>}{clear && <button type="button" className="icon-action" title={t("Clear")} aria-label={t('Clear {label}', { label: labelText })} disabled={!text} onClick={clearText}><Eraser size={14} /></button>}{actions}</div></div>
     {findOpen && <div className="find-bar">
       <div className="find-row">
         <input ref={findRef} className={findError ? 'find-bad' : undefined} value={query} aria-label={t('Find in {label}', { label: labelText })} aria-invalid={findError ? true : undefined} title={findError || undefined} placeholder={t("Find")} spellCheck="false" onChange={e => { setQuery(e.target.value); setActive(0) }} onKeyDown={e => {
@@ -494,6 +501,7 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
           if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); showReplace() }
           if (e.key === 'Escape') { e.preventDefault(); closeFind(true) }
           if (e.key === 'Enter') { e.preventDefault(); cycle(e.shiftKey ? -1 : 1) }
+          if (e.key === 'Tab' && !e.shiftKey && replaceOpen) { e.preventDefault(); replaceRef.current?.focus() }
         }} />
         <button type="button" className="icon-action find-opt" aria-pressed={caseSensitive} title={t("Match case")} aria-label={t("Match case")} onClick={() => toggleOpt(setCaseSensitive)}><CaseSensitive size={14} /></button>
         <button type="button" className="icon-action find-opt" aria-pressed={wholeWord} title={t("Match whole word")} aria-label={t("Match whole word")} onClick={() => toggleOpt(setWholeWord)}><WholeWord size={14} /></button>
@@ -510,6 +518,7 @@ function TextPane({ label, value, onChange, readOnly = false, placeholder, rows 
           if (mod && e.key.toLowerCase() === 'h') { e.preventDefault(); e.currentTarget.select() }
           if (e.key === 'Escape') { e.preventDefault(); closeFind(true) }
           if (e.key === 'Enter') { e.preventDefault(); applyReplace(mod) }
+          if (e.key === 'Tab' && e.shiftKey) { e.preventDefault(); findRef.current?.focus() }
         }} />
         <button type="button" className="icon-action" title={t("Replace (Enter)")} disabled={!ranges.length || !!findError} onClick={() => applyReplace(false)}>{t("Replace")}</button>
         <button type="button" className="icon-action" title={t("Replace all (Ctrl+Enter)")} disabled={!ranges.length || !!findError} onClick={() => applyReplace(true)}>{t("All")}</button>
@@ -688,7 +697,8 @@ export function CopyAction({ value, label = 'Copy', className = 'icon-action' })
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1200)
   }
-  return <button type="button" className={className} onClick={copy} disabled={!value} title={t(label)}><Copy size={14} />{t(copied ? 'Copied' : label)}</button>
+  const text = t(copied ? 'Copied' : label)
+  return <button type="button" className={className} onClick={copy} disabled={!value} title={text} aria-label={text}>{copied ? <Check size={14} /> : <Copy size={14} />}</button>
 }
 
 const SPLIT_KEY = 'pane-split'
@@ -768,7 +778,7 @@ function Split({ className = '', axis = 'x', storageKey = SPLIT_KEY, ratio: cont
   </div>
 }
 
-function Sample({ onClick }) { return <button className="text-action" onClick={onClick}><Sparkles size={13} /> {t("Load sample")}</button> }
+function Sample({ onClick }) { return <button className="text-action sample-action" onClick={onClick}><Sparkles size={13} /> {t("Load sample")}</button> }
 
 function ExampleSelect({ examples, value, onPick }) {
   const keys = Object.keys(examples)
@@ -1052,7 +1062,7 @@ function URLTool({ data, setData }) {
   let output = '', error = ''
   try { output = convertUrl(input, direction, multiline) }
   catch (e) { error = e.message }
-  return <div className="tool-content"><div className="inline-controls"><label>{t("Direction")}<select value={direction} onChange={e => set(setData, 'direction', e.target.value)}><option value="encode">{t("Encode")}</option><option value="decode">{t("Decode")}</option></select></label><MultilineToggle checked={multiline} onChange={v => set(setData, 'multiline', v)} /><Sample onClick={() => { set(setData, 'direction', 'encode'); set(setData, 'input', initialSamples.url) }} /><span className="muted-tip">{t("Uses encodeURIComponent / decodeURIComponent, like DevToys.")}</span></div><Split><Editor value={input} onChange={v => set(setData, 'input', v)} multiline={multiline} /><Output value={output} error={!!error} placeholder={error || 'Enter text to convert.'} multiline={multiline} /></Split>{error && <p className="error-note">{t(error)}</p>}</div>
+  return <div className="tool-content"><div className="inline-controls"><label>{t("Direction")}<select value={direction} onChange={e => set(setData, 'direction', e.target.value)}><option value="encode">{t("Encode")}</option><option value="decode">{t("Decode")}</option></select></label><MultilineToggle checked={multiline} onChange={v => set(setData, 'multiline', v)} /><span className="muted-tip">{t("Uses encodeURIComponent / decodeURIComponent, like DevToys.")}</span><Sample onClick={() => { set(setData, 'direction', 'encode'); set(setData, 'input', initialSamples.url) }} /></div><Split><Editor value={input} onChange={v => set(setData, 'input', v)} multiline={multiline} /><Output value={output} error={!!error} placeholder={error || 'Enter text to convert.'} multiline={multiline} /></Split>{error && <p className="error-note">{t(error)}</p>}</div>
 }
 
 function HTMLTool({ data, setData }) {
@@ -1123,7 +1133,7 @@ function GZipTool({ data, setData }) {
     return () => { alive = false }
   }, [input, mode])
   const ratioLabel = mode === 'compress' ? t('Compression ratio') : t('Expansion ratio')
-  return <div className="tool-content"><div className="inline-controls"><label>{t("Direction")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="compress">{t("Compress")}</option><option value="decompress">{t("Decompress")}</option></select></label><Sample onClick={() => setData({ mode: 'compress', input: initialSamples.gzip })} /><span className="muted-tip">{t("Wire format is Base64 GZip, like DevToys.")}</span></div>
+  return <div className="tool-content"><div className="inline-controls"><label>{t("Direction")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="compress">{t("Compress")}</option><option value="decompress">{t("Decompress")}</option></select></label><span className="muted-tip">{t("Wire format is Base64 GZip, like DevToys.")}</span><Sample onClick={() => setData({ mode: 'compress', input: initialSamples.gzip })} /></div>
     {ratio != null && Number.isFinite(ratio) && output && !error && <div className="gzip-ratio"><span>{ratioLabel}</span><strong>{ratio.toFixed(1)}%</strong><small>{mode === 'compress' ? t('{input} chars → {output} chars (Base64)', { input: input.length, output: output.length }) : t('{output} chars ← {input} chars (Base64)', { output: output.length, input: input.length })}</small></div>}
     <Split><Editor label={mode === 'compress' ? 'Plain text' : 'Base64 GZip'} value={input} onChange={v => set(setData, 'input', v)} /><Output label="Result" value={output} error={!!error} placeholder={busy ? 'Working…' : error || 'Enter text to convert.'} /></Split>{error && <p className="error-note">{t(error)}</p>}</div>
 }
@@ -1180,7 +1190,7 @@ function CertificateTool({ data, setData }) {
   let output = '', error = ''
   try { output = decodeCertificate(input) }
   catch (e) { error = input.trim() ? e.message : '' }
-  return <div className="tool-content"><div className="inline-controls"><Sample onClick={() => set(setData, 'input', initialSamples.certificate)} /><PasteTextButton onPaste={text => set(setData, 'input', text)} /><span className="muted-tip">{t("PEM X.509 public certificates only · no PFX passwords")}</span></div><Split><Editor label="Certificate PEM" value={input} onChange={v => set(setData, 'input', v)} rows={14} /><Output label="Decoded details" value={translateCertificateOutput(output)} error={!!error} placeholder={error || 'Paste a PEM certificate.'} rows={14} /></Split>{error && <p className="error-note">{t(error)}</p>}</div>
+  return <div className="tool-content"><div className="inline-controls"><PasteTextButton onPaste={text => set(setData, 'input', text)} /><span className="muted-tip">{t("PEM X.509 public certificates only · no PFX passwords")}</span><Sample onClick={() => set(setData, 'input', initialSamples.certificate)} /></div><Split><Editor label="Certificate PEM" value={input} onChange={v => set(setData, 'input', v)} rows={14} /><Output label="Decoded details" value={translateCertificateOutput(output)} error={!!error} placeholder={error || 'Paste a PEM certificate.'} rows={14} /></Split>{error && <p className="error-note">{t(error)}</p>}</div>
 }
 
 async function readQrText(file) {
@@ -1223,7 +1233,7 @@ function QRCodeTool({ data, setData }) {
       else await applyQrFile(await readClipboardImageFile())
     } catch (e) { toast(clipboardDialogMessage(mode === 'encode' ? 'text' : 'image', e), 'error') }
   }
-  return <div className="tool-content"><div className="inline-controls"><label>{t("Mode")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="encode">{t("Generate")}</option><option value="decode">{t("Read image")}</option></select></label>{mode === 'encode' ? <Sample onClick={() => setData({ text: initialSamples.qrcode, mode: 'encode' })} /> : <label className="file-button"><FileUp size={14} /> {t("QR image")}<input type="file" accept="image/*" onChange={onFile} /></label>}<button type="button" className="text-action" onClick={pasteClipboard}><ClipboardPaste size={13} /> {t("Paste from clipboard")}</button></div>
+  return <div className="tool-content"><div className="inline-controls"><label>{t("Mode")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="encode">{t("Generate")}</option><option value="decode">{t("Read image")}</option></select></label>{mode !== 'encode' && <label className="file-button"><FileUp size={14} /> {t("QR image")}<input type="file" accept="image/*" onChange={onFile} /></label>}<button type="button" className="text-action" onClick={pasteClipboard}><ClipboardPaste size={13} /> {t("Paste from clipboard")}</button>{mode === 'encode' && <Sample onClick={() => setData({ text: initialSamples.qrcode, mode: 'encode' })} />}</div>
     {mode === 'encode'
       ? <><Editor label="Text or URL" value={text} onChange={v => set(setData, 'text', v)} rows={4} />{imageUrl && <section className="editor-card media-preview-card"><div className="panel-top"><span>{t("QR code")}</span><CopyAction value={text} label="Copy text" /></div><img className="media-preview qr-preview" src={imageUrl} alt="" /></section>}</>
       : <Output label="Decoded text" value={decoded} placeholder={t("Choose or paste a QR code image to read it.")} rows={6} />}
@@ -1272,11 +1282,13 @@ function NumberBaseTool({ data, setData }) {
     }
   }
   return <div className="tool-content">
-    <div className="inline-controls"><label className="check-pill"><input type="checkbox" checked={formatNumber} onChange={toggleFormatNumber} />{t("Format number")}</label><Sample onClick={() => { const converted = convertFromBase(initialSamples['number-base'], '10', { formatNumber }); setData({ formatNumber, b2: converted[2], b8: converted[8], b10: converted[10], b16: converted[16] }) }} /><span className="muted-tip">{t("Edit any base — the other fields update automatically.")}</span></div>
+    <div className="inline-controls"><label className="check-pill"><input type="checkbox" checked={formatNumber} onChange={toggleFormatNumber} />{t("Format number")}</label><span className="muted-tip">{t("Edit any base — the other fields update automatically.")}</span><Sample onClick={() => { const converted = convertFromBase(initialSamples['number-base'], '10', { formatNumber }); setData({ formatNumber, b2: converted[2], b8: converted[8], b10: converted[10], b16: converted[16] }) }} /></div>
     <div className="base-grid">{numberBaseFields.map(field => <div className={`base-field${error ? ' has-error' : ''}`} key={field.base}><label>{t(field.label)}<small>BASE {field.base}</small></label><input value={values[field.base]} onChange={e => onChange(field.base, e.target.value)} spellCheck="false" placeholder={field.base === '10' ? 'e.g. 2026' : ''} /></div>)}</div>
     {error && <p className="error-note">{t(error)}</p>}
   </div>
 }
+
+const cronPlaceholderFields = ['minute', 'hour', 'day of month', 'month', 'day of week']
 
 function CronParserTool({ data, setData }) {
   const input = textValue(data, 'input', initialSamples.cron)
@@ -1290,13 +1302,11 @@ function CronParserTool({ data, setData }) {
     runs = nextCronRuns(input, Math.max(1, Math.min(25, count)))
   } catch (e) { error = input.trim() ? e.message : '' }
   return <div className="tool-content">
-    <div className="inline-controls"><label>{t("Upcoming runs")}<select value={count} onChange={e => set(setData, 'count', e.target.value)}>{[5, 10, 15, 25].map(n => <option key={n} value={n}>{n}</option>)}</select></label><Sample onClick={() => set(setData, 'input', initialSamples.cron)} /><span className="muted-tip">{t("5 fields (minute hour day month weekday) or 6 with seconds · local time")}</span></div>
+    <div className="inline-controls"><label>{t("Upcoming runs")}<select value={count} onChange={e => set(setData, 'count', e.target.value)}>{[5, 10, 15, 25].map(n => <option key={n} value={n}>{n}</option>)}</select></label><span className="muted-tip">{t("5 fields (minute hour day month weekday) or 6 with seconds · local time")}</span><Sample onClick={() => set(setData, 'input', initialSamples.cron)} /></div>
     <Editor label="Cron expression" value={input} onChange={v => set(setData, 'input', v)} rows={3} placeholder="0 9 * * 1-5" />
-    {!error && summary.length > 0 && <>
-      <div className="cron-summary">{summary.map(field => <div key={field.label}><span>{t(field.label)}</span><code>{field.value}</code></div>)}</div>
-      <p className="cron-description">{description}</p>
-      <div className="cron-runs">{runs.map((run, index) => <div className="cron-run" key={run.getTime()}><span>#{index + 1}</span><strong>{formatCronRunLocal(run)}</strong><CopyAction value={run.toISOString()} label="UTC" /></div>)}</div>
-    </>}
+    <div className="cron-summary">{(summary.length && !error ? summary : cronPlaceholderFields.map(label => ({ label, value: '—' }))).map(field => <div key={field.label}><span>{t(field.label)}</span><code>{field.value}</code></div>)}</div>
+    <p className={error || !summary.length ? 'cron-description subtle' : 'cron-description'}>{!error && summary.length ? description : t(error ? 'Fix the expression to see upcoming runs.' : 'Enter a cron expression.')}</p>
+    {!error && runs.length > 0 && <div className="cron-runs">{runs.map((run, index) => <div className="cron-run" key={run.getTime()}><span>#{index + 1}</span><strong>{formatCronRunLocal(run)}</strong><CopyAction value={run.toISOString()} label="Copy UTC" /></div>)}</div>}
     {error && <p className="error-note">{t(error)}</p>}
   </div>
 }
@@ -1344,13 +1354,11 @@ function UUIDTool({ data, setData }) {
     <div className="inline-controls">
       <label>{t("How many")}<select value={count} onChange={e => set(setData, 'count', e.target.value)}>{[1, 5, 10, 25, 50].map(n => <option key={n}>{n}</option>)}</select></label>
       <label>{t("Version")}<select value={version} onChange={e => set(setData, 'version', e.target.value)}><option value="1">{t("UUID v1 (time-based)")}</option><option value="4">{t("UUID v4 (random)")}</option><option value="7">{t("UUID v7 (Unix time)")}</option></select></label>
-    </div>
-    <div className="check-grid">
       <label className="check-pill"><input type="checkbox" checked={hyphens} onChange={e => set(setData, 'hyphens', e.target.checked)} />{t("Hyphens")}</label>
       <label className="check-pill"><input type="checkbox" checked={uppercase} onChange={e => set(setData, 'uppercase', e.target.checked)} />{t("Uppercase")}</label>
+      <button className="primary-button" onClick={generate}><Sparkles size={16} /> {t(count > 1 ? 'Generate UUIDs' : 'Generate UUID')}</button>
     </div>
-    <button className="primary-button" onClick={generate}><Sparkles size={16} /> Generate UUID{count > 1 ? 's' : ''}</button>
-    <Output label="UUIDs" value={output} placeholder={t("Your UUIDs will appear here…")} rows={Math.min(12, Math.max(5, count))} />
+    <Output label="UUIDs" value={output} onClear={() => set(setData, 'output', '')} placeholder={t("Your UUIDs will appear here…")} rows={Math.min(12, Math.max(5, count))} />
   </div>
 }
 
@@ -1370,7 +1378,7 @@ function PasswordTool({ data, setData }) {
   const length = Number(textValue(data, 'length', '20')), count = Number(textValue(data, 'count', '1')), selected = textValue(data, 'sets', ['Uppercase','Lowercase','Numbers','Symbols']), output = textValue(data, 'output', '')
   function toggle(name) { set(setData, 'sets', selected.includes(name) ? selected.filter(s => s !== name) : [...selected, name]) }
   function generate() { const chars = selected.map(k => charsets[k]).join(''); if (!chars) return; set(setData, 'output', Array.from({ length: count }, () => Array.from({ length }, () => chars[secureInt(chars.length)]).join('')).join('\n')) }
-  return <div className="tool-content generator-content"><div className="inline-controls"><label>{t("Length")}<input type="number" min="4" max="128" value={length} onChange={e => set(setData, 'length', Math.max(4, Math.min(128, Number(e.target.value))))} /></label><label>{t("Count")}<select value={count} onChange={e => set(setData, 'count', e.target.value)}>{[1,5,10,25].map(n => <option key={n}>{n}</option>)}</select></label></div><div className="check-grid">{Object.keys(charsets).map(name => <label className="check-pill" key={name}><input type="checkbox" checked={selected.includes(name)} onChange={() => toggle(name)} />{t(name)}</label>)}</div><button className="primary-button" onClick={generate} disabled={!selected.length}><Sparkles size={16} /> {t(count > 1 ? 'Generate passwords' : 'Generate password')}</button><Output label="Generated passwords" value={output} placeholder={t("Your password will appear here…")} rows={Math.min(12, Math.max(5, count))} /></div>
+  return <div className="tool-content generator-content"><div className="notice"><KeyRound size={16} /><span>{t("Generated passwords are not saved. Copy them before you leave this page.")}</span></div><div className="inline-controls"><label>{t("Length")}<input type="number" min="4" max="128" value={length} onChange={e => set(setData, 'length', Math.max(4, Math.min(128, Number(e.target.value))))} /></label><label>{t("Count")}<select value={count} onChange={e => set(setData, 'count', e.target.value)}>{[1,5,10,25].map(n => <option key={n}>{n}</option>)}</select></label>{Object.keys(charsets).map(name => <label className="check-pill" key={name}><input type="checkbox" checked={selected.includes(name)} onChange={() => toggle(name)} />{t(name)}</label>)}<button className="primary-button" onClick={generate} disabled={!selected.length}><Sparkles size={16} /> {t(count > 1 ? 'Generate passwords' : 'Generate password')}</button></div><Output label="Generated passwords" value={output} onClear={() => set(setData, 'output', '')} placeholder={t("Your password will appear here…")} rows={Math.min(12, Math.max(5, count))} /></div>
 }
 
 function LoremTool({ data, setData }) {
@@ -1386,9 +1394,9 @@ function LoremTool({ data, setData }) {
       <label>{t("Text corpus")}<select value={corpus} onChange={e => set(setData, 'corpus', e.target.value)}>{lipsumCorpusIds.map(id => <option key={id} value={id}>{lipsumCorpora[id].label}</option>)}</select></label>
       <label>{t("Amount")}<input type="number" min="1" max="5000" value={count} onChange={e => set(setData, 'count', Math.max(1, Math.min(5000, Number(e.target.value))))} /></label>
       <label>{t("Unit")}<select value={unit} onChange={e => set(setData, 'unit', e.target.value)}><option value="paragraphs">{t("Paragraphs")}</option><option value="sentences">{t("Sentences")}</option><option value="words">{t("Words")}</option></select></label>
+      <button className="primary-button" onClick={generate}><Sparkles size={16} /> {t("Generate text")}</button>
     </div>
-    <button className="primary-button" onClick={generate}><Sparkles size={16} /> {t("Generate text")}</button>
-    <Output label="Lorem Ipsum" value={output} placeholder={t("Your placeholder text will appear here…")} />
+    <Output label="Lorem Ipsum" value={output} onClear={() => set(setData, 'output', '')} placeholder={t("Your placeholder text will appear here…")} />
   </div>
 }
 
@@ -1408,9 +1416,9 @@ function AnalyzerTool({ data, setData }) {
     ['Lines', [['Trim lines', trimLines], ['A → Z', t => sortLines(t, 1)], ['Z → A', t => sortLines(t, -1)], ['Sort last word', t => sortByLast(t, 1)], ['Sort last word ↓', t => sortByLast(t, -1)], ['Reverse lines', reverseLines], ['Shuffle lines', shuffleLines], ['Unique lines', uniqueLines]]],
   ]
   return <div className="tool-content">
-    <div className="inline-controls" />
+    <div className="inline-controls"><button className="text-action" onClick={restore} disabled={original == null}>{t("Original")}</button><Sample onClick={() => edit(initialSamples.analyzer)} /></div>
     <div className="stats-grid">{stats.map(([label, value]) => <div className="stat" key={label}><span>{t(label)}</span><strong>{typeof value === 'number' ? value.toLocaleString() : value}</strong></div>)}</div>
-    <Editor label="Text" value={input} onChange={edit} onSelect={e => setCaret({ start: e.target.selectionStart, end: e.target.selectionEnd })} actions={<><Sample onClick={() => edit(initialSamples.analyzer)} /><button className="text-action" onClick={restore} disabled={original == null}>{t("Original")}</button></>} />
+    <Editor label="Text" value={input} onChange={edit} onSelect={e => setCaret({ start: e.target.selectionStart, end: e.target.selectionEnd })} />
     {strips.map(([name, buttons]) => <div className="action-strip" key={name}><span>{t(name)}</span>{buttons.map(([label, fn]) => <button className="chip-action" key={label} onClick={() => transform(fn)}>{t(label)}</button>)}</div>)}
     <div className="freq-grid">
       <FreqList title={t("Word frequency")} rows={info.wordFreq} />
@@ -1450,8 +1458,8 @@ function ChineseTool({ data, setData }) {
         <option value="t2s">{t('Traditional → Simplified')}</option>
       </select></label>
       <button type="button" className="text-action" onClick={swap} disabled={!converter || !output}><RefreshCw size={14} /> {t('Swap')}</button>
-      <Sample onClick={() => setData({ direction: 's2t', input: initialSamples.chinese })} />
       <span className="muted-tip">{t('Uses phrase-aware OpenCC rules. All conversion stays in your browser.')}</span>
+      <Sample onClick={() => setData({ direction: 's2t', input: initialSamples.chinese })} />
     </div>
     <Split>
       <Editor label={simplified ? 'Simplified Chinese' : 'Traditional Chinese'} value={input} onChange={v => set(setData, 'input', v)} />
@@ -1478,7 +1486,7 @@ function MarkdownTool({ data, setData }) {
   const input = textValue(data, 'input', initialSamples.markdown)
   const html = useMemo(() => DOMPurify.sanitize(marked.parse(input), { FORBID_TAGS: ['img','iframe','video','audio','style','script'], FORBID_ATTR: ['style'] }), [input])
   function download() { const blob = new Blob([html], { type: 'text/html;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = 'markdown-preview.html'; a.click(); URL.revokeObjectURL(url) }
-  return <div className="tool-content"><div className="inline-controls"><Sample onClick={() => set(setData, 'input', initialSamples.markdown)} /><button className="text-action" onClick={download}><Download size={14} /> {t("Export HTML")}</button></div><Split className="markdown-grid"><Editor label="Markdown" value={input} onChange={v => set(setData, 'input', v)} /><section className="editor-card preview-card"><div className="panel-top"><span>{t("Live preview")}</span><span className="live-label"><i /> {t("Local preview")}</span></div><article className="markdown-preview" dangerouslySetInnerHTML={{ __html: html }} /></section></Split><p className="subtle">{t("Remote images and embedded media are omitted from the preview.")}</p></div>
+  return <div className="tool-content"><div className="inline-controls"><button className="text-action" onClick={download}><Download size={14} /> {t("Export HTML")}</button><Sample onClick={() => set(setData, 'input', initialSamples.markdown)} /></div><Split className="markdown-grid"><Editor label="Markdown" confirmClear value={input} onChange={v => set(setData, 'input', v)} /><section className="editor-card preview-card"><div className="panel-top"><span>{t("Live preview")}</span><span className="live-label"><i /> {t("Local preview")}</span></div><article className="markdown-preview" dangerouslySetInnerHTML={{ __html: html }} /></section></Split><p className="subtle">{t("Remote images and embedded media are omitted from the preview.")}</p></div>
 }
 
 function JsxGraphTool({ data, setData }) {
@@ -1683,9 +1691,9 @@ function MermaidTool({ data, setData }) {
       <span className="muted-tip">{t("Drag to pan · Ctrl+scroll to zoom")}</span>
     </div>
     <Split className="markdown-grid">
-      <Editor label="Mermaid source" value={input} onChange={v => set(setData, 'input', v)} />
+      <Editor label="Mermaid source" confirmClear value={input} onChange={v => set(setData, 'input', v)} />
       <section className={`editor-card preview-card mermaid-preview-card${error ? ' has-error' : ''}`}>
-        <div className="panel-top"><span>{t("Preview")}</span><div className="panel-actions"><button type="button" className="icon-action" onClick={copyImage}><Copy size={14} /> {t("Copy image")}</button><button type="button" className="icon-action" onClick={downloadImage}><Download size={14} /> {t("PNG")}</button></div></div>
+        <div className="panel-top"><span>{t("Preview")}</span><div className="panel-actions"><button type="button" className="icon-action" title={t("Copy image")} aria-label={t("Copy image")} onClick={copyImage}><Copy size={14} /></button><button type="button" className="icon-action" onClick={downloadImage}><Download size={14} /> {t("PNG")}</button></div></div>
         {error
           ? <pre className="mermaid-error">{error}</pre>
           : <div ref={stageRef} className="mermaid-stage" onPointerDown={onPointerDown}><div ref={previewRef} className="mermaid-preview" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }} /></div>}
@@ -2004,7 +2012,7 @@ function ScratchpadTool({ data, setData }) {
       <button type="button" className="text-action" onClick={deleteFile} disabled={!selectedId}><Trash2 size={14} /> {t("Delete")}</button>
       <TextViewToggles data={data} setData={setData} />
     </div>
-    <Editor label="Note" value={text} onChange={edit} placeholder="Write something…" {...view} onKeyDown={e => {
+    <Editor label="Note" value={text} onChange={edit} confirmClear placeholder="Write something…" {...view} onKeyDown={e => {
       if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey) return
       e.preventDefault()
       const el = e.currentTarget
@@ -2113,15 +2121,15 @@ function CipherTool({ data, setData }) {
   }
   return <div className="tool-content">
     <div className="inline-controls">
-      <Sample onClick={() => setData({ input: initialSamples.cipher, key: initialSamples['cipher-key'], output: '', lastMode: '' })} />
       <button type="button" className="text-action" onClick={() => run('encrypt')}><LockKeyhole size={14} /> {t("Encrypt")}</button>
       <button type="button" className="text-action" onClick={() => run('decrypt')}><Fingerprint size={14} /> {t("Decrypt")}</button>
       {output && <CopyAction value={output} />}
       <span className="muted-tip">{t("AES passphrase mode (CryptoJS-compatible).")}</span>
+      <Sample onClick={() => setData({ input: initialSamples.cipher, key: initialSamples['cipher-key'], output: '', lastMode: '' })} />
     </div>
     <Split axis="y" storageKey="cipher-height" className="compare-stack">
       <Split><Editor label="Plain or ciphertext" value={input} onChange={v => set(setData, 'input', v)} /><Editor label="Key" value={key} onChange={v => set(setData, 'key', v)} rows={4} multiline={false} /></Split>
-      <Output label="Result" value={output} placeholder={t("Encrypt or decrypt to see output here.")} />
+      <Output label="Result" value={output} onClear={() => set(setData, 'output', '')} placeholder={t("Encrypt or decrypt to see output here.")} />
     </Split>
     {error && <p className="error-note">{t(error)}</p>}
   </div>
@@ -2490,6 +2498,7 @@ function M3u8Tool({ data, setData }) {
       <label>{t("Retries")}<input type="number" min="0" max="100" value={maxRetries} onChange={e => set(setData, 'maxRetries', e.target.value)} /></label>
       <label>{t("Start at")}<input type="number" min="0" value={startIndex} onChange={e => set(setData, 'startIndex', e.target.value)} /></label>
       <label>{t("File name")}<input value={fileName} onChange={e => set(setData, 'fileName', e.target.value)} spellCheck="false" /></label>
+      <Sample onClick={() => setData({ source: 'link', url: initialSamples.m3u8, playlist: '', fileName: 'video.ts' })} />
     </div>
     {saveMode === 'memory' && <p className="subtle">{t("In-memory mode holds the full video in RAM before download. Use stream mode for large files (Chrome/Edge).")}</p>}
     {saveMode === 'stream' && !canStreamToFile() && <p className="error-note">{t("Streaming save is not available in this browser. Use in-memory mode or Chrome/Edge.")}</p>}
@@ -2503,7 +2512,6 @@ function M3u8Tool({ data, setData }) {
         : <button type="button" className="text-action" onClick={() => sessionRef.current?.pause()} disabled={progress.phase !== 'downloading'}><Pause size={14} /> {t("Pause")}</button>}
       <button type="button" className="text-action" onClick={() => sessionRef.current?.retryFailed()} disabled={!progress.failures?.length}><RefreshCw size={14} /> {t("Retry failed")}</button>
       <button type="button" className="text-action" onClick={halt} disabled={!busy && progress.phase !== 'incomplete'}>{t("Stop")}</button>
-      <Sample onClick={() => setData({ source: 'link', url: initialSamples.m3u8, playlist: '', fileName: 'video.ts' })} />
     </div>
     {progress.phase !== 'idle' && <section className="m3u8-progress" aria-live="polite">
       <div className="m3u8-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent || 0}><span style={{ width: `${progress.percent || 0}%` }} /></div>
@@ -2659,7 +2667,7 @@ function XmlTesterTool({ data, setData }) {
   }, [xsd, xml])
   const noteClass = status.severity === 'success' ? 'integrity-note match' : status.severity === 'error' ? 'integrity-note mismatch' : 'subtle'
   return <div className="tool-content">
-    <div className="inline-controls"><Sample onClick={() => setData({ xsd: initialSamples['xml-tester-xsd'], xml: initialSamples['xml-tester-xml'] })} /><span className="muted-tip">{t("Validates locally with libxml2 (WebAssembly).")}</span></div>
+    <div className="inline-controls"><span className="muted-tip">{t("Validates locally with libxml2 (WebAssembly).")}</span><Sample onClick={() => setData({ xsd: initialSamples['xml-tester-xsd'], xml: initialSamples['xml-tester-xml'] })} /></div>
     <Split><Editor label="XSD schema" value={xsd} onChange={v => set(setData, 'xsd', v)} language="xml" rows={14} /><Editor label="XML data" value={xml} onChange={v => set(setData, 'xml', v)} language="xml" rows={14} /></Split>
     <p className={noteClass}>{t(status.message)}</p>
   </div>
@@ -2756,12 +2764,11 @@ function RegexTool({ data, setData }) {
     <div className="inline-controls">
       <label>{t("Flavor")}<select value={flavor} onChange={e => set(setData, 'flavor', e.target.value)}>{regexFlavors.map(([id, label]) => <option key={id} value={id}>{t(label)}</option>)}</select></label>
       <label>{t("Mode")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="match">{t("Match")}</option><option value="substitution">{t("Substitution")}</option><option value="extraction">{t("Extraction")}</option></select></label>
-      <Sample onClick={() => setData({ input: initialSamples.regex, pattern: '[\\w.+-]+@[\\w.-]+\\.[A-Za-z]{2,}' })} />
+      {regexControls(flavor).map(([key, label, title]) => <label className="check-pill" key={key} title={t(title)}><input type="checkbox" checked={key === 'allMatches' ? options[key] !== false && options[key] !== 'false' : options[key] === true || options[key] === 'true'} onChange={() => toggleOption(key)} />{t(label)}</label>)}
       <span className="muted-tip">{t('{flavor} · 2 second limit · 500 matches max', { flavor: flavorName })}</span>
+      <Sample onClick={() => setData({ input: initialSamples.regex, pattern: '[\\w.+-]+@[\\w.-]+\\.[A-Za-z]{2,}' })} />
     </div>
-    <div className="regex-controls"><label>{t("Pattern")}<input value={pattern} onChange={e => set(setData, 'pattern', e.target.value)} spellCheck="false" placeholder={t("Regular expression")} /></label></div>
-    <div className="check-grid">{regexControls(flavor).map(([key, label, title]) => <label className="check-pill" key={key} title={t(title)}><input type="checkbox" checked={key === 'allMatches' ? options[key] !== false && options[key] !== 'false' : options[key] === true || options[key] === 'true'} onChange={() => toggleOption(key)} />{t(label)}</label>)}</div>
-    {mode !== 'match' && <div className="regex-controls"><label>{mode === 'substitution' ? t('Replace with') : t('Extract')}<input value={template} onChange={e => set(setData, 'template', e.target.value)} spellCheck="false" placeholder={t(mode === 'substitution' ? hint[0] : hint[1])} /></label></div>}
+    <div className="regex-controls regex-fields"><label>{t("Pattern")}<input value={pattern} onChange={e => set(setData, 'pattern', e.target.value)} spellCheck="false" placeholder={t("Regular expression")} /></label>{mode !== 'match' && <label>{mode === 'substitution' ? t('Replace with') : t('Extract')}<input value={template} onChange={e => set(setData, 'template', e.target.value)} spellCheck="false" placeholder={t(mode === 'substitution' ? hint[0] : hint[1])} /></label>}</div>
     <Editor label="Test text" value={text} onChange={v => set(setData, 'input', v)} />
     {state.error && <p className="error-note regex-error">{translateRegexError(state.error)}</p>}
     {state.timeout && <p className="error-note">{t('This pattern took too long. It was stopped; try simplifying it.')}</p>}
@@ -2810,8 +2817,7 @@ function CompareTool({ data, setData }) {
   const rows = useMemo(() => layout === 'side' ? sideBySideRows(left, right, mode, compareOpts) : null, [layout, left, right, mode, compareOpts.lead, compareOpts.trail, compareOpts.embedded, compareOpts.ignoreCase, compareOpts.ignoreNewlines])
   const linked = layout === 'side' ? { ratio: pane, onRatio: setPane } : {}
   const editors = <Split axis={layout === 'inline' ? 'y' : 'x'} storageKey={layout === 'inline' ? 'compare-inline' : SPLIT_KEY} className="compare-editors" {...linked}><Editor label="Original text" value={left} onChange={v => set(setData, 'left', v)} /><Editor label="Changed text" value={right} onChange={v => set(setData, 'right', v)} /></Split>
-  return <div className="tool-content"><div className="inline-controls"><label>{t("Compare by")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="words">{t("Words")}</option><option value="lines">{t("Lines")}</option></select></label><label>{t("View")}<select value={layout} onChange={e => set(setData, 'layout', e.target.value)}><option value="side">{t("Side by side")}</option><option value="inline">{t("Inline")}</option></select></label><Sample onClick={() => setData({ left: initialSamples.compareLeft, right: initialSamples.compareRight })} /><span className="change-count"><b className="added">+{added}</b> <b className="removed">−{removed}</b> {t("changes")}</span></div>
-    <div className="check-grid">{compareFlags.map(([key, label]) => <label className="check-pill" key={key}><input type="checkbox" checked={data[key] === true || data[key] === 'true'} onChange={e => set(setData, key, e.target.checked)} />{t(label)}</label>)}</div>
+  return <div className="tool-content"><div className="inline-controls"><label>{t("Compare by")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="words">{t("Words")}</option><option value="lines">{t("Lines")}</option></select></label><label>{t("View")}<select value={layout} onChange={e => set(setData, 'layout', e.target.value)}><option value="side">{t("Side by side")}</option><option value="inline">{t("Inline")}</option></select></label>{compareFlags.map(([key, label]) => <label className="check-pill" key={key}><input type="checkbox" checked={data[key] === true || data[key] === 'true'} onChange={e => set(setData, key, e.target.checked)} />{t(label)}</label>)}<span className="change-count"><b className="added">+{added}</b> <b className="removed">−{removed}</b> {t("changes")}</span><Sample onClick={() => setData({ left: initialSamples.compareLeft, right: initialSamples.compareRight })} /></div>
     <Split axis="y" storageKey="compare-height" className="compare-stack">{editors}<section className={`editor-card diff-card${added || removed ? '' : ' is-same'}`}><div className="panel-top"><span>{t(layout === 'side' ? 'Side by side' : 'Inline')} · {t(mode === 'lines' ? 'Lines' : 'Words')}</span><span className="diff-legend"><i className="added-bg" /> {t("Added")}<i className="removed-bg" /> {t("Removed")}</span></div>{rows ? <Split className="side-diff" storageKey={SPLIT_KEY} {...linked}><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.left} /></pre>)}</div><div className="side-col">{rows.map((row, i) => <pre key={i}><DiffSpans parts={row.right} /></pre>)}</div></Split> : <pre>{markup}</pre>}</section></Split></div>
 }
 
@@ -2974,8 +2980,8 @@ function CalculatorTool({ data, setData }) {
       <label className="check-pill"><input type="checkbox" checked={autoCalc} onChange={e => set(setData, 'autoCalc', e.target.checked)} />{t("Auto calculate")}</label>
       <label className="check-pill"><input type="checkbox" checked={autoAns} onChange={e => set(setData, 'autoAns', e.target.checked)} />{t("Auto ans")}</label>
       <label className="check-pill"><input type="checkbox" checked={keepExpression} onChange={e => set(setData, 'keepExpression', e.target.checked)} />{t("Keep expression")}</label>
-      <Sample onClick={() => { resetRecall(); setData({ input: initialSamples.calculator, angleUnit: 'd', resultFormat: 'g', precision: '12', history: '[]', variables: '{}', ans: '' }) }} />
       <button type="button" className="text-action" onClick={clearHistory}>{t("Clear")}</button>
+      <Sample onClick={() => { resetRecall(); setData({ input: initialSamples.calculator, angleUnit: 'd', resultFormat: 'g', precision: '12', history: '[]', variables: '{}', ans: '' }) }} />
     </div>
     <div className="calculator-workspace">
       <section className="calculator-panel editor-card">
@@ -3134,9 +3140,9 @@ function CasCalculatorTool({ engine, data, setData }) {
     <div className="inline-controls calculator-options">
       <label className="check-pill"><input type="checkbox" checked={showMath} onChange={e => set(setData, 'showMath', e.target.checked)} />{t("Show math")}</label>
       <label className="check-pill"><input type="checkbox" checked={keepExpression} onChange={e => set(setData, 'keepExpression', e.target.checked)} />{t("Keep expression")}</label>
-      <Sample onClick={() => pickExpression(meta.sample)} />
       <button type="button" className="text-action" onClick={clearHistory}>{t("Clear")}</button>
       <span className="muted-tip">{t('Powered by {name}', { name: meta.label })} · <a href={meta.url} target="_blank" rel="noreferrer">{t("Docs")}</a></span>
+      <Sample onClick={() => pickExpression(meta.sample)} />
     </div>
     <div className="calculator-workspace cas-workspace">
       <section className="calculator-panel editor-card">
@@ -3194,7 +3200,7 @@ function ListCompareTool({ data, setData }) {
   const lineCountTip = rows.length === 1
     ? t('{count} line · blank lines skipped', { count: rows.length })
     : t('{count} lines · blank lines skipped', { count: rows.length })
-  return <div className="tool-content"><div className="inline-controls"><label>{t("Show")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="both">{t("In both")}</option><option value="a">{t("Only in A")}</option><option value="b">{t("Only in B")}</option><option value="union">{t("Combined")}</option></select></label><label className="check-pill"><input type="checkbox" checked={ignoreCase === true || ignoreCase === 'true'} onChange={e => set(setData, 'ignoreCase', e.target.checked)} />{t("Ignore case")}</label><Sample onClick={() => setData({ left: initialSamples.listLeft, right: initialSamples.listRight, mode: 'both' })} /><span className="muted-tip">{lineCountTip}</span></div>
+  return <div className="tool-content"><div className="inline-controls"><label>{t("Show")}<select value={mode} onChange={e => set(setData, 'mode', e.target.value)}><option value="both">{t("In both")}</option><option value="a">{t("Only in A")}</option><option value="b">{t("Only in B")}</option><option value="union">{t("Combined")}</option></select></label><label className="check-pill"><input type="checkbox" checked={ignoreCase === true || ignoreCase === 'true'} onChange={e => set(setData, 'ignoreCase', e.target.checked)} />{t("Ignore case")}</label><span className="muted-tip">{lineCountTip}</span><Sample onClick={() => setData({ left: initialSamples.listLeft, right: initialSamples.listRight, mode: 'both' })} /></div>
     <Split axis="y" storageKey="list-height" className="compare-stack"><Split className="compare-editors"><Editor label={t("List A")} value={left} onChange={v => set(setData, 'left', v)} /><Editor label={t("List B")} value={right} onChange={v => set(setData, 'right', v)} /></Split><Output label={outputLabels[mode] || t('Result')} value={rows.join('\n')} placeholder={t("No matching lines.")} /></Split></div>
 }
 
@@ -3220,7 +3226,7 @@ function SyntaxTool({ data, setData }) {
       <button type="button" className="text-action" disabled={!language.format} title={language.format ? t("Format code") : t("Formatting is not available for this language.")} onClick={format}><Sparkles size={14} /> {t("Format code")}</button>
       <Sample onClick={() => { setError(''); setData({ language: 'javascript', input: initialSamples.syntax }) }} />
     </div>
-    <Editor label="Source" value={input} onChange={value => { setError(''); set(setData, 'input', value) }} placeholder="Paste code to format." language={editorLanguage(language)} fold={fold} tabSize={indent === '4' ? 4 : indent === 'tab' ? 8 : 2} {...view} onKeyDown={e => {
+    <Editor label="Source" confirmClear value={input} onChange={value => { setError(''); set(setData, 'input', value) }} placeholder="Paste code to format." language={editorLanguage(language)} fold={fold} tabSize={indent === '4' ? 4 : indent === 'tab' ? 8 : 2} {...view} onKeyDown={e => {
       if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey) return
       e.preventDefault()
       document.execCommand('insertText', false, '\t')
@@ -3310,7 +3316,7 @@ function SqliteTool({ data, setData }) {
       <WasmNetworkWarning />
     </div>
     <Split>
-      <Editor label="SQL" language="sql" value={sql} onChange={value => set(setData, 'input', value)} placeholder="Enter SQL to run." onKeyDown={e => {
+      <Editor label="SQL" language="sql" confirmClear value={sql} onChange={value => set(setData, 'input', value)} placeholder="Enter SQL to run." onKeyDown={e => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run() }
       }} />
       {columns.length ? <section className="editor-card json-table-card"><div className="panel-top"><span>{t('Result')}</span><span>{note}</span></div><table className="json-table"><thead><tr>{columns.map((column, index) => <th key={index}>{column}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, index) => <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>) : <tr><td colSpan={columns.length}>{t('No rows.')}</td></tr>}</tbody></table></section>
@@ -3377,7 +3383,7 @@ function PythonTool({ data, setData }) {
       <WasmNetworkWarning />
     </div>
     <Split>
-      <Editor label="Python" language="python" tabSize={4} lineEdit={{ tab: '    ', comment: '#' }} value={code} onChange={value => set(setData, 'input', value)} placeholder="Enter Python to run." onKeyDown={e => {
+      <Editor label="Python" language="python" confirmClear tabSize={4} lineEdit={{ tab: '    ', comment: '#' }} value={code} onChange={value => set(setData, 'input', value)} placeholder="Enter Python to run." onKeyDown={e => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run() }
       }} />
       <Output label="Result" value={error || output} language={error ? 'python' : undefined} error={false} placeholder={busy ? 'Loading Python…' : 'Enter Python to run.'} />
