@@ -41,7 +41,7 @@ export const referencedProjects = [
     name: 'ArtCraft (WordCraft, GridCraft, PhotoCraft, FilmCraft, DeckCraft)',
     license: 'MIT OR Apache-2.0',
     url: 'https://getartcraft.com/apps',
-    note: 'WordCraft 0.13.2, GridCraft 0.14.2, PhotoCraft 0.18.0, FilmCraft 0.15.0, and DeckCraft 0.13.1 unpacked from third-party/ into public/crafts/ by scripts/vendor-crafts.js. WordCraft and PhotoCraft also load Noto Sans CJK SC Regular (OFL-1.1, Sans2.004) for Chinese text. DeckCraft is a local build with embedded Inter, BIZ UDPGothic, and LXGW WenKai Lite (OFL-1.1); LXGW supplies Chinese glyphs. Font licenses ship in public/crafts/deckcraft/font-licenses/.',
+    note: 'WordCraft 0.16.0, GridCraft 0.17.0, PhotoCraft 0.21.0, FilmCraft 0.18.0, and DeckCraft 0.16.0 unpacked from third-party/ into public/crafts/ by scripts/vendor-crafts.js. WordCraft and PhotoCraft also load Noto Sans CJK SC Regular (OFL-1.1, Sans2.004) for Chinese text.',
   },
   {
     name: 'SQLite',

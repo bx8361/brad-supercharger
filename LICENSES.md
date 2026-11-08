@@ -38,15 +38,15 @@ The **draw.io editor** tool vendors the [jgraph/drawio](https://github.com/jgrap
 
 The **Crafts** tools vendor [ArtCraft](https://getartcraft.com/apps) web builds (MIT OR Apache-2.0) into `public/crafts/` via `scripts/vendor-crafts.js`. The zip files live in `third-party/`:
 
-- WordCraft `0.13.2` (`wordcraft-web-0.13.2.zip`)
-- GridCraft `0.14.2` (`gridcraft-web-0.14.2.zip`)
-- PhotoCraft `0.18.0` (`photocraft-web-0.18.0.zip`)
-- FilmCraft `0.15.0` (`filmcraft-web-0.15.0.zip`)
-- DeckCraft `0.13.1` (`deckcraft-web-0.13.1-cjk.zip`, local font-enabled build)
+- WordCraft `0.16.0` (`wordcraft-web-0.16.0.zip`)
+- GridCraft `0.17.0` (`gridcraft-web-0.17.0.zip`)
+- PhotoCraft `0.21.0` (`photocraft-web-0.21.0.zip`)
+- FilmCraft `0.18.0` (`filmcraft-web-0.18.0.zip`)
+- DeckCraft `0.16.0` (`deckcraft-web-0.16.0.zip`)
 
 WordCraft and PhotoCraft text use [Noto Sans CJK SC](https://github.com/notofonts/noto-cjk) Regular `Sans2.004` (SIL Open Font License 1.1). `scripts/vendor-crafts.js` downloads it as `NotoSansCJKsc-Regular.otf`, with the license in `NotoSansCJKsc-OFL.txt`. WordCraft stores it in IndexedDB. PhotoCraft lists it in `fonts/manifest.txt`.
 
-DeckCraft uses a local web build with embedded Inter Regular/Bold, BIZ UDPGothic Regular, and LXGW WenKai Lite Regular (all SIL Open Font License 1.1), from [craft-fonts commit `aced4137`](https://github.com/storytold/craft-fonts/tree/aced4137c022f1f587624d48e81ec77e1914a9cc). LXGW provides Chinese glyphs for slides and interface fallback. License texts ship in `public/crafts/deckcraft/font-licenses/`; the patch, manifests, and rebuild instructions are in [scripts/deckcraft-font-fix](scripts/deckcraft-font-fix/README.md).
+DeckCraft's upstream web build has no Chinese font, so Chinese slide text needs fonts the browser lacks. `scripts/deckcraft-font-fix` documents the earlier local 0.13.1 build that added LXGW WenKai Lite.
 
 ## Hoppscotch
 

@@ -1,5 +1,5 @@
 import { createWriteStream, existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { fileURLToPath } from 'node:url'
@@ -12,12 +12,11 @@ const cjkFontName = 'NotoSansCJKsc-Regular.otf'
 
 // ponytail: unpack third-party/*.zip as-is. Re-run when the version marker changes.
 const apps = [
-  ['wordcraft', 'wordcraft-web-0.13.2.zip', '0.13.2'],
-  ['gridcraft', 'gridcraft-web-0.14.2.zip', '0.14.2'],
-  ['photocraft', 'photocraft-web-0.18.0.zip', '0.18.0'],
-  ['filmcraft', 'filmcraft-web-0.15.0.zip', '0.15.0'],
-  // Local build embeds Chinese fonts; rebuild notes: scripts/deckcraft-font-fix/README.md.
-  ['deckcraft', 'deckcraft-web-0.13.1-cjk.zip', '0.13.1-cjk.1'],
+  ['wordcraft', 'wordcraft-web-0.16.0.zip', '0.16.0'],
+  ['gridcraft', 'gridcraft-web-0.17.0.zip', '0.17.0'],
+  ['photocraft', 'photocraft-web-0.21.0.zip', '0.21.0'],
+  ['filmcraft', 'filmcraft-web-0.18.0.zip', '0.18.0'],
+  ['deckcraft', 'deckcraft-web-0.16.0.zip', '0.16.0'],
 ]
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -98,6 +97,8 @@ try{await seedWordcraftCjk()}catch(e){console.warn(e)}
     html = html.replace('const wasm = await init(', `${seed}const wasm = await init(`)
   }
   if (id === 'photocraft') {
+    // ponytail: photocraft-web 0.21.0 app/photocraft-web.js imports ./snippets/..., but the zip only ships snippets/ at the root (404 hangs loading).
+    if (existsSync(join(dest, 'app'))) await cp(join(dest, 'snippets'), join(dest, 'app', 'snippets'), { recursive: true })
     // ponytail: photocraft-web 0.15.1 fetches fonts/manifest.txt. Grid, Film, and Deck web builds have no host-font hook.
     const fonts = join(dest, 'fonts')
     await mkdir(fonts, { recursive: true })
