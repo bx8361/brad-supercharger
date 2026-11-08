@@ -14,10 +14,11 @@ async function request(path, signal) {
 
 export async function loadCurrencies(signal) {
   const data = await request('currencies', signal)
-  if (!Array.isArray(data) || !data.length || data.some(item => !/^[A-Z]{3}$/.test(item?.iso_code) || typeof item.name !== 'string')) {
-    throw new Error('The exchange-rate service returned invalid data.')
-  }
-  return data.sort((a, b) => a.iso_code.localeCompare(b.iso_code))
+  if (!Array.isArray(data)) throw new Error('The exchange-rate service returned invalid data.')
+  // The list also has crypto and metals, some with codes that aren't 3 letters. Keep only fiat currencies and skip bad entries rather than rejecting the whole list.
+  const currencies = data.filter(item => (item?.type ?? 'currency') === 'currency' && /^[A-Z]{3}$/.test(item?.iso_code) && typeof item.name === 'string')
+  if (!currencies.length) throw new Error('The exchange-rate service returned invalid data.')
+  return currencies.sort((a, b) => a.iso_code.localeCompare(b.iso_code))
 }
 
 export async function loadCurrencyRate(from, to, signal) {

@@ -26,6 +26,13 @@ test('rate loading validates the service response and skips same-currency reques
   await assert.rejects(loadCurrencyRate('USD', 'TWD'), /invalid data/)
   await assert.rejects(loadCurrencyRate('../USD', 'TWD'), /valid currencies/)
   await assert.rejects(loadCurrencies(), /invalid data/)
+  globalThis.fetch.mock.mockImplementation(async () => ({ ok: true, json: async () => [
+    { iso_code: 'USD', name: 'US Dollar', type: 'currency' },
+    { iso_code: 'AAVE', name: 'Aave', type: 'crypto' },
+    { iso_code: 'XAU', name: 'Gold', type: 'metal' },
+    { iso_code: 'EUR', name: 'Euro', type: 'currency' },
+  ] }))
+  assert.deepEqual((await loadCurrencies()).map(item => item.iso_code), ['EUR', 'USD'])
   globalThis.fetch.mock.mockImplementation(async () => ({ ok: false }))
   await assert.rejects(loadCurrencyRate('USD', 'TWD'), /Could not load/)
 })
